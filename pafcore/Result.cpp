@@ -12,7 +12,7 @@ Result::Result(Type* type, TypeCompound typeCompound)
 	m_typeCompound = typeCompound;
 }
 
-Type* Result::get_type() const
+::pafcore::RawPtr<Type> Result::get_type() const
 {
 	return m_type;
 }

@@ -14,16 +14,16 @@ size_t PrimitiveType::_getMemberCount_()
 	return m_memberCount;
 }
 
-Metadata* PrimitiveType::_getMember_(size_t index)
+::pafcore::RawPtr<Metadata> PrimitiveType::_getMember_(size_t index)
 {
 	if (index < m_memberCount)
 	{
 		return m_members[index];
 	}
-	return 0;
+	return nullptr;
 }
 
-Metadata* PrimitiveType::_findMember_(const char* name)
+::pafcore::RawPtr<Metadata> PrimitiveType::_findMember_(string_t name)
 {
 	Metadata dummy(name);
 	Metadata** it = std::lower_bound(m_members, m_members + m_memberCount, &dummy, CompareMetaDataPtrByName());
@@ -31,7 +31,7 @@ Metadata* PrimitiveType::_findMember_(const char* name)
 	{
 		return *it;
 	}
-	return 0;
+	return nullptr;
 }
 
 Metadata* PrimitiveType::findMember(const char* name)
@@ -66,60 +66,60 @@ Metadata* PrimitiveType::findTypeMember(const char* name)
 	return findStaticMethod(name);
 }
 
-template<bool short_less_int>
-struct TypePromoter
-{
-	static PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory)
-	{
-		if (typeCategory <= unsigned_short_type)
-		{
-			return int_type;
-		}
-		return typeCategory;
-	}
-};
-
-template<>
-struct TypePromoter<false>
-{
-	static PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory)
-	{
-		if (typeCategory < unsigned_short_type)
-		{
-			return int_type;
-		}
-		else if (typeCategory == unsigned_short_type)
-		{
-			return unsigned_int_type;
-		}
-		return typeCategory;
-	}
-};
-
-inline PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory)
-{
-	return TypePromoter<sizeof(unsigned short) < sizeof(int)>::GetPromotedTypeCategory(typeCategory);
-}
-
-inline PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory1, PrimitiveTypeCategory typeCategory2)
-{
-	PrimitiveTypeCategory small, large; 
-	if(typeCategory1 < typeCategory2)
-	{
-		small = typeCategory1;
-		large = typeCategory2;
-	}
-	else
-	{
-		small = typeCategory2;
-		large = typeCategory1;
-	}
-	if(unsigned_int_type == small && long_type == large)
-	{
-		return unsigned_long_type;
-	}
-	return GetPromotedTypeCategory(large);
-}
+//template<bool short_less_int>
+//struct TypePromoter
+//{
+//	static PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory)
+//	{
+//		if (typeCategory <= unsigned_short_type)
+//		{
+//			return int_type;
+//		}
+//		return typeCategory;
+//	}
+//};
+//
+//template<>
+//struct TypePromoter<false>
+//{
+//	static PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory)
+//	{
+//		if (typeCategory < unsigned_short_type)
+//		{
+//			return int_type;
+//		}
+//		else if (typeCategory == unsigned_short_type)
+//		{
+//			return unsigned_int_type;
+//		}
+//		return typeCategory;
+//	}
+//};
+//
+//inline PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory)
+//{
+//	return TypePromoter<sizeof(unsigned short) < sizeof(int)>::GetPromotedTypeCategory(typeCategory);
+//}
+//
+//inline PrimitiveTypeCategory GetPromotedTypeCategory(PrimitiveTypeCategory typeCategory1, PrimitiveTypeCategory typeCategory2)
+//{
+//	PrimitiveTypeCategory small, large; 
+//	if(typeCategory1 < typeCategory2)
+//	{
+//		small = typeCategory1;
+//		large = typeCategory2;
+//	}
+//	else
+//	{
+//		small = typeCategory2;
+//		large = typeCategory1;
+//	}
+//	if(unsigned_int_type == small && long_type == large)
+//	{
+//		return unsigned_long_type;
+//	}
+//	return GetPromotedTypeCategory(large);
+//}
 
 CPPPrimitiveType* GetPrimitiveTypeFromTypeCategory(PrimitiveTypeCategory typeCategory)
 {
@@ -180,530 +180,23 @@ CPPPrimitiveType* GetPrimitiveTypeFromTypeCategory(PrimitiveTypeCategory typeCat
 	return res;
 }
 
-ErrorCode CPPPrimitiveType::Primitive_op_plus(Variant* result, Variant** args, int_t numArgs)
-{
-	if(1 == numArgs)
-	{
-		if(!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
 
-		char value0[max_primitive_type_size];
-		char resultValue[max_primitive_type_size];
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		resType->op_plus(resultValue, value0);
-		result->assignPrimitive(resType, resultValue);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_negate(Variant* result, Variant** args, int_t numArgs)
-{
-	if(1 == numArgs)
-	{
-		if(!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		switch (arg0Type->m_typeCategory)
-		{
-		case unsigned_int_type:
-		case unsigned_long_type:
-		case unsigned_long_long_type:
-			return e_invalid_this_type;
-		}
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
-
-		char value0[max_primitive_type_size];
-		char resultValue[max_primitive_type_size];
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		resType->op_negate(resultValue, value0);
-		result->assignPrimitive(resType, resultValue);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_increment(Variant* result, Variant** args, int_t numArgs)
-{
-	if (1 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		if (float_type <= arg0Type->m_typeCategory)
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* resType = arg0Type;
-		char resultValue[max_primitive_type_size];
-		resType->op_increment(resultValue, args[0]->m_pointer);
-		result->assignPrimitivePtr(arg0Type, args[0]->m_pointer, false, ::pafcore::Variant::by_ref);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_postIncrement(Variant* result, Variant** args, int_t numArgs)
-{
-	if (1 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		if (float_type <= arg0Type->m_typeCategory)
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* resType = arg0Type;
-		char resultValue[max_primitive_type_size];
-		resType->op_postIncrement(resultValue, args[0]->m_pointer);
-		result->assignPrimitive(resType, resultValue);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_decrement(Variant* result, Variant** args, int_t numArgs)
-{
-	if (1 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		if (bool_type == arg0Type->m_typeCategory  || float_type <= arg0Type->m_typeCategory)
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* resType = arg0Type;
-		char resultValue[max_primitive_type_size];
-		resType->op_decrement(resultValue, args[0]->m_pointer);
-		result->assignPrimitivePtr(arg0Type, args[0]->m_pointer, false, ::pafcore::Variant::by_ref);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_postDecrement(Variant* result, Variant** args, int_t numArgs)
-{
-	if (1 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		if (bool_type == arg0Type->m_typeCategory || float_type <= arg0Type->m_typeCategory)
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* resType = arg0Type;
-		char resultValue[max_primitive_type_size];
-		resType->op_postDecrement(resultValue, args[0]->m_pointer);
-		result->assignPrimitive(resType, resultValue);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_not(Variant* result, Variant** args, int_t numArgs)
-{
-	if (1 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		bool res = arg0Type->op_not(args[0]->m_pointer);
-		result->assignPrimitive(BoolType::GetSingleton(), &res);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_bitwiseNot(Variant* result, Variant** args, int_t numArgs)
-{
-	if (1 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		if (float_type <= arg0Type->m_typeCategory)
-		{
-			return e_invalid_this_type;
-		}
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
-		char value0[max_primitive_type_size];
-		char resultValue[max_primitive_type_size];
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		resType->op_bitwiseNot(resultValue, value0);
-		result->assignPrimitive(resType, resultValue);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-template<typename Func>
-inline ErrorCode Primitive_op_binary(Variant* result, Variant** args, int_t numArgs, Func func)
-{
-	if (2 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		if (!args[1]->m_type->isPrimitive())
-		{
-			return e_invalid_arg_type_1;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		CPPPrimitiveType* arg1Type = static_cast<CPPPrimitiveType*>(args[1]->m_type);
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory, arg1Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
-
-		char value0[max_primitive_type_size];
-		char value1[max_primitive_type_size];
-		char resultValue[max_primitive_type_size];
-
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		arg1Type->castTo(value1, resType, args[1]->m_pointer);
-		(resType->*func)(resultValue, value0, value1);
-		result->assignPrimitive(resType, resultValue);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-template<typename Func>
-inline ErrorCode Primitive_op_binaryIntegerOnly(Variant* result, Variant** args, int_t numArgs, Func func)
-{
-	if (2 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		if (!args[1]->m_type->isPrimitive())
-		{
-			return e_invalid_arg_type_1;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		if(float_type <= arg0Type->m_typeCategory)
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg1Type = static_cast<CPPPrimitiveType*>(args[1]->m_type);
-		if(float_type <= arg1Type->m_typeCategory)
-		{
-			return e_invalid_arg_type_1;
-		}
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory, arg1Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
-
-		char value0[max_primitive_type_size];
-		char value1[max_primitive_type_size];
-		char resultValue[max_primitive_type_size];
-
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		arg1Type->castTo(value1, resType, args[1]->m_pointer);
-		(resType->*func)(resultValue, value0, value1);
-		result->assignPrimitive(resType, resultValue);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_add(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binary(result, args, numArgs, &op_add);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_subtract(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binary(result, args, numArgs, &op_subtract);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_multiply(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binary(result, args, numArgs, &op_multiply);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_divide(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binary(result, args, numArgs, &op_divide);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_mod(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binaryIntegerOnly(result, args, numArgs, &op_mod);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_bitwiseAnd(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binaryIntegerOnly(result, args, numArgs, &op_bitwiseAnd);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_bitwiseOr(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binaryIntegerOnly(result, args, numArgs, &op_bitwiseOr);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_bitwiseXor(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binaryIntegerOnly(result, args, numArgs, &op_bitwiseXor);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_leftShift(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binaryIntegerOnly(result, args, numArgs, &op_leftShift);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_rightShift(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_binaryIntegerOnly(result, args, numArgs, &op_rightShift);
-}
-
-
-
-template<typename Func>
-inline ErrorCode Primitive_op_compare(Variant* result, Variant** args, int_t numArgs, Func func)
-{
-	if (2 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		if (!args[1]->m_type->isPrimitive())
-		{
-			return e_invalid_arg_type_1;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		CPPPrimitiveType* arg1Type = static_cast<CPPPrimitiveType*>(args[1]->m_type);
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory, arg1Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
-
-		char value0[max_primitive_type_size];
-		char value1[max_primitive_type_size];
-
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		arg1Type->castTo(value1, resType, args[1]->m_pointer);
-		bool res = (resType->*func)(value0, value1);
-		result->assignPrimitive(BoolType::GetSingleton(), &res);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_less(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_compare(result, args, numArgs, &op_less);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_lessEqual(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_compare(result, args, numArgs, &op_lessEqual);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_equal(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_compare(result, args, numArgs, &op_equal);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_notEqual(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_compare(result, args, numArgs, &op_notEqual);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_greaterEqual(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_compare(result, args, numArgs, &op_greaterEqual);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_greater(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_compare(result, args, numArgs, &op_greater);
-}
-	
-ErrorCode CPPPrimitiveType::Primitive_op_assign(Variant* result, Variant** args, int_t numArgs)
-{
-	if (2 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		if (!args[1]->m_type->isPrimitive())
-		{
-			return e_invalid_arg_type_1;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		CPPPrimitiveType* arg1Type = static_cast<CPPPrimitiveType*>(args[1]->m_type);
-		arg1Type->castTo(args[0]->m_pointer, arg0Type, args[1]->m_pointer);
-		result->assignPrimitivePtr(arg0Type, args[0]->m_pointer, false, ::pafcore::Variant::by_ref);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-template<typename Func>
-inline ErrorCode Primitive_op_typeCompoundAssign(Variant* result, Variant** args, int_t numArgs, Func func)
-{
-	if (2 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		if (!args[1]->m_type->isPrimitive())
-		{
-			return e_invalid_arg_type_1;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		CPPPrimitiveType* arg1Type = static_cast<CPPPrimitiveType*>(args[1]->m_type);
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory, arg1Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
-
-		char value0[max_primitive_type_size];
-		char value1[max_primitive_type_size];
-		char resultValue[max_primitive_type_size];
-
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		arg1Type->castTo(value1, resType, args[1]->m_pointer);
-		(resType->*func)(resultValue, value0, value1);
-		resType->castTo(args[0]->m_pointer, arg0Type, resultValue);
-		result->assignPrimitivePtr(arg0Type, args[0]->m_pointer, false, ::pafcore::Variant::by_ref);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-
-template<typename Func>
-inline ErrorCode Primitive_op_typeCompoundAssign_IntegerOnly(Variant* result, Variant** args, int_t numArgs, Func func)
-{
-	if (2 == numArgs)
-	{
-		if (!args[0]->m_type->isPrimitive())
-		{
-			return e_invalid_this_type;
-		}
-		if (!args[1]->m_type->isPrimitive())
-		{
-			return e_invalid_arg_type_1;
-		}
-		CPPPrimitiveType* arg0Type = static_cast<CPPPrimitiveType*>(args[0]->m_type);
-		if(float_type <= arg0Type->m_typeCategory)
-		{
-			return e_invalid_this_type;
-		}
-		CPPPrimitiveType* arg1Type = static_cast<CPPPrimitiveType*>(args[1]->m_type);
-		if(float_type <= arg1Type->m_typeCategory)
-		{
-			return e_invalid_arg_type_1;
-		}
-		PrimitiveTypeCategory resTypeCategory = GetPromotedTypeCategory(arg0Type->m_typeCategory, arg1Type->m_typeCategory);
-		CPPPrimitiveType* resType = GetPrimitiveTypeFromTypeCategory(resTypeCategory);
-
-		char value0[max_primitive_type_size];
-		char value1[max_primitive_type_size];
-		char resultValue[max_primitive_type_size];
-
-		arg0Type->castTo(value0, resType, args[0]->m_pointer);
-		arg1Type->castTo(value1, resType, args[1]->m_pointer);
-		(resType->*func)(resultValue, value0, value1);
-		resType->castTo(args[0]->m_pointer, arg0Type, resultValue);
-		result->assignPrimitivePtr(arg0Type, args[0]->m_pointer, false, ::pafcore::Variant::by_ref);
-		return s_ok;
-	}
-	return e_invalid_arg_num;
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_addAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign(result, args, numArgs, &op_add);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_subtractAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign(result, args, numArgs, &op_subtract);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_multiplyAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign(result, args, numArgs, &op_multiply);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_divideAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign(result, args, numArgs, &op_divide);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_modAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign_IntegerOnly(result, args, numArgs, &op_mod);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_bitwiseXorAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign_IntegerOnly(result, args, numArgs, &op_bitwiseXor);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_bitwiseAndAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign_IntegerOnly(result, args, numArgs, &op_bitwiseAnd);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_bitwiseOrAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign_IntegerOnly(result, args, numArgs, &op_bitwiseOr);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_leftShiftAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign_IntegerOnly(result, args, numArgs, &op_leftShift);
-}
-
-ErrorCode CPPPrimitiveType::Primitive_op_rightShiftAssign(Variant* result, Variant** args, int_t numArgs)
-{
-	return Primitive_op_typeCompoundAssign_IntegerOnly(result, args, numArgs, &op_rightShift);
-}
-
-
-BoolType				BoolType::				s_instance("bool");
-CharType				CharType::				s_instance("char");
-SignedCharType			SignedCharType::		s_instance("signed char");
-UnsignedCharType		UnsignedCharType::		s_instance("unsigned char");
-WcharType				WcharType::				s_instance("wchar_t");
-ShortType				ShortType::				s_instance("short");
-UnsignedShortType		UnsignedShortType::		s_instance("unsigned short");
-LongType				LongType::				s_instance("long");
-UnsignedLongType		UnsignedLongType::		s_instance("unsigned long");
-LongLongType			LongLongType::			s_instance("long long");
-UnsignedLongLongType	UnsignedLongLongType::	s_instance("unsigned long long");
-IntType					IntType::				s_instance("int");
-UnsignedIntType			UnsignedIntType::		s_instance("unsigned int");
-FloatType				FloatType::				s_instance("float");
-DoubleType				DoubleType::			s_instance("double");
-LongDoubleType			LongDoubleType::		s_instance("long double");
-StringType				StringType::			s_instance("string_t");
+//BoolType				BoolType::				s_instance("bool");
+//CharType				CharType::				s_instance("char");
+//SignedCharType			SignedCharType::		s_instance("signed char");
+//UnsignedCharType		UnsignedCharType::		s_instance("unsigned char");
+//WcharType				WcharType::				s_instance("wchar_t");
+//ShortType				ShortType::				s_instance("short");
+//UnsignedShortType		UnsignedShortType::		s_instance("unsigned short");
+//LongType				LongType::				s_instance("long");
+//UnsignedLongType		UnsignedLongType::		s_instance("unsigned long");
+//LongLongType			LongLongType::			s_instance("long long");
+//UnsignedLongLongType	UnsignedLongLongType::	s_instance("unsigned long long");
+//IntType					IntType::				s_instance("int");
+//UnsignedIntType			UnsignedIntType::		s_instance("unsigned int");
+//FloatType				FloatType::				s_instance("float");
+//DoubleType				DoubleType::			s_instance("double");
+//LongDoubleType			LongDoubleType::		s_instance("long double");
 
 END_PAFCORE
 
@@ -722,4 +215,3 @@ AUTO_REGISTER_TYPE(pafcore::IntType)
 AUTO_REGISTER_TYPE(pafcore::UnsignedIntType)
 AUTO_REGISTER_TYPE(pafcore::FloatType)
 AUTO_REGISTER_TYPE(pafcore::DoubleType)
-AUTO_REGISTER_TYPE(pafcore::StringType)

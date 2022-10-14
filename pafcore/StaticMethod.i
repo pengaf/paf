@@ -33,7 +33,7 @@ namespace pafcore
 	};
 
 #{
-	inline Result* StaticMethod::getResult()
+	inline RawPtr<Result> StaticMethod::getResult()
 	{
 		return m_result;
 	}
@@ -43,7 +43,7 @@ namespace pafcore
 		return m_argCount;
 	}
 
-	inline Argument* StaticMethod::getArgument(uint32_t index)
+	inline RawPtr<Argument> StaticMethod::getArgument(uint32_t index)
 	{
 		if (index < m_argCount)
 		{
@@ -51,6 +51,13 @@ namespace pafcore
 		}
 		return nullptr;
 	}
+
+	inline uint32_t StaticMethod::firstDefaultArgument()
+	{
+		return m_firstDefaultArg;
+	}
+
+
 #}
 
 }

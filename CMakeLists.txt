@@ -3,17 +3,25 @@ project(pafcore)
 
 
 set(IDLCPP_PATH "C:/idlcpp/bin/idlcpp.exe" CACHE FILEPATH "idlcpp path")
+set(PAFCORE_DIR "C:/pafcore" CACHE PATH "pafcore dir") 
 
 if(NOT EXISTS ${IDLCPP_PATH})
 	message("can not find file: " ${IDLCPP_PATH})
 	return()
 endif()
 
+set(PAFCORE_KEY_FILE $CACHE{PAFCORE_DIR}/Variant.h)
+if(NOT EXISTS ${PAFCORE_KEY_FILE})
+	message("invalid entry PAFCORE_DIR : " ${PAFCORE_DIR})
+	message("can not find file: " ${PAFCORE_KEY_FILE})
+	return()
+endif()
 
-set(CMAKE_CXX_STANDARD 14)
+
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED false)
 
-set(PAFCORE_DIR ${PROJECT_SOURCE_DIR})
+#set(PAFCORE_DIR ${PROJECT_SOURCE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${PROJECT_SOURCE_DIR}/bin)

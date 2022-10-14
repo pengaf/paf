@@ -7,7 +7,7 @@
 namespace pafcore
 {
 
-	abstract class(name_space)#PAFCORE_EXPORT NameSpace : Metadata
+	abstract class(name_space) NameSpace : Metadata
 	{
 		size_t _getMemberCount_();
 		Metadata* _getMember_(size_t index);
@@ -22,21 +22,29 @@ namespace pafcore
 		{
 			bool operator() (const Metadata* lhs, const Metadata* rhs) const;
 		};
-	public:
+	private:
 		NameSpace(const char* name);
 		~NameSpace();
 	public:
-		NameSpace* getNameSpace(const char* name);
-		ErrorCode registerMember(Metadata* metadata);
-		Metadata* findMember(const char* name);
-		void unregisterMember(Metadata* metadata);
-	public:	
+		PAFCORE_EXPORT NameSpace* getNameSpace(const char* name);
+		PAFCORE_EXPORT ErrorCode registerMember(Metadata* metadata);
+		PAFCORE_EXPORT Metadata* findMember(const char* name);
+		PAFCORE_EXPORT void unregisterMember(Metadata* metadata);
+		Metadata* getEnclosing() const;
+	protected:
 		typedef std::unordered_set<Metadata*, Hash_Metadata, Equal_Metadata> MetadataContainer;
 		MetadataContainer m_members;
 		Metadata* m_enclosing;
 	public:
-		static NameSpace* GetGlobalNameSpace();
+		PAFCORE_EXPORT static NameSpace* GetGlobalNameSpace();
 #}
 	};
 
+#{
+	inline Metadata* NameSpace::getEnclosing() const
+	{
+		return m_enclosing;
+	}
+
+#}
 }

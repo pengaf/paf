@@ -13,5 +13,4 @@ Argument::Argument(const char* name, Type* type, TypeCompound typeCompound, Pass
 	m_passing = passing;
 }
 
-
 END_PAFCORE

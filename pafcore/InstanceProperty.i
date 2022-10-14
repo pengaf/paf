@@ -4,26 +4,28 @@ namespace pafcore
 {
 
 #{
-	struct Attributes;
+	class InstanceProperty;
 	class Iterator;
 	class Variant;
 	
-	typedef ErrorCode(*SimpleInstancePropertyGet)(Variant* that, Variant* value);
-	typedef ErrorCode(*SimpleInstancePropertySet)(Variant* that, Variant* value);
+	typedef ErrorCode(*SimpleInstancePropertyGet)(InstanceProperty* instanceProperty, Variant* that, Variant* value);
+	typedef ErrorCode(*SimpleInstancePropertySet)(InstanceProperty* instanceProperty, Variant* that, Variant* value);
 
-	typedef ErrorCode(*ArrayInstancePropertySize)(Variant* that, size_t& index);
-	typedef ErrorCode(*ArrayInstancePropertyGet)(Variant* that, size_t index, Variant* value);
-	typedef ErrorCode(*ArrayInstancePropertySet)(Variant* that, size_t index, Variant* value);
+	typedef ErrorCode(*ArrayInstancePropertySize)(InstanceProperty* instanceProperty, Variant* that, size_t& size);
+	typedef ErrorCode(*ArrayInstancePropertyGet)(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
+	typedef ErrorCode(*ArrayInstancePropertySet)(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
 
-	typedef ErrorCode(*CollectionInstancePropertyIterate)(Variant* that, Iterator*& iterator);
-	typedef ErrorCode(*CollectionInstancePropertyGet)(Variant* that, Iterator* iterator, Variant* value);
-	typedef ErrorCode(*CollectionInstancePropertySet)(Variant* that, Iterator* iterator, size_t removeCount, Variant* value);
+	typedef ErrorCode(*CollectionInstancePropertyIterate)(InstanceProperty* instanceProperty, Variant* that, Iterator*& iterator);
+	typedef ErrorCode(*CollectionInstancePropertyGet)(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, Variant* value);
+	typedef ErrorCode(*CollectionInstancePropertySet)(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, size_t removeCount, Variant* value);
+
+	struct Attributes;
 #}
 
 	abstract class(instance_property)#PAFCORE_EXPORT InstanceProperty : Metadata
 	{
-		ClassType* objectType { get };
-		Type* type { get };
+		ClassType objectType { get* };
+		Type type { get* };
 		TypeCompound getterTypeCompound{ get };
 		TypeCompound setterTypeCompound{ get };
 		PropertyCategory propertyCategory{ get };
@@ -68,12 +70,12 @@ namespace pafcore
 	};
 
 #{
-	inline ClassType* InstanceProperty::get_objectType() const
+	inline RawPtr<ClassType> InstanceProperty::get_objectType() const
 	{
 		return m_objectType;
 	}
 
-	inline Type* InstanceProperty::get_type() const
+	inline RawPtr<Type> InstanceProperty::get_type() const
 	{
 		return m_type;
 	}

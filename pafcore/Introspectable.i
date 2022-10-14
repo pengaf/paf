@@ -1,8 +1,7 @@
-#import "Typedef.i"
 #import "ClassType.i"
 
 #{
-#include "RefCount.h"
+#include "Utility.h"
 #}
 
 namespace pafcore
@@ -11,26 +10,11 @@ namespace pafcore
 	class ClassType;
 #}
 
-	override class(value_object) #PAFCORE_EXPORT ReferenceDebugTraveler
-	{
-		override abstract void onDebugTravel(Reference* reference);
-	};
-
-	class(noncopyable) #PAFCORE_EXPORT Reference ## : public RefCount
+	class(noncopyable) #PAFCORE_EXPORT Introspectable ## : public Interface
 	{ 
 		nocode bool isTypeOf(ClassType* classType);
 		nocode bool isStrictTypeOf(ClassType* classType);
-		static void DebugTravel(ReferenceDebugTraveler* traveler);
 #{
-#ifdef _DEBUG
-	public:
-		Reference();
-		Reference(const Reference&);
-		~Reference();
-#endif
-	//	Reference() = default;
-	//	Reference(const Reference&) = delete;
-	//	Reference& operator=(const Reference&) = delete;
 	public:
 		bool isTypeOf(ClassType* classType);
 
@@ -58,12 +42,6 @@ namespace pafcore
 		{
 			return reinterpret_cast<T*>(castTo(T::GetType()));
 		}
-
-		void deleteThis()
-		{
-			delete this;
-		}
-
 #}
 	};
 }

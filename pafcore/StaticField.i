@@ -9,7 +9,7 @@ namespace pafcore
 
 	abstract class(static_field)#PAFCORE_EXPORT StaticField : Metadata
 	{
-		Type * type { get };
+		Type type { get* };
 		TypeCompound typeCompound{ get };
 		uint32_t arraySize{ get };
 		size_t address { get };
@@ -25,7 +25,7 @@ namespace pafcore
 	};
 
 #{
-	inline Type* StaticField::get_type() const
+	inline RawPtr<Type> StaticField::get_type() const
 	{
 		return m_type;
 	}

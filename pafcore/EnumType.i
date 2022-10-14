@@ -10,7 +10,7 @@ namespace pafcore
 	class PrimitiveType;
 #}
 
-	abstract class(enum_type)#PAFCORE_EXPORT EnumType : Type
+	abstract class(enumeration_type)#PAFCORE_EXPORT EnumType : Type
 	{
 		size_t _getEnumeratorCount_();
 		Enumerator* _getEnumerator_(size_t index);
@@ -20,10 +20,15 @@ namespace pafcore
 	public:
 		EnumType(const char* name, const char* declarationFile);
 	public:
+		//override Type
+		virtual bool destruct(void* address) override;
+		virtual bool copyConstruct(void* dst, const void* src) override;
+		virtual bool copyAssign(void* dst, const void* src) override;
+		virtual Metadata* findMember(const char* name) override;
+	public:
 		void castToPrimitive(void* dst, PrimitiveType* dstType, const void* src);
 		void castFromPrimitive(void* dst, PrimitiveType* srcType, const void* src);
 		Enumerator* findEnumerator(const char* name);
-		Metadata* findMember(const char* name);
 	public:
 		static pafcore::ErrorCode Enum_get__name_(pafcore::InstanceProperty* instanceProperty, pafcore::Variant* that, pafcore::Variant* value);
 	public:

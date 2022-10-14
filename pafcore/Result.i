@@ -6,7 +6,7 @@ namespace pafcore
 
 	abstract class(function_result)#PAFCORE_EXPORT Result : Metadata
 	{
-		Type* type { get };
+		Type type { get* };
 		TypeCompound typeCompound{ get };
 #{
 	public:

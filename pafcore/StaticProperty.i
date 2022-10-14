@@ -24,7 +24,7 @@ namespace pafcore
 
 	abstract class(static_property)#PAFCORE_EXPORT StaticProperty : Metadata
 	{
-		Type* type { get };
+		Type type { get* };
 		TypeCompound getterTypeCompound{ get };
 		TypeCompound setterTypeCompound{ get };
 		PropertyCategory propertyCategory{ get };
@@ -67,7 +67,7 @@ namespace pafcore
 	};
 
 #{
-	inline Type* StaticProperty::get_type() const
+	inline RawPtr<Type> StaticProperty::get_type() const
 	{
 		return m_type;
 	}

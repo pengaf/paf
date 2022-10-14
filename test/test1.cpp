@@ -8,7 +8,7 @@
 #include "Node.h"
 #include "../pafcore/SmartPtr.h"
 #include "../pafcore/System.h"
-
+#pragma comment(lib, "pafcore_d.lib")
 //
 //#ifdef _DEBUG
 //	#define PAF_FILE_LINE(...) PAF_WIDE(__FILE__), __LINE__, __VA_ARGS__
@@ -27,19 +27,17 @@
 
 void test1()
 {
-	PAF_FILE_LINE;
 	auto scene = Scene::New();
 	for (int i = 0; i < 5; ++i)
 	{
-		PAF_FILE_LINE; 
 		auto node = Node::New();
 		char name[222];
 		sprintf(name, "%d", i);
 		node->m_name = name;
-		auto bn = scene->getRootNode()->addChild(node);
+		auto bn = scene->getRootNode()->addChild(std::move(node));
 		for (int j = 0; j < 5; ++j)
 		{
-			PAF_FILE_LINE; auto node = Node::New();
+			auto node = Node::New();
 			sprintf(name, "%d-%d", i,j);
 			node->m_name = name;
 			if (bn->m_childHead && j > 2)
@@ -79,16 +77,16 @@ public:
 //	a = 3;
 //}
 
-class Node2 : public Node
-{
-public:
-	~Node2()
-	{
-		printf("~Node2()\n");
-	}
-	void* aaa;
-};
-
+//class Node2 : public Node
+//{
+//public:
+//	~Node2()
+//	{
+//		printf("~Node2()\n");
+//	}
+//	void* aaa;
+//};
+//
 //int@ NewUnique();
 //int^ NewShared();
 //int*- Get();
@@ -99,14 +97,45 @@ public:
 //	static constexpr size_t value = 0;
 //};
 
+class Test
+{
+public:
+	Test(int a=1, int b=1)
+	{}
+public:
+	void test1(int& a)
+	{
+		std::cout << "test1(int& a)\n";
+	}
+
+	void test1(int&& a) 
+	{
+		std::cout << "test1(int&& a)\n";
+	}
+
+	void test1(const int& a) 
+	{
+		std::cout << "test1(const int& a)\n";
+	}
+};
+
+const int* testParam(int & a, const int& b, int const && c)
+{
+	return &c;
+}
 
 int main()
 {
-	{
-		std::vector<Node2> vv;
-		vv.push_back(Node2());
-		vv.push_back(Node2());
-	}
+	Test test;
+	int nn{};
+	test.test1(nn);
+
+	std::vector<Test> vv(3);
+	//{
+	//	std::vector<Node2> vv;
+	//	vv.push_back(Node2());
+	//	vv.push_back(Node2());
+	//}
 	new int[3];
 	//const char[] aa = "aaaa";
 	std::tuple<int, char> tt;

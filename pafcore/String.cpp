@@ -16,7 +16,7 @@ String::String(const String& arg)
 	if (s_emptyString != arg.m_str)
 	{
 		size_t len = strlen(arg.m_str) + 1;
-		m_str = paf_new char[len];
+		m_str = new char[len];
 		memcpy(m_str, arg.m_str, len * sizeof(char));
 	}
 	else
@@ -36,7 +36,7 @@ String::String(const char* str)
 	if (str && str[0])
 	{
 		size_t len = strlen(str) + 1;
-		m_str = paf_new char[len];
+		m_str = new char[len];
 		memcpy(m_str, str, len * sizeof(char));
 	}
 	else
@@ -71,7 +71,7 @@ void String::assign(string_t str)
 	else
 	{
 		size_t len = strlen(str) + 1;
-		m_str = paf_new char[len];
+		m_str = new char[len];
 		memcpy(m_str, str, len * sizeof(char));
 	}
 }
@@ -82,7 +82,7 @@ void String::append(string_t str)
 	{
 		size_t len1 = strlen(m_str);
 		size_t len2 = strlen(str) + 1;
-		char* newStr = paf_new char[len1 + len2];
+		char* newStr = new char[len1 + len2];
 		memcpy(newStr, m_str, len1 * sizeof(char));
 		memcpy(newStr + len1, str, len2 * sizeof(char));
 		delete[]m_str;

@@ -1,6 +1,5 @@
-#import "Reference.i"
+#import "Introspectable.i"
 #import "NotifyHandler.i"
-#import "DynamicObject.i"
 
 #{
 #include "Utility.h"
@@ -87,14 +86,12 @@ namespace pafcore
 		bool find(NotifyHandler* p);
 		NotifyHandler* remove(NotifyHandler* p);
 	public:
-		PAF_DECL_REFCOUNT_INTERFACE_DUMMY_IMPL
-	public:
 		NotifyHandler* m_first;
 		NotifyHandler* m_second;
 #}
 	};
 
-	class(value_object) #PAFCORE_EXPORT NotifyHandlerList
+	class #PAFCORE_EXPORT NotifyHandlerList
 	{
 		void addNotifyHandler(NotifyHandler* handler) const;
 		void removeNotifyHandler(NotifyHandler* handler) const;
@@ -108,37 +105,5 @@ namespace pafcore
 #}
 	};
 
-	class #PAFCORE_EXPORT PropertyChangedNotifySource : DynamicObject
-	{
-		void addNotifyHandler(PropertyChangedNotifyHandler* handler) const;
-		void removeNotifyHandler(PropertyChangedNotifyHandler* handler) const;
-		bool findNotifyHandler(PropertyChangedNotifyHandler* handler) const;
-#{
-	public:
-		void notifyPropertyChanged(string_t propertyName, PropertyChangedFlag flag = PropertyChangedFlag::update, Iterator* iterator = 0);
-		void nodifyPropertyAvailabilityChanged(string_t propertyName);
-		void notifyDynamicPropertyChanged(string_t propertyName, PropertyChangedFlag flag = PropertyChangedFlag::update, Iterator* iterator = 0);
-		void notifyUpdateDynamicProperty();
-	protected:
-		NotifyHandlerList m_notifyHandlerList;
-#}
-	};
-
-#{
-	inline void PropertyChangedNotifySource::addNotifyHandler(PropertyChangedNotifyHandler* handler) const
-	{
-		m_notifyHandlerList.addNotifyHandler(handler);
-	}
-	
-	inline void PropertyChangedNotifySource::removeNotifyHandler(PropertyChangedNotifyHandler* handler) const	
-	{
-		m_notifyHandlerList.removeNotifyHandler(handler);
-	}
-	
-	inline bool PropertyChangedNotifySource::findNotifyHandler(PropertyChangedNotifyHandler* handler) const
-	{
-		return m_notifyHandlerList.findNotifyHandler(handler);
-	}
-#}
 
 }

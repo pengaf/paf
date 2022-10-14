@@ -9,8 +9,8 @@ namespace pafcore
 
 	abstract class(instance_field)#PAFCORE_EXPORT InstanceField : Metadata
 	{
-		ClassType objectType { get&};
-		Type type { get& };
+		ClassType objectType { get*};
+		Type type { get* };
 		TypeCompound typeCompound { get };
 		uint32_t arraySize{ get };
 		uint32_t offset { get };
@@ -27,12 +27,12 @@ namespace pafcore
 	};
 
 #{
-	inline ClassType* InstanceField::get_objectType() const
+	inline RawPtr<ClassType> InstanceField::get_objectType() const
 	{
 		return m_objectType;
 	}
 
-	inline Type* InstanceField::get_type() const
+	inline RawPtr<Type> InstanceField::get_type() const
 	{
 		return m_type;
 	}

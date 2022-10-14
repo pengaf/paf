@@ -31,7 +31,7 @@ namespace pafcore
 	};
 
 #{
-	inline Result* InstanceMethod::getResult()
+	inline RawPtr<Result> InstanceMethod::getResult()
 	{
 		return m_result;
 	}
@@ -41,7 +41,7 @@ namespace pafcore
 		return m_argCount;
 	}
 
-	inline Argument* InstanceMethod::getArgument(uint32_t index)
+	inline RawPtr<Argument> InstanceMethod::getArgument(uint32_t index)
 	{
 		if (index < m_argCount)
 		{
@@ -49,6 +49,12 @@ namespace pafcore
 		}
 		return nullptr;
 	}
+
+	inline uint32_t InstanceMethod::firstDefaultArgument()
+	{
+		return m_firstDefaultArg;
+	}
+
 #}
 
 }

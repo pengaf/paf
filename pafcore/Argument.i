@@ -10,7 +10,7 @@ namespace pafcore
 
 	abstract class(function_argument)#PAFCORE_EXPORT Argument : Metadata
 	{
-		Type* type { get };
+		Type type { get* };
 		TypeCompound typeCompound{ get };
 		Passing passing{ get };
 #{
@@ -24,7 +24,7 @@ namespace pafcore
 	};
 
 #{
-	inline Type* Argument::get_type() const
+	inline pafcore::RawPtr<Type> Argument::get_type() const
 	{
 		return m_type;
 	}

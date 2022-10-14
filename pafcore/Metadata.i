@@ -1,9 +1,11 @@
-#import "Reference.i"
+#import "Utility.i"
 
 namespace pafcore
 {
 #{
-	enum ErrorCode
+	const size_t max_method_param_count = 32;
+
+	enum class ErrorCode
 	{
 		s_ok,
 		e_invalid_namespace,
@@ -14,26 +16,20 @@ namespace pafcore
 		e_invalid_subscript_type,
 		e_member_not_found,
 		e_index_out_of_range,
-		e_is_not_simple_property,
+		e_is_not_property,
 		e_is_not_array_property,
-		e_is_not_dynamic_array_property,
-		e_is_not_list_property,
-		e_is_not_map_property,
-		e_property_is_not_readable,
-		e_property_is_not_writable,
-		e_property_is_not_iterable,
-		e_property_is_not_dereferenceable,
-		e_property_has_no_candidate,
-		e_item_is_constant,
+		e_is_not_collection_property,
+		e_property_get_not_implemented,
+		e_property_set_not_implemented,
+		e_property_size_not_implemented,
+		e_property_iterate_not_implemented,
 		e_field_is_an_array,
-		e_field_is_constant,
 		e_invalid_type,
 		e_invalid_object_type,
 		e_invalid_field_type,
 		e_invalid_property_type,
-		e_invalid_arg_num,
-		e_no_match_overload,
-		e_ambiguous_overload,
+		e_invalid_too_few_arguments,
+		e_invalid_too_many_arguments,
 		e_invalid_this_type,
 		e_invalid_arg_type_1,
 		e_invalid_arg_type_2,
@@ -55,27 +51,18 @@ namespace pafcore
 		e_invalid_arg_type_18,
 		e_invalid_arg_type_19,
 		e_invalid_arg_type_20,
-		e_this_is_constant,
-		e_arg_is_constant_1,
-		e_arg_is_constant_2,
-		e_arg_is_constant_3,
-		e_arg_is_constant_4,
-		e_arg_is_constant_5,
-		e_arg_is_constant_6,
-		e_arg_is_constant_7,
-		e_arg_is_constant_8,
-		e_arg_is_constant_9,
-		e_arg_is_constant_10,
-		e_arg_is_constant_11,
-		e_arg_is_constant_12,
-		e_arg_is_constant_13,
-		e_arg_is_constant_14,
-		e_arg_is_constant_15,
-		e_arg_is_constant_16,
-		e_arg_is_constant_17,
-		e_arg_is_constant_18,
-		e_arg_is_constant_19,
-		e_arg_is_constant_20,
+		e_invalid_arg_type_21,
+		e_invalid_arg_type_22,
+		e_invalid_arg_type_23,
+		e_invalid_arg_type_24,
+		e_invalid_arg_type_25,
+		e_invalid_arg_type_26,
+		e_invalid_arg_type_27,
+		e_invalid_arg_type_28,
+		e_invalid_arg_type_29,
+		e_invalid_arg_type_30,
+		e_invalid_arg_type_31,
+		e_invalid_arg_type_32,
 		e_not_implemented,
 		e_script_error,
 		e_script_dose_not_override,
@@ -83,7 +70,7 @@ namespace pafcore
 
 	extern const char* g_errorStrings[];
 
-	PAFCORE_EXPORT const char* ErrorCodeToString(ErrorCode errorCode);
+	//PAFCORE_EXPORT const char* ErrorCodeToString(ErrorCode errorCode);
 
 	struct Attribute
 	{
@@ -96,14 +83,13 @@ namespace pafcore
 		Attribute* attributes;
 	};
 #}
-	enum MetaCategory
+	enum class MetaCategory
 	{
-		void_object,
-		primitive_object,
-		enum_object,
-		value_object,
-		reference_object,
-##		atomic_reference_object = reference_object,
+		primitive,
+		enumeration,
+		object,
+		string,//spec object implement fromString & toString
+		buffer,//spec object implement fromBuffer & toBuffer
 		enumerator,
 		instance_field,
 		static_field,
@@ -113,10 +99,9 @@ namespace pafcore
 		static_method,
 		function_argument,
 		function_result,
-		void_type,
 		primitive_type,
-		enum_type,
-		class_type,
+		enumeration_type,
+		object_type,
 		type_alias,
 		name_space,
 	};
@@ -126,19 +111,21 @@ namespace pafcore
 		value,
 		reference,
 		const_reference,
-		right_reference,
+		rvalue_reference,
+		const_rvalue_reference,
 	};
 
 	enum class TypeCompound
 	{
 		none,
-		array,
+		raw_ptr,
+		raw_array,
+		borrowed_ptr,
+		borrowed_array,
 		unique_ptr,
 		unique_array,
 		shared_ptr,
 		shared_array,
-		borrowed_ptr,
-		borrowed_array,
 	};
 
 	enum class PropertyCategory
@@ -148,7 +135,7 @@ namespace pafcore
 		collection_property,
 	};
 
-	abstract class #PAFCORE_EXPORT Metadata : Reference
+	abstract class #PAFCORE_EXPORT Metadata
 	{
 		string_t _name_ { get };
 		MetaCategory _category_ { get };

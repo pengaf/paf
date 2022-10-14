@@ -8,10 +8,6 @@
 #include "StaticMethod.h"
 #include "NameSpace.h"
 
-#pragma warning( push )
-#pragma warning( disable : 4804 )
-#pragma warning( disable : 4800 )
-#pragma warning( disable : 4146 )
 #}
 
 namespace pafcore
@@ -35,7 +31,6 @@ namespace pafcore
 		float_type,
 		double_type,
 		long_double_type,
-		//string_type,
 		primitive_type_count,
 	};	
 #}
@@ -44,10 +39,10 @@ namespace pafcore
 	{
 		size_t _getMemberCount_();
 		Metadata* _getMember_(size_t index);
-		Metadata* _findMember_(const char* name);
+		Metadata* _findMember_(string_t name);
 #{
 	public:
-		PrimitiveType(const char* name) : Type(name, primitive, "")
+		PrimitiveType(const char* name) : Type(name, MetaCategory::primitive, "")
 		{}
 	public:
 		virtual void castTo(void* dst, PrimitiveType* dstType, const void* src) = 0;
@@ -61,10 +56,6 @@ namespace pafcore
 		{
 			return m_typeCategory;
 		}
-		//bool isString() const
-		//{
-		//	return (string_type == m_typeCategory);
-		//}
 	public:
 		PrimitiveTypeCategory m_typeCategory;
 		Metadata** m_members;
@@ -93,105 +84,113 @@ namespace pafcore
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<bool>
 	{
 		enum { type_category = bool_type };
+		inline static const char* s_name = "bool";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<char>
 	{
 		enum { type_category = char_type };
+		inline static const char* s_name = "char";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<unsigned char>
 	{
 		enum { type_category = unsigned_char_type };
+		inline static const char* s_name = "unsigned char";
 	};
-
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<signed char>
 	{
 		enum { type_category = signed_char_type };
+		inline static const char* s_name = "signed char";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<wchar_t>
 	{
 		enum { type_category = wchar_type };
+		inline static const char* s_name = "wchar_t";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<short>
 	{
 		enum { type_category = short_type };
+		inline static const char* s_name = "short";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<unsigned short>
 	{
 		enum { type_category = unsigned_short_type };
+		inline static const char* s_name = "unsigned short";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<int>
 	{
 		enum { type_category = int_type };
+		inline static const char* s_name = "int";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<unsigned int>
 	{
 		enum { type_category = unsigned_int_type };
+		inline static const char* s_name = "unsigned int";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<long>
 	{
 		enum { type_category = long_type };
+		inline static const char* s_name = "long";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<unsigned long>
 	{
 		enum { type_category = unsigned_long_type };
+		inline static const char* s_name = "unsigned long";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<long long>
 	{
 		enum { type_category = long_long_type };
+		inline static const char* s_name = "long long";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<unsigned long long>
 	{
 		enum { type_category = unsigned_long_long_type };
+		inline static const char* s_name = "unsigned long long";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<float>
 	{
 		enum { type_category = float_type };
+		inline static const char* s_name = "float";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<double>
 	{
 		enum { type_category = double_type };
+		inline static const char* s_name = "double";
 	};
 
 	template<>
 	struct PAFCORE_EXPORT PrimitiveTypeTraits<long double>
 	{
 		enum { type_category = long_double_type };
+		inline static const char* s_name = "long double";
 	};
-
-	//template<>
-	//struct PAFCORE_EXPORT PrimitiveTypeTraits<string_t>
-	//{
-	//	enum { type_category = string_type };
-	//};
-
 
 	template<typename T>
 	class PAFCORE_EXPORT PrimitiveTypeImpl : public CPPPrimitiveType
@@ -207,75 +206,78 @@ namespace pafcore
 			{
 				::pafcore::Result(this, TypeCompound::unique_ptr),
 				::pafcore::Result(this, TypeCompound::unique_array),
-				::pafcore::Result(this, TypeCompound::shared_ptr),
-				::pafcore::Result(this, TypeCompound::shared_array),
 			};
 			static ::pafcore::Argument s_staticArguments[] =
 			{
-				::pafcore::Argument("arg", this, ::pafcore::Argument::by_value, false),
-				::pafcore::Argument("count", RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), ::pafcore::Argument::by_value, false),
-			};
-			static ::pafcore::Overload s_staticOverloads[] =
-			{
-				::pafcore::Overload(&s_staticResults[0], &s_staticArguments[0], 0, true, false),
-				::pafcore::Overload(&s_staticResults[1], &s_staticArguments[0], 1, true, false),
-				::pafcore::Overload(&s_staticResults[2], &s_staticArguments[1], 1, true, false),
+				::pafcore::Argument("arg", this, ::pafcore::TypeCompound::none, ::pafcore::Passing::value),
+				::pafcore::Argument("count", RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), ::pafcore::TypeCompound::none, ::pafcore::Passing::value),
 			};
 			static ::pafcore::StaticMethod s_staticMethods[] =
 			{
-				::pafcore::StaticMethod("New", 0, Primitive_New, &s_staticResults[0], &s_staticArguments[0], 0),
-				::pafcore::StaticMethod("NewArray", 0, Primitive_NewArray, &s_staticOverloads[2], 1),
-				::pafcore::StaticMethod("NewShared", 0, Primitive_NewShared, &s_staticOverloads[0], 2),
-				::pafcore::StaticMethod("NewSharedArray", 0, Primitive_NewSharedArray, &s_staticOverloads[2], 1),
+				::pafcore::StaticMethod("New", nullptr, Primitive_New, &s_staticResults[0], &s_staticArguments[0], 1, 0),
+				::pafcore::StaticMethod("NewArray", nullptr, Primitive_NewArray, &s_staticResults[1], &s_staticArguments[1], 1, 1),
 			};
 			m_staticMethods = s_staticMethods;
 			m_staticMethodCount = paf_array_size_of(s_staticMethods);
-			static Metadata* s_members[] =
+			static ::pafcore::Metadata* s_members[] =
 			{
 				&s_staticMethods[0],
 				&s_staticMethods[1],
-				&s_staticMethods[2],
-				&s_staticMethods[3],
 			};
 			m_members = s_members;
 			m_memberCount = paf_array_size_of(s_members);
-			NameSpace::GetGlobalNameSpace()->registerMember(this);
+			::pafcore::NameSpace::GetGlobalNameSpace()->registerMember(this);
 		}
-		static ErrorCode Primitive_New(Variant* result, Variant** args, int_t numArgs)
+		static ::pafcore::ErrorCode Primitive_New(Variant* result, Variant** args, uint32_t numArgs)
 		{
-			if(1 < numArgs)
+			if (0 == numArgs)
 			{
-				return e_invalid_arg_num;
+				result->assignUniquePtr(::pafcore::UniquePtr<T>::Make());
+				return ::pafcore::ErrorCode::s_ok;
 			}
-			T a0 = 0;
-			if(1 == numArgs)
+			T a0;
+			if (!args[0]->castToPrimitive(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), &a0))
 			{
-				if(!args[0]->castToPrimitive(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), &a0))
-				{
-					return e_invalid_arg_type_1;
-				}
+				return ::pafcore::ErrorCode::e_invalid_arg_type_1;
 			}
-			result->assignPrimitiveForNew(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), &a0);
-			return s_ok;
+			if (1 == numArgs)
+			{
+				result->assignUniquePtr(::pafcore::UniquePtr<T>::Make(a0));
+				return ::pafcore::ErrorCode::s_ok;
+			}
+			return ::pafcore::ErrorCode::e_invalid_too_many_arguments;
 		}
-		static ErrorCode Primitive_NewArray(Variant* result, Variant** args, int_t numArgs)
+		static ::pafcore::ErrorCode Primitive_NewArray(Variant* result, Variant** args, uint32_t numArgs)
 		{
-			if(1 == numArgs)
+			if (numArgs < 1)
 			{
-				unsigned int count;
-				if(!args[0]->castToPrimitive(RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), &count))
-				{
-					return e_invalid_arg_type_1;
-				}
-				T* p = paf_new_array<T>(count);
-				result->assignArray(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), p, count, false, Variant::by_new_array);
-				return s_ok;
+				return ::pafcore::ErrorCode::e_invalid_too_few_arguments;
 			}
-			return e_invalid_arg_num;
+			unsigned int a0;
+			if (!args[0]->castToPrimitive(RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), &a0))
+			{
+				return ::pafcore::ErrorCode::e_invalid_arg_type_1;
+			}
+			if (1 == numArgs)
+			{
+				result->assignUniqueArray(::pafcore::UniqueArray<T>::Make(a0));
+				return ::pafcore::ErrorCode::s_ok;
+			}
+			return ::pafcore::ErrorCode::e_invalid_too_many_arguments;
 		}
-		virtual void destroyArray(void* address)
+		virtual bool destruct(void* address)
 		{
-			paf_delete_array((T*)address);
+			return true;
+		}
+		virtual bool copyConstruct(void* dst, const void* src)
+		{
+			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
+			return true;
+		}
+		virtual bool copyAssign(void* dst, const void* src)
+		{
+			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
+			return true;
 		}
 		virtual void castTo(void* dst, PrimitiveType* dstType, const void* src)
 		{
@@ -334,319 +336,32 @@ namespace pafcore
 				PAF_ASSERT(false);
 			}
 		}
-		virtual void op_plus(void* dst, const void* arg)
+	public:
+		///static PrimitiveTypeImpl s_instance;
+		static PrimitiveTypeImpl* GetSingleton()
 		{
-			*reinterpret_cast<T*>(dst) = +*reinterpret_cast<const T*>(arg);
-		}
-		virtual bool op_not(const void* arg)
-		{
-			return !*reinterpret_cast<const T*>(arg);
-		}
-		virtual void op_add(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) + *reinterpret_cast<const T*>(arg2);
-		}
-		virtual void op_subtract(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) - *reinterpret_cast<const T*>(arg2);
-		}
-		virtual void op_multiply(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) * *reinterpret_cast<const T*>(arg2);
-		}
-		virtual void op_divide(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) / *reinterpret_cast<const T*>(arg2);
-		}
-		virtual bool op_less(const void* arg1, const void* arg2)
-		{
-			return *reinterpret_cast<const T*>(arg1) < *reinterpret_cast<const T*>(arg2);
-		}
-		virtual bool op_lessEqual(const void* arg1, const void* arg2)
-		{
-			return *reinterpret_cast<const T*>(arg1) <= *reinterpret_cast<const T*>(arg2);
-		}
-		virtual bool op_equal(const void* arg1, const void* arg2)
-		{
-			return *reinterpret_cast<const T*>(arg1) == *reinterpret_cast<const T*>(arg2);
-		}
-		virtual bool op_notEqual(const void* arg1, const void* arg2)
-		{
-			return *reinterpret_cast<const T*>(arg1) != *reinterpret_cast<const T*>(arg2);
-		}
-		virtual bool op_greaterEqual(const void* arg1, const void* arg2)
-		{
-			return *reinterpret_cast<const T*>(arg1) >= *reinterpret_cast<const T*>(arg2);
-		}
-		virtual bool op_greater(const void* arg1, const void* arg2)
-		{
-			return *reinterpret_cast<const T*>(arg1) > *reinterpret_cast<const T*>(arg2);
+			static PrimitiveTypeImpl s_instance(PrimitiveTypeTraits<T>::s_name);
+			return &s_instance;
 		}
 	};
 	
-	template<typename T>
-	class PAFCORE_EXPORT PrimitiveTypeImpl_Integer : public PrimitiveTypeImpl<T>
-	{
-	public:
-		PrimitiveTypeImpl_Integer(const char* name) : PrimitiveTypeImpl(name)
-		{}
-		virtual void op_increment(void* dst, void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = ++(*reinterpret_cast<T*>(arg));
-		}
-		virtual void op_postIncrement(void* dst, void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = (*reinterpret_cast<T*>(arg))++;
-		}
-		virtual void op_bitwiseNot(void* dst, const void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = ~*reinterpret_cast<const T*>(arg);
-		}
-		virtual void op_mod(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) % *reinterpret_cast<const T*>(arg2);
-		}
-		virtual void op_bitwiseAnd(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) & *reinterpret_cast<const T*>(arg2);
-		}
-		virtual void op_bitwiseOr(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) | *reinterpret_cast<const T*>(arg2);
-		}
-		virtual void op_bitwiseXor(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) ^ *reinterpret_cast<const T*>(arg2);
-		}
-		virtual void op_leftShift(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) << *reinterpret_cast<const char*>(arg2);
-		}
-		virtual void op_rightShift(void* dst, const void* arg1, const void* arg2)
-		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(arg1) >> *reinterpret_cast<const char*>(arg2);
-		}
-	};
 
-	template<typename T>
-	class PAFCORE_EXPORT PrimitiveTypeImpl_Bool : public PrimitiveTypeImpl_Integer<T>
-	{
-	public:
-		typedef PrimitiveTypeImpl_Bool<T> ThisType;
-	public:
-		PrimitiveTypeImpl_Bool(const char* name) : PrimitiveTypeImpl_Integer(name)
-		{}
-		static ThisType s_instance;
-		static ThisType* GetSingleton()
-		{
-			return &s_instance;
-		}
-		virtual void op_negate(void* dst, const void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = -*reinterpret_cast<const T*>(arg);
-		}
-		virtual void op_decrement(void* dst, void* arg)
-		{}
-		virtual void op_postDecrement(void* dst, void* arg)
-		{}
-	};
-
-	template<typename T>
-	class PAFCORE_EXPORT PrimitiveTypeImpl_ForbidNegate : public PrimitiveTypeImpl_Integer<T>
-	{
-	public:
-		typedef PrimitiveTypeImpl_ForbidNegate<T> ThisType;
-	public:
-		PrimitiveTypeImpl_ForbidNegate(const char* name) : PrimitiveTypeImpl_Integer(name)
-		{}
-		static ThisType s_instance;
-		static ThisType* GetSingleton()
-		{
-			return &s_instance;
-		}
-		virtual void op_negate(void* dst, const void* arg)
-		{}
-		virtual void op_decrement(void* dst, void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = --*reinterpret_cast<T*>(arg);
-		}
-		virtual void op_postDecrement(void* dst, void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = (*reinterpret_cast<T*>(arg))--;
-		}
-	};
-
-	template<typename T>
-	class PAFCORE_EXPORT PrimitiveTypeImpl_AllowNegate : public PrimitiveTypeImpl_Integer<T>
-	{
-	public:
-		typedef PrimitiveTypeImpl_AllowNegate<T> ThisType;
-	public:
-		PrimitiveTypeImpl_AllowNegate(const char* name) : PrimitiveTypeImpl_Integer(name)
-		{}
-		static ThisType s_instance;
-		static ThisType* GetSingleton()
-		{
-			return &s_instance;
-		}
-		virtual void op_negate(void* dst, const void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = -*reinterpret_cast<const T*>(arg);
-		}
-		virtual void op_decrement(void* dst, void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = --*reinterpret_cast<T*>(arg);
-		}
-		virtual void op_postDecrement(void* dst, void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = (*reinterpret_cast<T*>(arg))--;
-		}
-	};
-
-	template<typename T>
-	class PAFCORE_EXPORT PrimitiveTypeImpl_Real : public PrimitiveTypeImpl<T>
-	{
-	public:
-		typedef PrimitiveTypeImpl_Real<T> ThisType;
-	public:
-		PrimitiveTypeImpl_Real(const char* name) : PrimitiveTypeImpl(name)
-		{}
-		static ThisType s_instance;
-		static ThisType* GetSingleton()
-		{
-			return &s_instance;
-		}
-		virtual void op_negate(void* dst, const void* arg)
-		{
-			*reinterpret_cast<T*>(dst) = -*reinterpret_cast<const T*>(arg);
-		}
-		virtual void op_increment(void* dst, void* arg)
-		{}
-		virtual void op_postIncrement(void* dst, void* arg)
-		{}
-		virtual void op_decrement(void* dst, void* arg)
-		{}
-		virtual void op_postDecrement(void* dst, void* arg)
-		{}
-		virtual void op_bitwiseNot(void* dst, const void* arg)
-		{}
-		void op_mod(void* dst, const void* arg1, const void* arg2)
-		{}
-		virtual void op_bitwiseAnd(void* dst, const void* arg1, const void* arg2)
-		{}
-		virtual void op_bitwiseOr(void* dst, const void* arg1, const void* arg2)
-		{}
-		virtual void op_bitwiseXor(void* dst, const void* arg1, const void* arg2)
-		{}
-		virtual void op_leftShift(void* dst, const void* arg1, const void* arg2)
-		{}
-		virtual void op_rightShift(void* dst, const void* arg1, const void* arg2)
-		{}
-	};
-
-	typedef PrimitiveTypeImpl_Bool<bool>						BoolType;
-	typedef PrimitiveTypeImpl_AllowNegate<char>					CharType;
-	typedef PrimitiveTypeImpl_AllowNegate<signed char>			SignedCharType;
-	typedef PrimitiveTypeImpl_AllowNegate<unsigned char>		UnsignedCharType;
-	typedef PrimitiveTypeImpl_AllowNegate<wchar_t>				WcharType;
-	typedef PrimitiveTypeImpl_AllowNegate<short>				ShortType;
-	typedef PrimitiveTypeImpl_AllowNegate<unsigned short>		UnsignedShortType;
-	typedef PrimitiveTypeImpl_AllowNegate<long>					LongType;
-	typedef PrimitiveTypeImpl_ForbidNegate<unsigned long>		UnsignedLongType;
-	typedef PrimitiveTypeImpl_AllowNegate<long long>			LongLongType;
-	typedef PrimitiveTypeImpl_ForbidNegate<unsigned long long>	UnsignedLongLongType;
-	typedef PrimitiveTypeImpl_AllowNegate<int>					IntType;
-	typedef PrimitiveTypeImpl_ForbidNegate<unsigned int>		UnsignedIntType;
-	typedef PrimitiveTypeImpl_Real<float>						FloatType;
-	typedef PrimitiveTypeImpl_Real<double>						DoubleType;
-	typedef PrimitiveTypeImpl_Real<long double>					LongDoubleType;
-
-
-
-	//class PAFCORE_EXPORT StringType : public PrimitiveType
-	//{
-	//public:
-	//	StringType(const char* name) : PrimitiveType(name)
-	//	{
-	//		m_typeCategory = (PrimitiveTypeCategory)PrimitiveTypeTraits<::string_t>::type_category;
-	//		m_name = name;
-	//		m_size = sizeof(::string_t);
-
-	//		static ::pafcore::Result s_staticResults[] =
-	//		{
-	//			::pafcore::Result(this, false, ::pafcore::Result::by_new),
-	//			::pafcore::Result(this, false, ::pafcore::Result::by_new),
-	//		};
-	//		static ::pafcore::Argument s_staticArguments[] =
-	//		{
-	//			::pafcore::Argument("str", CharType::GetSingleton(), ::pafcore::Argument::by_ptr, true),
-	//		};
-	//		static ::pafcore::Overload s_staticOverloads[] =
-	//		{
-	//			::pafcore::Overload(&s_staticResults[0], 0, 0, true, false),
-	//			::pafcore::Overload(&s_staticResults[1], &s_staticArguments[0], 1, true, false),
-	//		};
-	//		static ::pafcore::StaticMethod s_staticMethods[] =
-	//		{
-	//			::pafcore::StaticMethod("New", 0, string_t_New, &s_staticOverloads[0], 2),
-	//		};
-	//		m_staticMethods = s_staticMethods;
-	//		m_staticMethodCount = paf_array_size_of(s_staticMethods);
-	//		static Metadata* s_members[] =
-	//		{
-	//			&s_staticMethods[0],
-	//		};
-	//		m_members = s_members;
-	//		m_memberCount = paf_array_size_of(s_members);
-	//		::pafcore::NameSpace::GetGlobalNameSpace()->registerMember(this);
-	//	}
-	//	static ErrorCode string_t_New(::pafcore::Variant* result, ::pafcore::Variant** args, int_t numArgs)
-	//	{
-	//		if (0 == numArgs)
-	//		{
-	//			result->assignNullPrimitive(GetSingleton());
-	//			return ::pafcore::s_ok;
-	//		}
-	//		if (1 <= numArgs)
-	//		{
-	//			if (args[0]->isTemporary())
-	//			{
-	//				return ::pafcore::e_invalid_arg_type_1;
-	//			}
-	//			const char* a0;
-	//			if (!args[0]->castToPrimitivePtr(CharType::GetSingleton(), (void**)&a0))
-	//			{
-	//				return ::pafcore::e_invalid_arg_type_1;
-	//			}
-	//			::string_t res(a0);
-	//			result->assignPrimitive(GetSingleton(), &res);
-	//			return ::pafcore::s_ok;
-	//		}
-	//		return ::pafcore::e_invalid_arg_num;
-	//	}
-
-	//	virtual bool castTo(void* dst, PrimitiveType* dstType, const void* src)
-	//	{
-	//		if (!dstType->isPrimitive())
-	//		{
-	//			return false;
-	//		}
-	//		if (string_type != static_cast<PrimitiveType*>(dstType)->m_typeCategory)
-	//		{
-	//			return false;
-	//		}
-	//		*reinterpret_cast<::string_t*>(dst) = (*reinterpret_cast<const ::string_t*>(src));
-	//		return true;
-	//	}
-
-	//public:
-	//	static StringType s_instance;
-	//	static StringType* GetSingleton()
-	//	{
-	//		return &s_instance;
-	//	}
-	//};
-
+	typedef PrimitiveTypeImpl<bool>					BoolType;
+	typedef PrimitiveTypeImpl<char>					CharType;
+	typedef PrimitiveTypeImpl<signed char>			SignedCharType;
+	typedef PrimitiveTypeImpl<unsigned char>		UnsignedCharType;
+	typedef PrimitiveTypeImpl<wchar_t>				WcharType;
+	typedef PrimitiveTypeImpl<short>				ShortType;
+	typedef PrimitiveTypeImpl<unsigned short>		UnsignedShortType;
+	typedef PrimitiveTypeImpl<long>					LongType;
+	typedef PrimitiveTypeImpl<unsigned long>		UnsignedLongType;
+	typedef PrimitiveTypeImpl<long long>			LongLongType;
+	typedef PrimitiveTypeImpl<unsigned long long>	UnsignedLongLongType;
+	typedef PrimitiveTypeImpl<int>					IntType;
+	typedef PrimitiveTypeImpl<unsigned int>			UnsignedIntType;
+	typedef PrimitiveTypeImpl<float>				FloatType;
+	typedef PrimitiveTypeImpl<double>				DoubleType;
+	typedef PrimitiveTypeImpl<long double>			LongDoubleType;
 
 #}
 }
@@ -656,127 +371,112 @@ template<>
 struct RuntimeTypeOf<bool>
 {
 	typedef ::pafcore::BoolType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<char>
 {
 	typedef ::pafcore::CharType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<signed char>
 {
 	typedef ::pafcore::SignedCharType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned char>
 {
 	typedef ::pafcore::UnsignedCharType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<wchar_t>
 {
 	typedef ::pafcore::WcharType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<short>
 {
 	typedef ::pafcore::ShortType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned short>
 {
 	typedef ::pafcore::UnsignedShortType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<long>
 {
 	typedef ::pafcore::LongType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned long>
 {
 	typedef ::pafcore::UnsignedLongType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<long long>
 {
 	typedef ::pafcore::LongLongType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned long long>
 {
 	typedef ::pafcore::UnsignedLongLongType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<int>
 {
 	typedef ::pafcore::IntType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned int>
 {
 	typedef ::pafcore::UnsignedIntType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<float>
 {
 	typedef ::pafcore::FloatType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<double>
 {
 	typedef ::pafcore::DoubleType RuntimeType;
-	enum {type_category = ::pafcore::primitive};
+	enum {type_category = ::pafcore::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<long double>
 {
 	typedef ::pafcore::LongDoubleType RuntimeType;
-	enum { type_category = ::pafcore::primitive };
+	enum { type_category = ::pafcore::MetaCategory::primitive };
 };
 
-//template<>
-//struct RuntimeTypeOf<string_t>
-//{
-//	typedef ::pafcore::StringType RuntimeType;
-//	enum { type_category = ::pafcore::primitive };
-//};
-
-template<typename T>
-struct RuntimeTypeOf<T*>
-{
-	typedef RuntimeTypeOf<size_t>::RuntimeType RuntimeType;
-	enum { type_category = ::pafcore::primitive };
-};
-
-#pragma warning( pop ) 
 #}

@@ -1,18 +1,18 @@
-#import "Typedef.i"
+#import "Utility.i"
 
 #{
-#include "Utility.h"
+#include "SmartPtr.h"
 #}
 
 namespace pafcore
 {
 	//idlcpp 特殊的用法，提供 toString__ 和 fromString__ 两个方法的类被视为字符串类型，序列化，反序列化以及复制时，会调用这两个函数，不在看其下 field 和 property
 
-	class(value_object) #PAFCORE_EXPORT String
+	class(string) #PAFCORE_EXPORT String
 	{
 		String();
-		string_t toString__() const;
-		void fromString__(string_t str);
+		string_t toString() const;
+		void fromString(string_t str);
 #{
 	public:
 		explicit String(const char* str);
@@ -134,12 +134,12 @@ namespace pafcore
 		return 0 != strcmp(m_str, str);
 	}
 
-	inline string_t String::toString__() const
+	inline string_t String::toString() const
 	{
 		return m_str;
 	}
 
-	inline void String::fromString__(string_t str)
+	inline void String::fromString(string_t str)
 	{
 		assign(str);
 	}

@@ -1,7 +1,4 @@
-#import "Typedef.i"
-#{
-#include "Utility.h"
-#}
+#import "Utility.i"
 
 namespace pafcore
 {

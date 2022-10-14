@@ -1,4 +1,11 @@
+#include "Node.h"
+#include "Node.mh"
+#include "Node.ic"
+#include "Node.mc"
 #include "Scene.h"
+
+Node::Node()
+{}
 
 pafcore::BorrowedPtr<Node> Node::PushBack(pafcore::UniquePtr<Node>&& node, pafcore::BorrowedPtr<Node> parentNode)
 {

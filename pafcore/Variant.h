@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Utility.h"
-#include "TypeTraits.h"
 #include "SmartPtr.h"
 
 BEGIN_PAFCORE
@@ -9,7 +8,7 @@ BEGIN_PAFCORE
 class Type;
 class PrimitiveType;
 class EnumType;
-class Reference;
+class Introspectable;
 class Value;
 
 
@@ -69,18 +68,20 @@ public:
 class PAFCORE_EXPORT Variant
 {
 public:
-	static constexpr size_t storage_size = 24;//16 + 8
+	static constexpr size_t storage_size = 64 + sizeof(ValueBox);
 	enum Category
 	{
 		vt_null,
 		vt_small_value,
 		vt_big_value,
+		vt_raw_ptr,
+		vt_raw_array,
+		vt_borrowed_ptr,
+		vt_borrowed_array,
 		vt_unique_ptr,
 		vt_unique_array,
 		vt_shared_ptr,
 		vt_shared_array,
-		vt_borrowed_ptr,
-		vt_borrowed_array,
 		vt_borrowed_array_element,
 	};
 public:
@@ -90,23 +91,55 @@ private:
 	Variant(Variant const& var) = delete;
 	Variant& operator = (Variant const& var) = delete;
 public:
-	bool isNull();
-
+	bool isNull() const;
+	Type* getType() const;
+	void* getRawPointer() const;
 	void clear();
-	//void move(Variant& var);
 	bool subscript(Variant& var, uint32_t index);
 
-	void assignValue(Type* type, void const* pointer);
-
+	void assignEnumByInt(EnumType* type, int value);
 	bool castToPrimitive(PrimitiveType* dstType, void* dst) const;
 	bool castToEnum(EnumType* dstType, void* dst) const;
-	bool castToRawPtr(Type* dstType, void** dst) const;
+	bool castToRawPointer(Type* dstType, void** dst) const;
 
+public:
+	template <typename T, typename... Types>
+	void makeValue(Types&&... args)
+	{
+		using T_ = std::remove_reference_t<T>;
+		makeValue_<T_>(std::bool_constant<sizeof(ValueBox) + sizeof(T_) <= sizeof(m_storage)>(), std::forward<Types>(args)...);
+	}
 
-	//void assignPrimitive(PrimitiveType* type, void const* pointer);
+	template<typename T>
+	void assignValue(T const& value)
+	{
+		using T_ = std::remove_reference_t<T>;
+		assignValue_(value, std::bool_constant<sizeof(ValueBox) + sizeof(T_) <= sizeof(m_storage)>());
+	}
 
-	//void assignEnum(EnumType* enumType, void const* pointer);
+	template<typename T>
+	void assignValue(T&& value)
+	{
+		using T_ = std::remove_reference_t<T>;
+		assignValue_(std::move(value), std::bool_constant<sizeof(ValueBox) + sizeof(T_) <= sizeof(m_storage)>());
+	}
 
+	template<typename T>
+	void assignRawPtr(RawPtr<T> const& rawPtr)
+	{
+		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+		T* ptr = rawPtr.get();
+		assignRawPtr(type, ptr);
+	}
+
+	template<typename T>
+	void assignRawArray(RawArray<T> const& rawArray)
+	{
+		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+		T* ptr = rawArray.get();
+		size_t size = rawArray.size();
+		assignRawArray(type, ptr, size);
+	}
 
 	template<typename T>
 	void assignBorrowedPtr(BorrowedPtr<T> const& borrowedPtr)
@@ -201,28 +234,60 @@ public:
 		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 		T* ptr = uniqueArray.get();
 		size_t size = uniqueArray.size();
-		uniquePtr.m_ptr = nullptr;
-		uniquePtr.m_size = 0;
+		uniqueArray.m_ptr = nullptr;
+		uniqueArray.m_size = 0;
 		assignUniqueArray(type, ptr, size);
 	}
 
-	template<typename T>
-	void assignValue(T&& value)
+	template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+	bool castToPrimitive(T& dst) const
 	{
-		using T_ = std::remove_reference_t<T>;
-		if constexpr (sizeof(m_storage) < sizeof(ValueBox) + sizeof(T_))
-		{
-			assignBigValue(std::forward(value))
-		}
-		else
-		{
-			assignSmallValue(std::forward(value));
-		}
+		return castToPrimitive(static_cast<PrimitiveType*>(RuntimeTypeOf<T>::RuntimeType::GetSingleton()), (void*)&dst);
+	}
+
+	template<typename T, std::enable_if_t<std::is_enum_v<T>, int> = 0>
+	bool castToEnum(T& dst) const
+	{
+		return castToEnum(static_cast<EnumType*>(RuntimeTypeOf<T>::RuntimeType::GetSingleton()), (void*)&dst);
 	}
 
 	template<typename T>
-	bool castToRawPtr(T*& ptr)
-	{}
+	bool castToRawPointer(T*& rawPointer) const
+	{
+		return castToRawPointer(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), (void**)&rawPointer);
+	}
+
+	template<typename T>
+	bool castToRawPtr(RawPtr<T>& rawPtr) const
+	{
+		if (vt_raw_ptr == m_category || vt_borrowed_ptr == m_category || vt_unique_ptr == m_category || vt_shared_ptr == m_category)
+		{
+			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+			T* rawPointer;
+			if (castToRawPointer(type, (void**)&rawPointer))
+			{
+				rawPtr.assignRawPointer((T*)m_ptr);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	template<typename T>
+	bool castToRawArray(RawArray<T>& rawArray) const
+	{
+		if (vt_raw_array == m_category || vt_borrowed_array == m_category || vt_unique_array == m_category || vt_shared_array == m_category)
+		{
+			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+			T* rawPointer;
+			if (castToRawPointer(type, (void**)&rawPointer))
+			{
+				rawArray.assignRawPointer((T*)m_ptr, m_arraySize);
+				return true;
+			}
+		}
+		return false;
+	}
 
 	template<typename T, typename D>
 	bool castToUniquePtr(UniquePtr<T, D>& uniquePtr)
@@ -230,10 +295,10 @@ public:
 		if (vt_unique_ptr == m_category)
 		{
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			T* rawPtr;
-			if (castToRawPtr(type, (void**)&rawPtr) && rawPtr == m_ptr)
+			T* rawPointer;
+			if (castToRawPointer(type, (void**)&rawPointer))
 			{
-				uniquePtr.assignRawPtr(rawPtr);
+				uniquePtr.assignRawPointer(rawPointer);
 				m_category = vt_null;//owner ship transferred 
 				return true;
 			}
@@ -242,14 +307,14 @@ public:
 	}
 
 	template<typename T, typename D>
-	bool castToUniqueArray(UniqueArray<T, D>& uniquePtr)
+	bool castToUniqueArray(UniqueArray<T, D>& uniqueArray)
 	{
 		if (vt_unique_array == m_category)
 		{
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 			if (type == m_type)
 			{
-				uniquePtr.assignRawPtr((T*)m_ptr, m_size);
+				uniqueArray.assignRawPointer((T*)m_ptr, m_arraySize);
 				m_category = vt_null;//owner ship transferred 
 				return true;
 			}
@@ -263,10 +328,10 @@ public:
 		if (vt_shared_ptr == m_category)
 		{
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			T* rawPtr;
-			if (castToRawPtr(type, (void**)&rawPtr) && rawPtr == m_ptr)
+			T* rawPointer;
+			if (castToRawPointer(type, (void**)&rawPointer))
 			{
-				sharedPtr.assignRawPtr(rawPtr);
+				sharedPtr.assignRawPointer(rawPointer);
 				return true;
 			}
 		}
@@ -281,7 +346,7 @@ public:
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 			if (type == m_type)
 			{
-				sharedArray.assignRawPtr((T*)m_ptr, m_size);
+				sharedArray.assignRawPointer((T*)m_ptr, m_arraySize);
 				return true;
 			}
 		}
@@ -295,10 +360,10 @@ public:
 		if (vt_borrowed_ptr == m_category || vt_unique_ptr == m_category || vt_shared_ptr == m_category)
 		{
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			T* rawPtr;
-			if (castToRawPtr(type, (void**)&rawPtr) && rawPtr == m_ptr)
+			T* rawPointer;
+			if (castToRawPointer(type, (void**)&rawPointer))
 			{
-				borrowedPtr.assignRawPtr(rawPtr);
+				borrowedPtr.assignRawPointer(rawPointer);
 				return true;
 			}
 		}
@@ -313,45 +378,76 @@ public:
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 			if (type == m_type)
 			{
-				borrowedArray.assignRawPtr((T*)m_ptr, m_size);
+				borrowedArray.assignRawPointer((T*)m_ptr, m_arraySize);
 				return true;
 			}
 		}
 		return false;
 	}
 
-	//bool castToValue(Type* dstType, void* dst) const;
-	//bool castToReference(Type* dstType, void* dst) const;
-
-	//bool castToVoidPtr(void** dst) const;
-	//bool castToPrimitivePtr(Type* dstType, void** dst) const;
-	//bool castToEnumPtr(Type* dstType, void** dst) const;
-	//bool castToReferencePtr(Type* dstType, void** dst) const;
-
-	//bool castToVoidPtrAllowNull(void** dst) const;
-	//bool castToPrimitivePtrAllowNull(Type* dstType, void** dst) const;
-	//bool castToEnumPtrAllowNull(Type* dstType, void** dst) const;
-	//bool castToValuePtrAllowNull(Type* dstType, void** dst) const;
-	//bool castToReferencePtrAllowNull(Type* dstType, void** dst) const;
-
-	//bool castToObjectPtr(Type* dstType, void** dst) const;
-	//bool castToObject(Type* dstType, void* dst) const;
-
-	//void reinterpretCastToPtr(Variant& var, Type* dstType) const;
-
-	//void setTemporary();
-	//bool isTemporary() const;
-
-	//void setSubClassProxy();
-	//bool isSubClassProxy() const;
-//public:
-//	template<typename T>
-//	void assignValue(const T& t)
-//	{
-//		assignPrimitive(RuntimeTypeOf<T>::RuntimeType::GetInstance(), &t);
-//	}
-
 private:
+	template <typename T, typename... Types>
+	void makeValue_(std::false_type smallObject, Types&&... args)
+	{
+		clear();
+		m_type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+		m_ptr = ValueBoxImpl<T>::New(std::forward<Types>(args)...);
+		m_category = vt_big_value;
+	}
+
+	template <typename T, typename... Types>
+	void makeValue_(std::true_type smallObject, Types&&... args)
+	{
+		clear();
+		m_type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+		ValueBoxImpl<T_>::PlacementNew(m_storage, std::forward<Types>(args)...);
+		m_category = vt_small_value;
+	}
+
+	template<typename T>
+	void assignValue_(T const& value, std::false_type smallObject)
+	{
+		using T_ = std::remove_reference_t<T>;
+		clear();
+		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
+		m_ptr = ValueBoxImpl<T_>::New(value);
+		m_category = vt_big_value;
+	}
+
+	template<typename T>
+	void assignValue_(T const& value, std::true_type smallObject)
+	{
+		using T_ = std::remove_reference_t<T>;
+		clear();
+		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
+		ValueBoxImpl<T_>::PlacementNew(m_storage, value);
+		m_category = vt_small_value;
+	}
+
+	template<typename T>
+	void assignValue_(T&& value, std::false_type smallObject)
+	{
+		using T_ = std::remove_reference_t<T>;
+		clear();
+		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
+		m_ptr = ValueBoxImpl<T_>::New(std::move(value));
+		m_category = vt_big_value;
+	}
+
+	template<typename T>
+	void assignValue_(T&& value, std::true_type smallObject)
+	{
+		using T_ = std::remove_reference_t<T>;
+		clear();
+		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
+		ValueBoxImpl<T_>::PlacementNew(m_storage, std::move(value));
+		m_category = vt_small_value;
+	}
+private:
+	void assignRawPtr(Type* type, void* ptr);
+
+	void assignRawArray(Type* type, void* ptr, size_t size);
+
 	void assignBorrowedPtr(Type* type, void* ptr);
 
 	void assignBorrowedArray(Type* type, void* ptr, size_t size);
@@ -364,25 +460,6 @@ private:
 
 	void assignUniqueArray(Type* type, void* ptr, size_t size);
 
-	template<typename T>
-	void assignBigValue(T&& value)
-	{
-		using T_ = std::remove_reference_t<T>;
-		clear();
-		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
-		m_ptr = ValueBoxImpl<T_>::New(std::forward(value));
-		m_category = vt_big_value;
-	}
-
-	template<typename T>
-	void assignSmallValue(T&& value)
-	{
-		using T_ = std::remove_reference_t<T>;
-		clear();
-		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
-		ValueBoxImpl<T_>::PlacementNew(m_storage, std::forward(value));
-		m_category = vt_small_value;
-	}
 private:
 	Category m_category;
 	uint32_t m_arrayIndex;
@@ -392,16 +469,21 @@ private:
 		struct 
 		{
 			void* m_ptr;
-			size_t m_size;
+			size_t m_arraySize;
 		};
 		byte_t m_storage[storage_size];
 	};
 };
 
 //------------------------------------------------------------------------------
-inline bool Variant::isNull()
+inline bool Variant::isNull() const
 {
 	return vt_null == m_category;
+}
+
+inline Type* Variant::getType() const 
+{
+	return m_type;
 }
 
 END_PAFCORE

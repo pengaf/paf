@@ -1,17 +1,13 @@
 #include "Scene.h"
+#include "Scene.mh"
+#include "Scene.ic"
+#include "Scene.mc"
 
 
 Scene::Scene()
 {
-	PAF_FILE_LINE;
 	m_rootNode = Node::New();
 	m_rootNode->m_scene = this;
-}
-
-pafcore::UniquePtr<Scene> Scene::New()
-{
-	auto scene = pafcore::UniquePtr<Scene>::Make();
-	return scene;
 }
 
 void Scene::check__()

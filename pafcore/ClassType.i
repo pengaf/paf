@@ -27,11 +27,11 @@ namespace pafcore
 			m_next = iterator;
 			m_classType = classType;
 		}
-		ClassTypeIterator* next()
+		::pafcore::RawPtr<ClassTypeIterator> next()
 		{
 			return m_next;
 		}
-		ClassType* value()
+		::pafcore::RawPtr<ClassType> value()
 		{
 			return m_classType;
 		}
@@ -41,11 +41,11 @@ namespace pafcore
 #}
 	};
 
-	abstract class(class_type)#PAFCORE_EXPORT ClassType : Type
+	abstract class(object_type)#PAFCORE_EXPORT ClassType : Type
 	{
 		size_t _getMemberCount_(bool includeBaseClasses);
 		Metadata* _getMember_(size_t index, bool includeBaseClasses);
-		Metadata* _findMember_(char const* name, bool includeBaseClasses);
+		Metadata* _findMember_(string_t name, bool includeBaseClasses);
 		size_t _getBaseClassCount_();
 		Metadata* _getBaseClass_(size_t index);
 		ClassTypeIterator* _getFirstDerivedClass_();
@@ -59,11 +59,6 @@ namespace pafcore
 		{
 			ClassType* m_type;
 			ptrdiff_t m_offset;
-		};
-		enum SpecialClass : uint8_t 
-		{
-			not_special_class,
-			string_class,
 		};
 	public:
 		ClassType(const char* name, MetaCategory category, const char* declarationFile);
@@ -87,7 +82,6 @@ namespace pafcore
 		StaticMethod* findStaticMethod(const char* name, bool includeBaseClasses);
 		bool hasDynamicInstanceField(bool includeBaseClasses) const;
 		bool hasDynamicInstanceField() const;
-		bool isStringClass() const;
 	public:
 		InstanceProperty* getInstancePropertyBaseClassFirst(size_t index);//基类property在前
 		InstanceField* getInstanceFieldBaseClassFirst(size_t index);//基类field在前
@@ -119,9 +113,8 @@ namespace pafcore
 		size_t m_staticPropertyCount;
 		StaticMethod* m_staticMethods;
 		size_t m_staticMethodCount;
+		bool m_introspectable;
 		bool m_hasDynamicInstanceField;
-		SpecialClass m_specialClass;//字符串类型特殊处理
-		//bool m_hasDynamicInstanceProperty;
 #}
 	};
 
@@ -143,10 +136,6 @@ namespace pafcore
 		return m_hasDynamicInstanceField;
 	}
 
-	inline bool ClassType::isStringClass() const
-	{
-		return string_class == m_specialClass;
-	}
 
 #}
 

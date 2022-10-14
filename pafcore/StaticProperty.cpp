@@ -7,7 +7,7 @@ BEGIN_PAFCORE
 
 
 StaticProperty::StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
-	StaticPropertyGet get, StaticPropertySet set) :
+	SimpleStaticPropertyGet get, SimpleStaticPropertySet set) :
 	Metadata(name, attributes)
 {
 	m_type = type;
@@ -19,7 +19,8 @@ StaticProperty::StaticProperty(const char* name, Attributes* attributes, Type* t
 }
 
 StaticProperty::StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
-	ArrayStaticPropertySize size, ArrayStaticPropertyGet get, ArrayStaticPropertySet set)
+	ArrayStaticPropertySize size, ArrayStaticPropertyGet get, ArrayStaticPropertySet set) :
+	Metadata(name, attributes)
 {
 	m_type = type;
 	m_getterTypeCompound = getterTypeCompound;
@@ -31,7 +32,7 @@ StaticProperty::StaticProperty(const char* name, Attributes* attributes, Type* t
 }
 
 StaticProperty::StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
-	StaticPropertyIterate iterate, StaticPropertyDereference dereference, StaticPropertyInsert insert, StaticPropertyErase erase) :
+	CollectionStaticPropertyIterate iterate, CollectionStaticPropertyGet get, CollectionStaticPropertySet set) :
 	Metadata(name, attributes)
 {
 	m_type = type;

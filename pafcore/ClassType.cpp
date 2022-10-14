@@ -39,7 +39,6 @@ ClassType::ClassType(const char* name, MetaCategory category, const char* declar
 	m_classTypeIterators = 0;
 	m_firstDerivedClass = 0;
 	m_hasDynamicInstanceField = false;
-	m_specialClass = not_special_class;
 }
 
 Type* ClassType::findNestedType(const char* name, bool includeBaseClasses, bool typeAliasToType)
@@ -98,7 +97,7 @@ TypeAlias* ClassType::findNestedTypeAlias(const char* name, bool includeBaseClas
 InstanceField* ClassType::findInstanceField(const char* name, bool includeBaseClasses)
 {
 	Metadata* member = _findMember_(name, includeBaseClasses);
-	if (member && instance_field == member->get__category_())
+	if (member && MetaCategory::instance_field == member->get__category_())
 	{
 		return static_cast<InstanceField*>(member);
 	}
@@ -108,7 +107,7 @@ InstanceField* ClassType::findInstanceField(const char* name, bool includeBaseCl
 StaticField* ClassType::findStaticField(const char* name, bool includeBaseClasses)
 {
 	Metadata* member = _findMember_(name, includeBaseClasses);
-	if (member && static_field == member->get__category_())
+	if (member && MetaCategory::static_field == member->get__category_())
 	{
 		return static_cast<StaticField*>(member);
 	}
@@ -138,7 +137,7 @@ StaticField* ClassType::findStaticField(const char* name, bool includeBaseClasse
 InstanceProperty* ClassType::findInstanceProperty(const char* name, bool includeBaseClasses)
 {
 	Metadata* member = _findMember_(name, includeBaseClasses);
-	if (member && instance_property == member->get__category_())
+	if (member && MetaCategory::instance_property == member->get__category_())
 	{
 		return static_cast<InstanceProperty*>(member);
 	}
@@ -168,7 +167,7 @@ InstanceProperty* ClassType::findInstanceProperty(const char* name, bool include
 StaticProperty* ClassType::findStaticProperty(const char* name, bool includeBaseClasses)
 {
 	Metadata* member = _findMember_(name, includeBaseClasses);
-	if (member && static_property == member->get__category_())
+	if (member && MetaCategory::static_property == member->get__category_())
 	{
 		return static_cast<StaticProperty*>(member);
 	}
@@ -239,7 +238,7 @@ StaticMethod* ClassType::findStaticMethod(const char* name, bool includeBaseClas
 	return 0;
 }
 
-Metadata* ClassType::_findMember_(const char* name, bool includeBaseClasses)
+::pafcore::RawPtr<Metadata> ClassType::_findMember_(string_t name, bool includeBaseClasses)
 {
 	Metadata dummy(name);
 	Metadata** it = std::lower_bound(m_members, m_members + m_memberCount, &dummy, CompareMetaDataPtrByName());
@@ -258,13 +257,13 @@ Metadata* ClassType::_findMember_(const char* name, bool includeBaseClasses)
 			}
 		}
 	}
-	return 0;
+	return nullptr;
 }
 
 Metadata* ClassType::findMember(const char* name, bool includeBaseClasses, bool typeAliasToType)
 {
 	Metadata* member = _findMember_(name, includeBaseClasses);
-	if (0 != member && typeAliasToType && member->get__category_() == type_alias)
+	if (0 != member && typeAliasToType && member->get__category_() == MetaCategory::type_alias)
 	{
 		member = static_cast<TypeAlias*>(member)->m_type;
 	}
@@ -352,7 +351,7 @@ size_t ClassType::_getMemberCount_(bool includeBaseClasses)
 	return count;
 }
 	
-Metadata* ClassType::_getMember_(size_t index, bool includeBaseClasses)
+::pafcore::RawPtr<Metadata> ClassType::_getMember_(size_t index, bool includeBaseClasses)
 {
 	if(includeBaseClasses)
 	{
@@ -372,7 +371,7 @@ Metadata* ClassType::_getMember_(size_t index, bool includeBaseClasses)
 				}
 				index -= baseMemberCount;
 			}
-			return 0;
+			return nullptr;
 		}
 	}
 	else
@@ -381,7 +380,7 @@ Metadata* ClassType::_getMember_(size_t index, bool includeBaseClasses)
 		{
 			return m_members[index];
 		}
-		return 0;
+		return nullptr;
 	}
 }
 
@@ -390,13 +389,13 @@ size_t ClassType::_getBaseClassCount_()
 	return m_baseClassCount;
 }
 
-Metadata* ClassType::_getBaseClass_(size_t index)
+::pafcore::RawPtr<Metadata> ClassType::_getBaseClass_(size_t index)
 {
 	if(index < m_baseClassCount)
 	{
 		return m_baseClasses[index].m_type;
 	}
-	return 0;
+	return nullptr;
 }
 
 bool ClassType::getClassOffset_(size_t& offset, ClassType* otherType)
@@ -423,7 +422,7 @@ bool ClassType::getClassOffset(size_t& offset, ClassType* otherType)
 	return getClassOffset_(offset, otherType);
 }
 
-ClassTypeIterator* ClassType::_getFirstDerivedClass_()
+::pafcore::RawPtr<ClassTypeIterator> ClassType::_getFirstDerivedClass_()
 {
 	return m_firstDerivedClass;
 }
@@ -441,7 +440,7 @@ size_t ClassType::_getInstancePropertyCount_(bool includeBaseClasses)
 	return count;
 }
 
-InstanceProperty* ClassType::_getInstanceProperty_(size_t index, bool includeBaseClasses)
+::pafcore::RawPtr<InstanceProperty> ClassType::_getInstanceProperty_(size_t index, bool includeBaseClasses)
 {
 	if (includeBaseClasses)
 	{
@@ -454,7 +453,7 @@ InstanceProperty* ClassType::_getInstanceProperty_(size_t index, bool includeBas
 		{
 			return &m_instanceProperties[index];
 		}
-		return 0;
+		return nullptr;
 	}
 }
 
@@ -507,7 +506,7 @@ size_t ClassType::_getInstanceFieldCount_(bool includeBaseClasses)
 	return count;
 }
 
-InstanceField* ClassType::_getInstanceField_(size_t index, bool includeBaseClasses)
+::pafcore::RawPtr<InstanceField> ClassType::_getInstanceField_(size_t index, bool includeBaseClasses)
 {
 	if (includeBaseClasses)
 	{
@@ -520,7 +519,7 @@ InstanceField* ClassType::_getInstanceField_(size_t index, bool includeBaseClass
 		{
 			return &m_instanceFields[index];
 		}
-		return 0;
+		return nullptr;
 	}
 }
 

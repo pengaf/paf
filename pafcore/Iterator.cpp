@@ -18,24 +18,24 @@ void Iterator::reset()
 {
 }
 
-bool Iterator::equal(Iterator* other) const
+bool Iterator::equal(::pafcore::RawPtr<Iterator> other) const
 {
 	return false;
 }
 
-long_t Iterator::addRef()
-{
-	return ++m_refCount;
-}
-
-long_t Iterator::release()
-{
-	long_t refCount = --m_refCount;
-	if (0 == refCount)
-	{
-		delete this;
-	}
-	return refCount;
-}
+//long_t Iterator::addRef()
+//{
+//	return ++m_refCount;
+//}
+//
+//long_t Iterator::release()
+//{
+//	long_t refCount = --m_refCount;
+//	if (0 == refCount)
+//	{
+//		delete this;
+//	}
+//	return refCount;
+//}
 
 END_PAFCORE

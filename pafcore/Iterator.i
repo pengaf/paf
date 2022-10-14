@@ -1,4 +1,3 @@
-#import "Reference.i"
 
 #{
 #include "Utility.h"
@@ -6,22 +5,12 @@
 
 namespace pafcore
 {
-	class #PAFCORE_EXPORT Iterator : Reference
+	class #PAFCORE_EXPORT Iterator
 	{
 		virtual bool isEnd() const;
 		virtual void moveNext();
 		virtual void reset();
 		virtual bool equal(Iterator* other) const;
-#{
-	protected:
-		Iterator() : m_refCount(1)
-		{}
-	public:
-		virtual long_t addRef();
-		virtual long_t release();
-	protected: 
-		long_t m_refCount; 
-#}
 	};
 
 #{
