@@ -304,19 +304,26 @@ bool Variant::castToRawPointer(Type* dstType, void** dst) const
 		src = &m_storage[sizeof(ValueBox)];
 		break;
 	}
-	//todo 
-	//if (srcType->isObject())
-	//{
-	//	Object* object = (Object*)src;
-	//	srcType = object->getType();
-	//	src = (void*)object->getAddress();
-	//}
-	//size_t offset;
-	//if (static_cast<ClassType*>(srcType)->getClassOffset(offset, static_cast<ClassType*>(dstType)))
-	//{
-	//	*dst = (void*)((size_t)src + offset);
-	//	return true;
-	//}
+	if (srcType == dstType)
+	{
+		*dst = (void*)src;
+		return true;
+	}
+	if (srcType->isObject() && dstType->isObject())
+	{
+		if (static_cast<ClassType*>(srcType)->isIntrospectable())
+		{
+			Introspectable* introspectable = (Introspectable*)src;
+			srcType = introspectable->getType();
+			src = introspectable->getAddress();
+		}
+		size_t offset;
+		if (static_cast<ClassType*>(srcType)->getClassOffset(offset, static_cast<ClassType*>(dstType)))
+		{
+			*dst = (void*)((size_t)src + offset);
+			return true;
+		}
+	}
 	return false;
 }
 

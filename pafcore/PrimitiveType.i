@@ -340,8 +340,14 @@ namespace pafcore
 		///static PrimitiveTypeImpl s_instance;
 		static PrimitiveTypeImpl* GetSingleton()
 		{
-			static PrimitiveTypeImpl s_instance(PrimitiveTypeTraits<T>::s_name);
-			return &s_instance;
+			static PrimitiveTypeImpl* s_instance = 0;
+			static char s_buffer[sizeof(PrimitiveTypeImpl)];
+			if (0 == s_instance)
+			{
+				s_instance = (PrimitiveTypeImpl*)s_buffer;
+				new (s_buffer)PrimitiveTypeImpl(PrimitiveTypeTraits<T>::s_name);
+			}
+			return s_instance;
 		}
 	};
 	

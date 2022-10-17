@@ -8,9 +8,14 @@ namespace pafcore
 {
 #{
 	class ClassType;
+	class PAFCORE_EXPORT IntrospectableInterface : public Interface
+	{
+	public:
+		virtual ClassType* getType() = 0;
+	};
 #}
 
-	class(noncopyable) #PAFCORE_EXPORT Introspectable ## : public Interface
+	class(noncopyable) #PAFCORE_EXPORT Introspectable ## : public IntrospectableInterface
 	{ 
 		nocode bool isTypeOf(ClassType* classType);
 		nocode bool isStrictTypeOf(ClassType* classType);

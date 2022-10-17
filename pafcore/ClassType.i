@@ -80,6 +80,7 @@ namespace pafcore
 		StaticProperty* findStaticProperty(const char* name, bool includeBaseClasses);
 		InstanceMethod* findInstanceMethod(const char* name, bool includeBaseClasses);
 		StaticMethod* findStaticMethod(const char* name, bool includeBaseClasses);
+		bool isIntrospectable() const;
 		bool hasDynamicInstanceField(bool includeBaseClasses) const;
 		bool hasDynamicInstanceField() const;
 	public:
@@ -119,6 +120,11 @@ namespace pafcore
 	};
 
 #{
+	inline bool ClassType::isIntrospectable() const
+	{
+		return m_introspectable;
+	}
+
 	inline InstanceProperty* ClassType::getInstancePropertyBaseClassFirst(size_t index)
 	{
 		InstanceProperty* res = getInstancePropertyBaseClassFirst_(index);

@@ -1,4 +1,5 @@
 #import "Utility.i"
+#import "Introspectable.i"
 
 namespace pafcore
 {
@@ -135,7 +136,7 @@ namespace pafcore
 		collection_property,
 	};
 
-	abstract class #PAFCORE_EXPORT Metadata
+	abstract class #PAFCORE_EXPORT Metadata : Introspectable
 	{
 		string_t _name_ { get };
 		MetaCategory _category_ { get };

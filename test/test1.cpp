@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include <functional>
 #include "Scene.h"
 #include "Node.h"
 #include "../pafcore/SmartPtr.h"
@@ -126,6 +127,8 @@ const int* testParam(int & a, const int& b, int const && c)
 
 int main()
 {
+	auto fn = std::mem_fn(&std::string::length);
+	int a = sizeof(fn);
 	Test test;
 	int nn{};
 	test.test1(nn);
