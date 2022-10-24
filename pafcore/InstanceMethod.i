@@ -5,7 +5,7 @@
 #include "Argument.h"
 #}
 
-namespace pafcore
+namespace paf
 {
 
 #{

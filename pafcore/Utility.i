@@ -18,7 +18,7 @@
 #define PAF_RELEASE_ONLY(...) __VA_ARGS__
 #endif
 
-#define BEGIN_PAFCORE namespace pafcore {
+#define BEGIN_PAFCORE namespace paf {
 #define END_PAFCORE }
 
 #define PAF_CONCAT_(a, b) a ## b
@@ -141,6 +141,47 @@ struct CopyAssignmentCaller<T, false>
 	}
 };
 
+template<typename T>
+struct AutoRegisterType
+{
+};
+
+#define AUTO_REGISTER_TYPE(T)						\
+template<>											\
+struct AutoRegisterType<T>							\
+{													\
+	AutoRegisterType()								\
+	{												\
+		T::GetSingleton();							\
+	}												\
+	static AutoRegisterType<T> s_instance;			\
+};													\
+AutoRegisterType<T> AutoRegisterType<T>::s_instance;
+
+
+template<typename T>
+struct AutoRegisterTypeAlias
+{
+public:
+	AutoRegisterTypeAlias()
+	{
+		T::GetSingleton();
+	}
+};
+
+#define AUTO_REGISTER_TYPEALIAS(T) AutoRegisterTypeAlias<T> g_auto_register_##T;
+
+#define BEGIN_AUTO_RUN(T)		\
+struct AutoRun_##T				\
+{								\
+	AutoRun_##T()				\
+	{
+
+#define END_AUTO_RUN(T)			\
+	}							\
+};								\
+static AutoRun_##T s_autoRun_##T;
+
 #}
 
 typename bool_t;
@@ -170,9 +211,77 @@ typename uint64_t;
 typename size_t;
 typename ptrdiff_t;
 
-namespace pafcore
+namespace paf
 {
 #{
+	const size_t max_method_param_count = 32;
+
+	enum class ErrorCode
+	{
+		s_ok,
+		e_invalid_namespace,
+		e_name_conflict,
+		e_is_null,
+		e_is_not_type,
+		e_is_not_class,
+		e_is_not_array,
+		e_invalid_subscript_type,
+		e_member_not_found,
+		e_index_out_of_range,
+		e_is_not_property,
+		e_is_not_array_property,
+		e_is_not_collection_property,
+		e_property_get_not_implemented,
+		e_property_set_not_implemented,
+		e_property_size_not_implemented,
+		e_property_iterate_not_implemented,
+		e_field_is_an_array,
+		e_invalid_type,
+		e_invalid_object_type,
+		e_invalid_field_type,
+		e_invalid_property_type,
+		e_invalid_too_few_arguments,
+		e_invalid_too_many_arguments,
+		e_invalid_this_type,
+		e_invalid_arg_type_1,
+		e_invalid_arg_type_2,
+		e_invalid_arg_type_3,
+		e_invalid_arg_type_4,
+		e_invalid_arg_type_5,
+		e_invalid_arg_type_6,
+		e_invalid_arg_type_7,
+		e_invalid_arg_type_8,
+		e_invalid_arg_type_9,
+		e_invalid_arg_type_10,
+		e_invalid_arg_type_11,
+		e_invalid_arg_type_12,
+		e_invalid_arg_type_13,
+		e_invalid_arg_type_14,
+		e_invalid_arg_type_15,
+		e_invalid_arg_type_16,
+		e_invalid_arg_type_17,
+		e_invalid_arg_type_18,
+		e_invalid_arg_type_19,
+		e_invalid_arg_type_20,
+		e_invalid_arg_type_21,
+		e_invalid_arg_type_22,
+		e_invalid_arg_type_23,
+		e_invalid_arg_type_24,
+		e_invalid_arg_type_25,
+		e_invalid_arg_type_26,
+		e_invalid_arg_type_27,
+		e_invalid_arg_type_28,
+		e_invalid_arg_type_29,
+		e_invalid_arg_type_30,
+		e_invalid_arg_type_31,
+		e_invalid_arg_type_32,
+		e_not_implemented,
+		e_script_error,
+		e_script_dose_not_override,
+	};
+
+	PAFCORE_EXPORT const char* ErrorCodeToString(ErrorCode errorCode);
+
 	class PAFCORE_EXPORT VirtualDestructor
 	{
 	public:
@@ -185,9 +294,24 @@ namespace pafcore
 	public:
 		virtual void* getAddress() = 0;
 	};
+
+	class Variant;
+	class PAFCORE_EXPORT SubclassInvoker : public VirtualDestructor
+	{
+	public:
+		virtual ErrorCode invoke(const char* name, Variant* result, Variant* self, Variant* args, size_t numArgs) = 0;
+	};
+
+	class ClassType;
+	class PAFCORE_EXPORT IntrospectableInterface : public Interface
+	{
+	public:
+		virtual ClassType* getType() = 0;
+	};
+
 #}
 
-	class string_t
+	class(string) #PAFCORE_EXPORT string_t #final
 	{
 #{
 	public:
@@ -225,6 +349,86 @@ namespace pafcore
 #}
 	};
 
+	class(buffer) #PAFCORE_EXPORT buffer_t #final
+	{
+#{
+	public:
+		buffer_t() :
+			m_ptr(nullptr), m_size(0)
+		{}
+		buffer_t(void* ptr, size_t size) :
+			m_ptr(ptr), m_size(size)
+		{}
+		void assign(void* ptr, size_t size)
+		{
+			m_ptr = ptr;
+			m_size = size;
+		}
+		void* getPtr() const
+		{
+			return m_ptr;
+		}
+		size_t getSize() const
+		{
+			return m_size;
+		}
+	protected:
+		void* m_ptr;
+		size_t m_size;
+#}
+	};
+
+	//StringBase 的派生类在序列化，反序列化以及复制时特殊处理，调用toString, fromString， 不再看其下 field 和 property
+	class #PAFCORE_EXPORT StringBase
+	{
+#{
+	public:
+		virtual string_t toString() const = 0;
+		virtual void fromString(string_t str) = 0;
+#}
+	};
+
+	//StringBase 的派生类在序列化，反序列化以及复制时特殊处理，调用toBuffer, fromBuffer， 不再看其下 field 和 property
+	class #PAFCORE_EXPORT BufferBase
+	{
+#{
+		virtual buffer_t toBuffer() const = 0;
+		virtual void fromBuffer(buffer_t buffer) = 0;
+#}
+	};
+
+	class(noncopyable) #PAFCORE_EXPORT Introspectable ## : public IntrospectableInterface
+	{
+#{
+	public:
+		bool isTypeOf(ClassType* classType);
+
+		template<typename T>
+		bool isTypeOf()
+		{
+			return isTypeOf(T::GetType());
+		}
+
+		bool isStrictTypeOf(ClassType* classType)
+		{
+			return getType() == classType;
+		}
+
+		template<typename T>
+		bool isStrictTypeOf()
+		{
+			return isStrictTypeOf(T::GetType());
+		}
+
+		void* castTo(ClassType* classType);
+
+		template<typename T>
+		T* castTo()
+		{
+			return reinterpret_cast<T*>(castTo(T::GetType()));
+		}
+#}
+	};
 
 }
 

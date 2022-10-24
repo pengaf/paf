@@ -16,14 +16,14 @@ TypeAlias::TypeAlias(const char* name, Type* type, const char* declarationFile) 
 
 TypeAlias::~TypeAlias()
 {
-	if (m_enclosing && MetaCategory::name_space == m_enclosing->get__category_())
+	if (m_enclosing && MetaCategory::name_space == m_enclosing->getType()->getMetaCategory())
 	{
 		static_cast<NameSpace*>(m_enclosing)->unregisterMember(this);
 	}
 }
 
 
-::pafcore::RawPtr<Type> TypeAlias::get_type() const
+::paf::RawPtr<Type> TypeAlias::get_type() const
 {
 	return m_type;
 }

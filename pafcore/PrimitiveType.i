@@ -10,7 +10,7 @@
 
 #}
 
-namespace pafcore
+namespace paf
 {
 #{
 	enum PrimitiveTypeCategory
@@ -47,7 +47,6 @@ namespace pafcore
 	public:
 		virtual void castTo(void* dst, PrimitiveType* dstType, const void* src) = 0;
 	public:
-		InstanceMethod * findInstanceMethod(const char* name);
 		StaticMethod* findStaticMethod(const char* name);
 		Metadata* findTypeMember(const char* name);
 		virtual Metadata* findMember(const char* name);
@@ -56,15 +55,21 @@ namespace pafcore
 		{
 			return m_typeCategory;
 		}
-	public:
+		size_t getStaticMethodCount() const
+		{
+			return m_staticMethodCount;
+		}
+		StaticMethod* getStaticMethod(size_t index) const
+		{
+			return index < m_staticMethodCount ? &m_staticMethods[index] : nullptr;
+		}
+	protected:
 		PrimitiveTypeCategory m_typeCategory;
 		Metadata** m_members;
 		size_t m_memberCount;
-		InstanceMethod* m_instanceMethods;
-		size_t m_instanceMethodCount;
 		StaticMethod* m_staticMethods;
-#}
 		size_t m_staticMethodCount;
+#}
 	};
 #{
 
@@ -202,68 +207,68 @@ namespace pafcore
 			m_name = name;
 			m_size = sizeof(T);
 
-			static ::pafcore::Result s_staticResults[] =
+			static ::paf::Result s_staticResults[] =
 			{
-				::pafcore::Result(this, TypeCompound::unique_ptr),
-				::pafcore::Result(this, TypeCompound::unique_array),
+				::paf::Result(this, TypeCompound::unique_ptr),
+				::paf::Result(this, TypeCompound::unique_array),
 			};
-			static ::pafcore::Argument s_staticArguments[] =
+			static ::paf::Argument s_staticArguments[] =
 			{
-				::pafcore::Argument("arg", this, ::pafcore::TypeCompound::none, ::pafcore::Passing::value),
-				::pafcore::Argument("count", RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), ::pafcore::TypeCompound::none, ::pafcore::Passing::value),
+				::paf::Argument("arg", this, ::paf::TypeCompound::none, ::paf::Passing::value),
+				::paf::Argument("count", RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), ::paf::TypeCompound::none, ::paf::Passing::value),
 			};
-			static ::pafcore::StaticMethod s_staticMethods[] =
+			static ::paf::StaticMethod s_staticMethods[] =
 			{
-				::pafcore::StaticMethod("New", nullptr, Primitive_New, &s_staticResults[0], &s_staticArguments[0], 1, 0),
-				::pafcore::StaticMethod("NewArray", nullptr, Primitive_NewArray, &s_staticResults[1], &s_staticArguments[1], 1, 1),
+				::paf::StaticMethod("New", nullptr, Primitive_New, &s_staticResults[0], &s_staticArguments[0], 1, 0),
+				::paf::StaticMethod("NewArray", nullptr, Primitive_NewArray, &s_staticResults[1], &s_staticArguments[1], 1, 1),
 			};
 			m_staticMethods = s_staticMethods;
 			m_staticMethodCount = paf_array_size_of(s_staticMethods);
-			static ::pafcore::Metadata* s_members[] =
+			static ::paf::Metadata* s_members[] =
 			{
 				&s_staticMethods[0],
 				&s_staticMethods[1],
 			};
 			m_members = s_members;
 			m_memberCount = paf_array_size_of(s_members);
-			::pafcore::NameSpace::GetGlobalNameSpace()->registerMember(this);
+			::paf::NameSpace::GetGlobalNameSpace()->registerMember(this);
 		}
-		static ::pafcore::ErrorCode Primitive_New(Variant* result, Variant** args, uint32_t numArgs)
+		static ::paf::ErrorCode Primitive_New(Variant* result, Variant** args, uint32_t numArgs)
 		{
 			if (0 == numArgs)
 			{
-				result->assignUniquePtr(::pafcore::UniquePtr<T>::Make());
-				return ::pafcore::ErrorCode::s_ok;
+				result->assignUniquePtr(::paf::UniquePtr<T>::Make());
+				return ::paf::ErrorCode::s_ok;
 			}
 			T a0;
 			if (!args[0]->castToPrimitive(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), &a0))
 			{
-				return ::pafcore::ErrorCode::e_invalid_arg_type_1;
+				return ::paf::ErrorCode::e_invalid_arg_type_1;
 			}
 			if (1 == numArgs)
 			{
-				result->assignUniquePtr(::pafcore::UniquePtr<T>::Make(a0));
-				return ::pafcore::ErrorCode::s_ok;
+				result->assignUniquePtr(::paf::UniquePtr<T>::Make(a0));
+				return ::paf::ErrorCode::s_ok;
 			}
-			return ::pafcore::ErrorCode::e_invalid_too_many_arguments;
+			return ::paf::ErrorCode::e_invalid_too_many_arguments;
 		}
-		static ::pafcore::ErrorCode Primitive_NewArray(Variant* result, Variant** args, uint32_t numArgs)
+		static ::paf::ErrorCode Primitive_NewArray(Variant* result, Variant** args, uint32_t numArgs)
 		{
 			if (numArgs < 1)
 			{
-				return ::pafcore::ErrorCode::e_invalid_too_few_arguments;
+				return ::paf::ErrorCode::e_invalid_too_few_arguments;
 			}
 			unsigned int a0;
 			if (!args[0]->castToPrimitive(RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), &a0))
 			{
-				return ::pafcore::ErrorCode::e_invalid_arg_type_1;
+				return ::paf::ErrorCode::e_invalid_arg_type_1;
 			}
 			if (1 == numArgs)
 			{
-				result->assignUniqueArray(::pafcore::UniqueArray<T>::Make(a0));
-				return ::pafcore::ErrorCode::s_ok;
+				result->assignUniqueArray(::paf::UniqueArray<T>::Make(a0));
+				return ::paf::ErrorCode::s_ok;
 			}
-			return ::pafcore::ErrorCode::e_invalid_too_many_arguments;
+			return ::paf::ErrorCode::e_invalid_too_many_arguments;
 		}
 		virtual bool destruct(void* address)
 		{
@@ -282,7 +287,7 @@ namespace pafcore
 		virtual void castTo(void* dst, PrimitiveType* dstType, const void* src)
 		{
 			PAF_ASSERT(dst && dstType && src);
-			switch (dstType->m_typeCategory)
+			switch (dstType->getPrimitiveTypeCategory())
 			{
 			case bool_type:
 				*reinterpret_cast<bool_t*>(dst) = *reinterpret_cast<const T*>(src) != 0;
@@ -376,113 +381,113 @@ namespace pafcore
 template<>
 struct RuntimeTypeOf<bool>
 {
-	typedef ::pafcore::BoolType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::BoolType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<char>
 {
-	typedef ::pafcore::CharType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::CharType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<signed char>
 {
-	typedef ::pafcore::SignedCharType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::SignedCharType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned char>
 {
-	typedef ::pafcore::UnsignedCharType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::UnsignedCharType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<wchar_t>
 {
-	typedef ::pafcore::WcharType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::WcharType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<short>
 {
-	typedef ::pafcore::ShortType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::ShortType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned short>
 {
-	typedef ::pafcore::UnsignedShortType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::UnsignedShortType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<long>
 {
-	typedef ::pafcore::LongType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::LongType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned long>
 {
-	typedef ::pafcore::UnsignedLongType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::UnsignedLongType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<long long>
 {
-	typedef ::pafcore::LongLongType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::LongLongType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned long long>
 {
-	typedef ::pafcore::UnsignedLongLongType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::UnsignedLongLongType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<int>
 {
-	typedef ::pafcore::IntType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::IntType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<unsigned int>
 {
-	typedef ::pafcore::UnsignedIntType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::UnsignedIntType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<float>
 {
-	typedef ::pafcore::FloatType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::FloatType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<double>
 {
-	typedef ::pafcore::DoubleType RuntimeType;
-	enum {type_category = ::pafcore::MetaCategory::primitive};
+	typedef ::paf::DoubleType RuntimeType;
+	enum {type_category = ::paf::MetaCategory::primitive};
 };
 
 template<>
 struct RuntimeTypeOf<long double>
 {
-	typedef ::pafcore::LongDoubleType RuntimeType;
-	enum { type_category = ::pafcore::MetaCategory::primitive };
+	typedef ::paf::LongDoubleType RuntimeType;
+	enum { type_category = ::paf::MetaCategory::primitive };
 };
 
 #}

@@ -1,6 +1,6 @@
-#import "Introspectable.i"
+#import "Utility.i"
 
-namespace pafcore
+namespace paf
 {
 	class(noncopyable) #PAFCORE_EXPORT Serializable : Introspectable
 	{

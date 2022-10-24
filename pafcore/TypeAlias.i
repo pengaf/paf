@@ -1,6 +1,6 @@
 #import "Type.i"
 
-namespace pafcore
+namespace paf
 {
 	abstract class(type_alias)#PAFCORE_EXPORT TypeAlias : Metadata
 	{

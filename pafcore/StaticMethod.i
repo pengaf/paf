@@ -5,7 +5,7 @@
 #}
 
 
-namespace pafcore
+namespace paf
 {
 
 #{

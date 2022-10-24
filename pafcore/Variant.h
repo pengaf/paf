@@ -74,6 +74,7 @@ public:
 		vt_null,
 		vt_small_value,
 		vt_big_value,
+		vt_reference,
 		vt_raw_ptr,
 		vt_raw_array,
 		vt_borrowed_ptr,
@@ -84,24 +85,31 @@ public:
 		vt_shared_array,
 		vt_borrowed_array_element,
 	};
-public:
-	Variant();
-	~Variant();
 private:
 	Variant(Variant const& var) = delete;
 	Variant& operator = (Variant const& var) = delete;
 public:
+	Variant();
+	Variant(Variant&& var);
+	~Variant();
+	void assign(Variant&& var);
+public:
+	Category getCategory() const;
 	bool isNull() const;
+	bool isValue() const;
+	bool isPointer() const;
+	bool isArray() const;
+	size_t getArraySize() const;
 	Type* getType() const;
 	void* getRawPointer() const;
 	void clear();
-	bool subscript(Variant& var, uint32_t index);
-
 	void assignEnumByInt(EnumType* type, int value);
 	bool castToPrimitive(PrimitiveType* dstType, void* dst) const;
 	bool castToEnum(EnumType* dstType, void* dst) const;
+	bool castToString(string_t& str);
+	bool castToBuffer(buffer_t& buf);
 	bool castToRawPointer(Type* dstType, void** dst) const;
-
+	ErrorCode subscript(Variant& var, uint32_t index);
 public:
 	template <typename T, typename... Types>
 	void makeValue(Types&&... args)
@@ -127,7 +135,7 @@ public:
 	template<typename T>
 	void assignRawPtr(RawPtr<T> const& rawPtr)
 	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+		Type* type = typename RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 		T* ptr = rawPtr.get();
 		assignRawPtr(type, ptr);
 	}
@@ -389,17 +397,19 @@ private:
 	template <typename T, typename... Types>
 	void makeValue_(std::false_type smallObject, Types&&... args)
 	{
+		using T_ = std::remove_reference_t<T>;
 		clear();
-		m_type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		m_ptr = ValueBoxImpl<T>::New(std::forward<Types>(args)...);
+		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton(); RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
+		m_ptr = ValueBoxImpl<T_>::New(std::forward<Types>(args)...);
 		m_category = vt_big_value;
 	}
 
 	template <typename T, typename... Types>
 	void makeValue_(std::true_type smallObject, Types&&... args)
 	{
+		using T_ = std::remove_reference_t<T>;
 		clear();
-		m_type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
+		m_type = RuntimeTypeOf<T_>::RuntimeType::GetSingleton();
 		ValueBoxImpl<T_>::PlacementNew(m_storage, std::forward<Types>(args)...);
 		m_category = vt_small_value;
 	}
@@ -443,11 +453,13 @@ private:
 		ValueBoxImpl<T_>::PlacementNew(m_storage, std::move(value));
 		m_category = vt_small_value;
 	}
-private:
+
+public:
 	void assignRawPtr(Type* type, void* ptr);
 
 	void assignRawArray(Type* type, void* ptr, size_t size);
 
+private:
 	void assignBorrowedPtr(Type* type, void* ptr);
 
 	void assignBorrowedArray(Type* type, void* ptr, size_t size);
@@ -481,9 +493,35 @@ inline bool Variant::isNull() const
 	return vt_null == m_category;
 }
 
+inline bool Variant::isValue() const
+{
+	return (vt_small_value == m_category || vt_big_value == m_category);
+}
+
+inline bool Variant::isPointer() const
+{
+	return (vt_raw_ptr == m_category || vt_borrowed_ptr == m_category || vt_unique_ptr == m_category || vt_shared_ptr == m_category);
+}
+
+inline bool Variant::isArray() const
+{
+	return (vt_raw_array == m_category || vt_borrowed_array == m_category || vt_unique_array == m_category || vt_shared_array == m_category);
+}
+
+inline size_t Variant::getArraySize() const
+{
+	PAF_ASSERT(isArray());
+	return m_arraySize;
+}
+
 inline Type* Variant::getType() const 
 {
 	return m_type;
+}
+
+inline Variant::Category Variant::getCategory() const
+{
+	return m_category;
 }
 
 END_PAFCORE

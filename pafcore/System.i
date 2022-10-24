@@ -1,6 +1,6 @@
 #import "Utility.i"
 
-namespace pafcore
+namespace paf
 {
 	struct #PAFCORE_EXPORT System
 	{

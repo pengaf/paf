@@ -1,10 +1,6 @@
 
 set(HeaderFiles
-    "AutoRun.h"
-    "Debug.h"
     "SmartPtr.h"
-    "SubclassInvoker.h"
-    "Utility.h"
     "Variant.h"
 )
 source_group("Header Files" FILES ${HeaderFiles})
@@ -18,7 +14,6 @@ set(InterfaceFiles
     "InstanceField.i"
     "InstanceMethod.i"
     "InstanceProperty.i"
-    "Introspectable.i"
     "Iterator.i"
     "Metadata.i"
     "NameSpace.i"
@@ -49,7 +44,6 @@ set(SourceFiles
     "InstanceField.cpp"
     "InstanceMethod.cpp"
     "InstanceProperty.cpp"
-    "Introspectable.cpp"
     "Iterator.cpp"
     "Metadata.cpp"
     "NameSpace.cpp"
@@ -91,5 +85,5 @@ foreach(InterfaceFile IN LISTS InterfaceFiles)
 endforeach()
 
 add_library(pafcore SHARED ${AllFiles})
-target_compile_definitions(pafcore PUBLIC _UNICODE)
-target_compile_definitions(pafcore PUBLIC PAFCORE_EXPORTS)
+#target_compile_definitions(pafcore PUBLIC _UNICODE)
+target_compile_definitions(pafcore PRIVATE PAFCORE_EXPORTS)

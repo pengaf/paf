@@ -1,6 +1,6 @@
 #import "Type.i"
 
-namespace pafcore
+namespace paf
 {
 	##class Variant;
 

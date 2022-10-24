@@ -1,6 +1,10 @@
 #import "ClassType.i"
 
-namespace pafcore
+#{
+#include "SmartPtr.h"
+#}
+
+namespace paf
 {
 
 #{
@@ -15,7 +19,7 @@ namespace pafcore
 	typedef ErrorCode(*ArrayInstancePropertyGet)(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
 	typedef ErrorCode(*ArrayInstancePropertySet)(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
 
-	typedef ErrorCode(*CollectionInstancePropertyIterate)(InstanceProperty* instanceProperty, Variant* that, Iterator*& iterator);
+	typedef ErrorCode(*CollectionInstancePropertyIterate)(InstanceProperty* instanceProperty, Variant* that, UniquePtr<Iterator>& iterator);
 	typedef ErrorCode(*CollectionInstancePropertyGet)(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, Variant* value);
 	typedef ErrorCode(*CollectionInstancePropertySet)(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, size_t removeCount, Variant* value);
 

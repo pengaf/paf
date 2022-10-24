@@ -3,14 +3,17 @@
 #include "Utility.h"
 #}
 
-namespace pafcore
+namespace paf
 {
+	//”√”⁄ Collection Property
 	class #PAFCORE_EXPORT Iterator
 	{
-		virtual bool isEnd() const;
-		virtual void moveNext();
-		virtual void reset();
-		virtual bool equal(Iterator* other) const;
+#{
+		virtual bool isEnd() const = 0;
+		virtual void moveNext() = 0;
+		virtual void reset() = 0;
+		virtual bool equal(Iterator* other) const = 0;
+#}
 	};
 
 #{

@@ -3,8 +3,6 @@
 #include "PrimitiveType.ic"
 #include "PrimitiveType.mc"
 #include "TypeAlias.h"
-#include "AutoRun.h"
-#include <assert.h>
 #include <algorithm>
 
 BEGIN_PAFCORE
@@ -14,7 +12,7 @@ size_t PrimitiveType::_getMemberCount_()
 	return m_memberCount;
 }
 
-::pafcore::RawPtr<Metadata> PrimitiveType::_getMember_(size_t index)
+::paf::RawPtr<Metadata> PrimitiveType::_getMember_(size_t index)
 {
 	if (index < m_memberCount)
 	{
@@ -23,7 +21,7 @@ size_t PrimitiveType::_getMemberCount_()
 	return nullptr;
 }
 
-::pafcore::RawPtr<Metadata> PrimitiveType::_findMember_(string_t name)
+::paf::RawPtr<Metadata> PrimitiveType::_findMember_(string_t name)
 {
 	Metadata dummy(name);
 	Metadata** it = std::lower_bound(m_members, m_members + m_memberCount, &dummy, CompareMetaDataPtrByName());
@@ -38,17 +36,17 @@ Metadata* PrimitiveType::findMember(const char* name)
 {
 	return _findMember_(name);
 }
-
-InstanceMethod* PrimitiveType::findInstanceMethod(const char* name)
-{
-	Metadata dummy(name);
-	InstanceMethod* res = std::lower_bound(m_instanceMethods, m_instanceMethods + m_instanceMethodCount, dummy);
-	if (m_instanceMethods + m_instanceMethodCount != res && strcmp(name, res->m_name) == 0)
-	{
-		return res;
-	}
-	return 0;
-}
+//
+//InstanceMethod* PrimitiveType::findInstanceMethod(const char* name)
+//{
+//	Metadata dummy(name);
+//	InstanceMethod* res = std::lower_bound(m_instanceMethods, m_instanceMethods + m_instanceMethodCount, dummy);
+//	if (m_instanceMethods + m_instanceMethodCount != res && strcmp(name, res->m_name) == 0)
+//	{
+//		return res;
+//	}
+//	return 0;
+//}
 
 StaticMethod* PrimitiveType::findStaticMethod(const char* name)
 {
@@ -175,7 +173,7 @@ CPPPrimitiveType* GetPrimitiveTypeFromTypeCategory(PrimitiveTypeCategory typeCat
 		res = LongDoubleType::GetSingleton();
 		break;
 	default:
-		assert(false);
+		PAF_ASSERT(false);
 	}
 	return res;
 }
@@ -200,18 +198,18 @@ CPPPrimitiveType* GetPrimitiveTypeFromTypeCategory(PrimitiveTypeCategory typeCat
 
 END_PAFCORE
 
-AUTO_REGISTER_TYPE(pafcore::BoolType)
-AUTO_REGISTER_TYPE(pafcore::CharType)
-AUTO_REGISTER_TYPE(pafcore::SignedCharType)
-AUTO_REGISTER_TYPE(pafcore::UnsignedCharType)
-AUTO_REGISTER_TYPE(pafcore::WcharType)
-AUTO_REGISTER_TYPE(pafcore::ShortType)
-AUTO_REGISTER_TYPE(pafcore::UnsignedShortType)
-AUTO_REGISTER_TYPE(pafcore::LongType)
-AUTO_REGISTER_TYPE(pafcore::UnsignedLongType)
-AUTO_REGISTER_TYPE(pafcore::LongLongType)
-AUTO_REGISTER_TYPE(pafcore::UnsignedLongLongType)
-AUTO_REGISTER_TYPE(pafcore::IntType)
-AUTO_REGISTER_TYPE(pafcore::UnsignedIntType)
-AUTO_REGISTER_TYPE(pafcore::FloatType)
-AUTO_REGISTER_TYPE(pafcore::DoubleType)
+AUTO_REGISTER_TYPE(paf::BoolType)
+AUTO_REGISTER_TYPE(paf::CharType)
+AUTO_REGISTER_TYPE(paf::SignedCharType)
+AUTO_REGISTER_TYPE(paf::UnsignedCharType)
+AUTO_REGISTER_TYPE(paf::WcharType)
+AUTO_REGISTER_TYPE(paf::ShortType)
+AUTO_REGISTER_TYPE(paf::UnsignedShortType)
+AUTO_REGISTER_TYPE(paf::LongType)
+AUTO_REGISTER_TYPE(paf::UnsignedLongType)
+AUTO_REGISTER_TYPE(paf::LongLongType)
+AUTO_REGISTER_TYPE(paf::UnsignedLongLongType)
+AUTO_REGISTER_TYPE(paf::IntType)
+AUTO_REGISTER_TYPE(paf::UnsignedIntType)
+AUTO_REGISTER_TYPE(paf::FloatType)
+AUTO_REGISTER_TYPE(paf::DoubleType)

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
-project(pafcore)
+project(paf)
 
 
 set(IDLCPP_PATH "C:/idlcpp/bin/idlcpp.exe" CACHE FILEPATH "idlcpp path")
-set(PAFCORE_DIR "C:/pafcore" CACHE PATH "pafcore dir") 
+set(PAFCORE_DIR "C:/paf/pafcore" CACHE PATH "pafcore dir") 
 
 if(NOT EXISTS ${IDLCPP_PATH})
 	message("can not find file: " ${IDLCPP_PATH})
@@ -28,5 +28,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${PROJECT_SOURCE_DIR}/bin)
 
 set(CMAKE_DEBUG_POSTFIX _d)
 
+add_subdirectory(3rd/lua)
 add_subdirectory(pafcore)
+add_subdirectory(paflua)
 add_subdirectory(test)
+add_subdirectory(testlua)

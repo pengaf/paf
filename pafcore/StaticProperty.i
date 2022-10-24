@@ -1,7 +1,11 @@
 #import "Metadata.i"
 #import "Type.i"
 
-namespace pafcore
+#{
+#include "SmartPtr.h"
+#}
+
+namespace paf
 {
 
 #{
@@ -10,16 +14,16 @@ namespace pafcore
 	class Iterator;
 	class Variant;
 
-	typedef ErrorCode(*SimpleStaticPropertyGet)(Variant* value);
-	typedef ErrorCode(*SimpleStaticPropertySet)(Variant* value);
+	typedef ErrorCode(*SimpleStaticPropertyGet)(StaticProperty* staticProperty, Variant* value);
+	typedef ErrorCode(*SimpleStaticPropertySet)(StaticProperty* staticProperty, Variant* value);
 
-	typedef ErrorCode(*ArrayStaticPropertySize)(size_t& size);
-	typedef ErrorCode(*ArrayStaticPropertyGet)(size_t index, Variant* value);
-	typedef ErrorCode(*ArrayStaticPropertySet)(size_t index, Variant* value);
+	typedef ErrorCode(*ArrayStaticPropertySize)(StaticProperty* staticProperty, size_t& size);
+	typedef ErrorCode(*ArrayStaticPropertyGet)(StaticProperty* staticProperty, size_t index, Variant* value);
+	typedef ErrorCode(*ArrayStaticPropertySet)(StaticProperty* staticProperty, size_t index, Variant* value);
 
-	typedef ErrorCode(*CollectionStaticPropertyIterate)(Iterator*& iterator);
-	typedef ErrorCode(*CollectionStaticPropertyGet)(Iterator* iterator, Variant* value);
-	typedef ErrorCode(*CollectionStaticPropertySet)(Iterator* iterator, size_t removeCount, Variant* value);
+	typedef ErrorCode(*CollectionStaticPropertyIterate)(StaticProperty* staticProperty, UniquePtr<Iterator>& iterator);
+	typedef ErrorCode(*CollectionStaticPropertyGet)(StaticProperty* staticProperty, Iterator* iterator, Variant* value);
+	typedef ErrorCode(*CollectionStaticPropertySet)(StaticProperty* staticProperty, Iterator* iterator, size_t removeCount, Variant* value);
 #}
 
 	abstract class(static_property)#PAFCORE_EXPORT StaticProperty : Metadata

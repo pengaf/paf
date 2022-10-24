@@ -7,17 +7,14 @@
 
 #include <windows.h>
 
-namespace pafcore
+namespace paf
 {
 	string_t System::GetProgramPath()
 	{
-		static char* s_buffer = 0;
-		if (0 == s_buffer)
+		static char s_buffer[MAX_PATH] = {0};
+		if (0 == s_buffer[0])
 		{
-			DWORD size = GetModuleFileNameA(0, 0, 0);
-			s_buffer = new char[size + 1];
-			s_buffer[0] = 0;
-			GetModuleFileNameA(0, s_buffer, size + 1);
+			GetModuleFileNameA(0, s_buffer, MAX_PATH);
 		}
 		return s_buffer;
 	}

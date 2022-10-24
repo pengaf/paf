@@ -3,35 +3,35 @@
 
 #pragma once
 
-#include "../pafcore/Introspectable.h"
+#include "../pafcore/Utility.h"
 #include "../pafcore/SmartPtr.h"
 class Node;
-namespace pafcore{ class ClassType; }
+namespace paf{ class ClassType; }
 
 
-class Scene : public pafcore::Introspectable
+class Scene : public paf::Introspectable
 {
 public:
-	static ::pafcore::ClassType* GetType();
-	::pafcore::ClassType* getType();
+	static ::paf::ClassType* GetType();
+	::paf::ClassType* getType();
 	void* getAddress();
 
 	Scene();
 
-	static ::pafcore::UniquePtr<Scene> New();
+	static ::paf::UniquePtr<Scene> New();
 
 
 	friend class Node;
 	Scene(const Scene&) = delete;
 	Scene(Scene&&) = delete;
 public:
-	pafcore::BorrowedPtr<Node> Scene::getRootNode() const
+	paf::BorrowedPtr<Node> Scene::getRootNode() const
 	{
-		return pafcore::BorrowedPtr<Node>(m_rootNode);
+		return paf::BorrowedPtr<Node>(m_rootNode);
 	}
 public:
 	void check__();
 protected:
-	pafcore::UniquePtr<Node> m_rootNode;
+	paf::UniquePtr<Node> m_rootNode;
 
 };

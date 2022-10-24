@@ -2,7 +2,7 @@
 #import "InstanceProperty.i"
 #import "InstanceField.i"
 
-namespace pafcore
+namespace paf
 {
 #{
 	class InstanceField;
@@ -27,11 +27,11 @@ namespace pafcore
 			m_next = iterator;
 			m_classType = classType;
 		}
-		::pafcore::RawPtr<ClassTypeIterator> next()
+		::paf::RawPtr<ClassTypeIterator> next()
 		{
 			return m_next;
 		}
-		::pafcore::RawPtr<ClassType> value()
+		::paf::RawPtr<ClassType> value()
 		{
 			return m_classType;
 		}
@@ -63,9 +63,11 @@ namespace pafcore
 	public:
 		ClassType(const char* name, MetaCategory category, const char* declarationFile);
 	public:
+		//override Type
 		virtual Metadata* findMember(const char* name);
-		virtual void* createSubclassProxy(SubclassInvoker* subclassInvoker);
-		virtual void destroySubclassProxy(void* subclassProxy);
+	public:
+		virtual ::paf::UniquePtr<::paf::Introspectable> createSubclassProxy(SubclassInvoker* subclassInvoker);
+	public:
 		Metadata* findMember(const char* name, bool includeBaseClasses, bool typeAliasToType);
 		Metadata* findClassMember(const char* name, bool includeBaseClasses, bool typeAliasToType);
 	public:

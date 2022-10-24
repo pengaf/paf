@@ -12,7 +12,7 @@
 BEGIN_PAFCORE
 
 
-String Reflection::GetTypeFullName(::pafcore::RawPtr<Type>  type)
+String Reflection::GetTypeFullName(::paf::RawPtr<Type>  type)
 {
 	const char* localName = type->get__name_();
 	size_t totalLength = strlen(localName) + 1;
@@ -23,7 +23,7 @@ String Reflection::GetTypeFullName(::pafcore::RawPtr<Type>  type)
 	while (scope)
 	{
 		Metadata* nextScope = 0;
-		MetaCategory category = scope->get__category_();
+		MetaCategory category = scope->getType()->getMetaCategory();
 		if (MetaCategory::name_space == category)
 		{
 			nextScope = static_cast<NameSpace*>(scope)->getEnclosing();
@@ -53,7 +53,7 @@ String Reflection::GetTypeFullName(::pafcore::RawPtr<Type>  type)
 	return String(name.c_str());
 }
 
-String Reflection::GetTypeAliasFullName(::pafcore::RawPtr<TypeAlias> typeAlias)
+String Reflection::GetTypeAliasFullName(::paf::RawPtr<TypeAlias> typeAlias)
 {
 	const char* localName = typeAlias->get__name_();
 	size_t totalLength = strlen(localName) + 1;
@@ -64,7 +64,7 @@ String Reflection::GetTypeAliasFullName(::pafcore::RawPtr<TypeAlias> typeAlias)
 	while (scope)
 	{
 		Metadata* nextScope = 0;
-		MetaCategory category = scope->get__category_();
+		MetaCategory category = scope->getType()->getMetaCategory();
 		if (MetaCategory::name_space == category)
 		{
 			nextScope = static_cast<NameSpace*>(scope)->getEnclosing();
@@ -94,7 +94,7 @@ String Reflection::GetTypeAliasFullName(::pafcore::RawPtr<TypeAlias> typeAlias)
 	return String(name.c_str());
 }
 
-::pafcore::RawPtr<Type> Reflection::GetTypeFromFullName(string_t fullName)
+::paf::RawPtr<Type> Reflection::GetTypeFromFullName(string_t fullName)
 {
 	std::string name;
 	const char* nameBegin = fullName;
@@ -112,7 +112,7 @@ String Reflection::GetTypeAliasFullName(::pafcore::RawPtr<TypeAlias> typeAlias)
 			name.assign(nameBegin);
 			nameBegin = 0;
 		}
-		MetaCategory category = metadata->get__category_();
+		MetaCategory category = metadata->getType()->getMetaCategory();
 		if (MetaCategory::name_space == category)
 		{
 			metadata = static_cast<NameSpace*>(metadata)->findMember(name.c_str());
@@ -128,7 +128,7 @@ String Reflection::GetTypeAliasFullName(::pafcore::RawPtr<TypeAlias> typeAlias)
 	}
 	if (metadata)
 	{
-		MetaCategory category = metadata->get__category_();
+		MetaCategory category = metadata->getType()->getMetaCategory();
 		if (MetaCategory::name_space != category)
 		{
 			PAF_ASSERT(MetaCategory::primitive_type == category || MetaCategory::enumeration_type == category || MetaCategory::object_type == category);
@@ -149,7 +149,7 @@ String Reflection::PrimitiveToString(const Variant& value)
 	char buf[64];
 	PAF_ASSERT(value.getType()->isPrimitive());
 	PrimitiveType* primitiveType = static_cast<PrimitiveType*>(value.getType());
-	switch (primitiveType->m_typeCategory)
+	switch (primitiveType->getPrimitiveTypeCategory())
 	{
 	case bool_type:
 		res.assign(*reinterpret_cast<const bool*>(pointer) ? "true" : "false");
@@ -220,7 +220,7 @@ String Reflection::PrimitiveToString(const Variant& value)
 
 void Reflection::StringToPrimitive(Variant& value, PrimitiveType* primitiveType, const char* str)
 {
-	switch (primitiveType->m_typeCategory)
+	switch (primitiveType->getPrimitiveTypeCategory())
 	{
 	case bool_type: {
 		bool val = (0 == strcmp(str, "true")) ? true : false;
@@ -327,7 +327,7 @@ bool Reflection::StringToEnum(Variant& value, EnumType* enumType, const char* st
 	Enumerator* enumerator = enumType->findEnumerator(str);
 	if (enumerator)
 	{
-		value.assignEnumByInt(enumType, enumerator->m_value);
+		value.assignEnumByInt(enumType, enumerator->get__value_());
 		return true;
 	}
 	else
@@ -338,6 +338,25 @@ bool Reflection::StringToEnum(Variant& value, EnumType* enumType, const char* st
 	}
 	return false;
 }
+
+bool Reflection::IsString(ClassType* type)
+{
+	if (string_t::GetType() == type)
+	{
+		return true;
+	}
+	return type->isType(StringBase::GetType());
+}
+
+bool Reflection::IsBuffer(ClassType* type)
+{
+	if (buffer_t::GetType() == type)
+	{
+		return true;
+	}
+	return type->isType(StringBase::GetType());
+}
+
 
 //String Reflection::ObjectToString(const Variant& value)
 //{
@@ -430,7 +449,7 @@ bool Reflection::StringToEnum(Variant& value, EnumType* enumType, const char* st
 //
 //ErrorCode Reflection::StringToInstanceProperty(Variant& that, const char* propertyName, const char* str)
 //{
-//	if (object_type != that.m_type->get__category_())
+//	if (object_type != that.m_type->getType()->getMetaCategory())
 //	{
 //		return e_is_not_class;
 //	}
@@ -738,7 +757,7 @@ ErrorCode Reflection::CollectionInstancePropertySet(InstanceProperty* instancePr
 	return errorCode;
 }
 
-ErrorCode Reflection::CollectionInstancePropertyIterate(InstanceProperty* instanceProperty, Variant* that, Iterator*& iterator)
+ErrorCode Reflection::CollectionInstancePropertyIterate(InstanceProperty* instanceProperty, Variant* that, UniquePtr<Iterator>& iterator)
 {
 	PAF_ASSERT(instanceProperty && that);
 	if (PropertyCategory::collection_property != instanceProperty->get_propertyCategory())
@@ -761,7 +780,7 @@ ErrorCode Reflection::CallInstanceMethod(InstanceMethod* method, Variant& result
 		numArgs = max_method_param_count;
 	}
 	args[0] = that;
-	for (int_t i = 0; i < numArgs; ++i)
+	for (uint32_t i = 0; i < numArgs; ++i)
 	{
 		args[i + 1] = &arguments[i];
 	}
@@ -776,7 +795,7 @@ ErrorCode Reflection::CallStaticMethod(StaticMethod* method, Variant& result, Va
 	{
 		numArgs = max_method_param_count;
 	}
-	for (int_t i = 0; i < numArgs; ++i)
+	for (uint32_t i = 0; i < numArgs; ++i)
 	{
 		args[i] = &arguments[i];
 	}

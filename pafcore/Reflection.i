@@ -18,7 +18,7 @@
 #include "StaticMethod.h"
 #}
 
-namespace pafcore
+namespace paf
 {
 	class(value_object) #PAFCORE_EXPORT Reflection
 	{
@@ -32,6 +32,9 @@ namespace pafcore
 		static String EnumToString(const Variant& value);
 		static bool StringToEnum(Variant& value, EnumType* enumType, const char* str);
 		
+		static bool IsString(ClassType* type);
+		static bool IsBuffer(ClassType* type);
+
 		//static String ObjectToString(const Variant& value);
 		//static bool StringToObject(Variant& value, ClassType* classType, const char* str);
 		//static String InstancePropertyToString(Introspectable* that, InstanceProperty* instanceProperty);
@@ -57,7 +60,7 @@ namespace pafcore
 		static ErrorCode ArrayInstancePropertySize(InstanceProperty* instanceProperty, Variant* that, size_t& index);
 		static ErrorCode ArrayInstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
 		static ErrorCode ArrayInstancePropertySet(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
-		static ErrorCode CollectionInstancePropertyIterate(InstanceProperty* instanceProperty, Variant* that, Iterator*& iterator);
+		static ErrorCode CollectionInstancePropertyIterate(InstanceProperty* instanceProperty, Variant* that, UniquePtr<Iterator>& iterator);
 		static ErrorCode CollectionInstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, Variant* value);
 		static ErrorCode CollectionInstancePropertySet(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, size_t removeCount, Variant* value);
 

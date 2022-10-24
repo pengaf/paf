@@ -9,6 +9,7 @@
 #include "Node.h"
 #include "../pafcore/SmartPtr.h"
 #include "../pafcore/System.h"
+#include "../pafcore/String.h"
 #pragma comment(lib, "pafcore_d.lib")
 //
 //#ifdef _DEBUG
@@ -18,12 +19,12 @@
 //#endif // _DEBUG
 
 
-//pafcore::UniquePtr<Node> m_nextSibling;
-//pafcore::BorrowedPtr<Node> m_prevSibling;
-//pafcore::UniquePtr<Node> m_childHead;
-//pafcore::BorrowedPtr<Node> m_childTail;
-//pafcore::BorrowedPtr<Node> m_parent;
-//pafcore::BorrowedPtr<Scene> m_scene;
+//paf::UniquePtr<Node> m_nextSibling;
+//paf::BorrowedPtr<Node> m_prevSibling;
+//paf::UniquePtr<Node> m_childHead;
+//paf::BorrowedPtr<Node> m_childTail;
+//paf::BorrowedPtr<Node> m_parent;
+//paf::BorrowedPtr<Scene> m_scene;
 
 
 void test1()
@@ -55,7 +56,7 @@ void test1()
 	scene->check__();
 
 
-	std::cout << sizeof(pafcore::UniquePtr<Node>) << "  " << sizeof(pafcore::SharedPtr<Node>) << "  " << sizeof(pafcore::BorrowedPtr<Node>);
+	std::cout << sizeof(paf::UniquePtr<Node>) << "  " << sizeof(paf::SharedPtr<Node>) << "  " << sizeof(paf::BorrowedPtr<Node>);
 }
 
 class AA
@@ -128,7 +129,8 @@ const int* testParam(int & a, const int& b, int const && c)
 int main()
 {
 	auto fn = std::mem_fn(&std::string::length);
-	int a = sizeof(fn);
+	std::function<void()> fn2;
+	int a = sizeof(std::string);
 	Test test;
 	int nn{};
 	test.test1(nn);
@@ -143,10 +145,10 @@ int main()
 	//const char[] aa = "aaaa";
 	std::tuple<int, char> tt;
 	{
-		//pafcore::UniqueArray<int> aa;
+		//paf::UniqueArray<int> aa;
 		{
-			auto sn = pafcore::SharedArray<int>::Make(3);
-			//pafcore::BorrowedArray<int> xx(sn);
+			auto sn = paf::SharedArray<int>::Make(3);
+			//paf::BorrowedArray<int> xx(sn);
 			//aa = std::move(sn);
 		}
 	}
@@ -172,17 +174,17 @@ int main()
 	//std::vector<std::string> strs;
 	//strs.push_back(std::move(str));
 	//{
-	//	PAF_FILE_LINE(auto p1 = pafcore::UniquePtr<int>::Make(3));
-	//	PAF_FILE_LINE(auto p2 = pafcore::UniquePtr<int>::Make(3));
+	//	PAF_FILE_LINE(auto p1 = paf::UniquePtr<int>::Make(3));
+	//	PAF_FILE_LINE(auto p2 = paf::UniquePtr<int>::Make(3));
 	//	p1 = std::move(p2);
 	//}
 	//{
-	//	auto p1 = pafcore::UniquePtr<int>::Make(3);
-	//	auto p2 = pafcore::BorrowedPtr<int>(p1);
+	//	auto p1 = paf::UniquePtr<int>::Make(3);
+	//	auto p2 = paf::BorrowedPtr<int>(p1);
 	//}
 	//{
 	//	std::unique_ptr<int[]> p1(new int[100000]);
-		//std::unique_ptr<int> p2(new int(4));
+		std::unique_ptr<int> p2(new int(4));
 		//std::weak_ptr<int> p4(p3);
 		//auto aa = std::make_shared<AA>();
 		//auto aa2 = aa->shared_from_this();
@@ -193,9 +195,9 @@ int main()
 		//	std::weak_ptr<int> p4(p3);
 	//	std::cout << sizeof(p1) << "  " << sizeof(p2) << "  " << sizeof(p3) << "\n\n";
 	//}
-	////pafcore::System::DebugBreak();
+	////paf::System::DebugBreak();
 	//{
-	//	pafcore::UniquePtr<int> ptr(new int);
+	//	paf::UniquePtr<int> ptr(new int);
 	//	std::cout << sizeof(ptr);
 	//}
 	test1();

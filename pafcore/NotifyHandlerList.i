@@ -1,11 +1,10 @@
-#import "Introspectable.i"
 #import "NotifyHandler.i"
 
 #{
 #include "Utility.h"
 #}
 
-namespace pafcore
+namespace paf
 {
 	class #PAFCORE_EXPORT NotifyHandlerLink : NotifyHandler
 	{

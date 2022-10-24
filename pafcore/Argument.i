@@ -1,6 +1,6 @@
 #import "Type.i"
 
-namespace pafcore
+namespace paf
 {
 
 #{
@@ -24,7 +24,7 @@ namespace pafcore
 	};
 
 #{
-	inline pafcore::RawPtr<Type> Argument::get_type() const
+	inline paf::RawPtr<Type> Argument::get_type() const
 	{
 		return m_type;
 	}

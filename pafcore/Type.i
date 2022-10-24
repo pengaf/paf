@@ -1,6 +1,6 @@
 #import "Metadata.i"
 
-namespace pafcore
+namespace paf
 {
 #{
 	class NameSpace;
@@ -19,17 +19,17 @@ namespace pafcore
 		virtual bool copyAssign(void* dst, const void* src) = 0;
 		virtual Metadata* findMember(const char* name) = 0;
 	public:
-		MetaCategory getCategory() const;
+		MetaCategory getMetaCategory() const;
 		bool isPrimitive() const;
 		bool isEnumeration() const;
+		bool isClass() const;
 		bool isString() const;
 		bool isBuffer() const;
 		bool isObject() const;
-		bool isClass() const;
 		Metadata* getEnclosing() const;
 		const char* getDeclarationFile() const;
 	protected:
-		MetaCategory m_category;
+		MetaCategory m_metaCategory;
 		size_t m_size;
 		Metadata* m_enclosing;
 		const char* m_declarationFile;//类型声明所在文件路径
@@ -43,39 +43,39 @@ namespace pafcore
 		return m_size;
 	}
 	
-	inline MetaCategory Type::getCategory() const
+	inline MetaCategory Type::getMetaCategory() const
 	{
-		return m_category;
+		return m_metaCategory;
 	}
 
 	inline bool Type::isPrimitive() const
 	{
-		return MetaCategory::primitive == m_category;
+		return MetaCategory::primitive == m_metaCategory;
 	}
 	
 	inline bool Type::isEnumeration() const
 	{
-		return MetaCategory::enumeration == m_category;
-	}
-
-	inline bool Type::isObject() const
-	{
-		return MetaCategory::object == m_category;
+		return MetaCategory::enumeration == m_metaCategory;
 	}
 
 	inline bool Type::isString() const
 	{
-		return MetaCategory::string == m_category;
+		return MetaCategory::string == m_metaCategory;
 	}
 
 	inline bool Type::isBuffer() const
 	{
-		return MetaCategory::buffer == m_category;
+		return MetaCategory::buffer == m_metaCategory;
+	}
+
+	inline bool Type::isObject() const
+	{
+		return MetaCategory::object == m_metaCategory;
 	}
 
 	inline bool Type::isClass() const
 	{
-		return MetaCategory::object <= m_category;
+		return MetaCategory::object <= m_metaCategory;
 	}
 	
 	inline Metadata* Type::getEnclosing() const

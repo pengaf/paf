@@ -1,7 +1,8 @@
 #import "Serializable.i"
+#import "Iterator.i"
 #import "NotifyHandler.i"
 
-namespace pafcore
+namespace paf
 {
 	class(noncopyable) #PAFCORE_EXPORT Editable : Serializable
 	{

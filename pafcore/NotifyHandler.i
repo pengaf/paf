@@ -1,12 +1,10 @@
-#import "Introspectable.i"
-#import "NotifyHandlerList.i"
-#import "Iterator.i"
+#import "Utility.i"
 
 #{
 #include "Utility.h"
 #}
 
-namespace pafcore
+namespace paf
 {
 	enum class PropertyChangedFlag
 	{

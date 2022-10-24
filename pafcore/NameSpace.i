@@ -4,7 +4,7 @@
 #include <unordered_set>
 #}
 
-namespace pafcore
+namespace paf
 {
 
 	abstract class(name_space) NameSpace : Metadata

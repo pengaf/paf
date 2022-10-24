@@ -12,9 +12,9 @@ EnumType::EnumType(const char* name, const char* declarationFile)
 {
 	m_enumerators = 0;
 	m_enumeratorCount = 0;
-	static pafcore::InstanceProperty s_properties[] = 
+	static paf::InstanceProperty s_properties[] = 
 	{
-		::pafcore::InstanceProperty("_name_", nullptr, nullptr, RuntimeTypeOf<string_t>::RuntimeType::GetSingleton(), ::pafcore::TypeCompound::none, ::pafcore::TypeCompound::none, Enum_get__name_, nullptr),
+		::paf::InstanceProperty("_name_", nullptr, nullptr, RuntimeTypeOf<string_t>::RuntimeType::GetSingleton(), ::paf::TypeCompound::none, ::paf::TypeCompound::none, Enum_get__name_, nullptr),
 	};
 	m_instanceProperties = s_properties;
 	m_instancePropertyCount = paf_array_size_of(s_properties);
@@ -25,7 +25,7 @@ size_t EnumType::_getEnumeratorCount_()
 	return m_enumeratorCount;
 }
 
-::pafcore::RawPtr<Enumerator> EnumType::_getEnumerator_(size_t index)
+::paf::RawPtr<Enumerator> EnumType::_getEnumerator_(size_t index)
 {
 	if(index < m_enumeratorCount)
 	{
@@ -34,12 +34,12 @@ size_t EnumType::_getEnumeratorCount_()
 	return nullptr;
 }
 
-::pafcore::RawPtr<Enumerator> EnumType::_getEnumeratorByValue_(int value)
+::paf::RawPtr<Enumerator> EnumType::_getEnumeratorByValue_(int value)
 {
 	for(size_t i = 0; i < m_enumeratorCount; ++i)
 	{
 		Enumerator* enumerator = &m_enumerators[i];
-		if(value == enumerator->m_value)
+		if(value == enumerator->get__value_())
 		{
 			return enumerator;
 		}
@@ -47,7 +47,7 @@ size_t EnumType::_getEnumeratorCount_()
 	return nullptr;
 }
 
-::pafcore::RawPtr<Enumerator> EnumType::_getEnumeratorByName_(string_t name)
+::paf::RawPtr<Enumerator> EnumType::_getEnumeratorByName_(string_t name)
 {
 	Metadata dummy(name);
 	Enumerator* res = std::lower_bound(m_enumerators, m_enumerators + m_enumeratorCount, dummy);
@@ -69,27 +69,27 @@ Enumerator* EnumType::findEnumerator(const char* name)
 	return nullptr;
 }
 
-pafcore::ErrorCode EnumType::Enum_get__name_(pafcore::InstanceProperty* instanceProperty, pafcore::Variant* that, pafcore::Variant* value)
+paf::ErrorCode EnumType::Enum_get__name_(paf::InstanceProperty* instanceProperty, paf::Variant* that, paf::Variant* value)
 {
 	Type* type = that->getType();
 	if(!type->isEnumeration())
 	{
-		return pafcore::ErrorCode::e_invalid_this_type;
+		return paf::ErrorCode::e_invalid_this_type;
 	}
 	int e;
 	if(!that->castToPrimitive(RuntimeTypeOf<int>::RuntimeType::GetSingleton(), &e))
 	{
-		return pafcore::ErrorCode::e_invalid_this_type;
+		return paf::ErrorCode::e_invalid_this_type;
 	}
 	EnumType* enumType = static_cast<EnumType*>(type);
 	Enumerator* enumerator = enumType->_getEnumeratorByValue_(e);
 	if(0 == enumerator)
 	{	
-		return pafcore::ErrorCode::e_invalid_this_type;
+		return paf::ErrorCode::e_invalid_this_type;
 	}
 	string_t res = enumerator->get__name_();
 	value->assignValue<string_t>(res);
-	return pafcore::ErrorCode::s_ok;
+	return paf::ErrorCode::s_ok;
 }
 
 bool EnumType::destruct(void* address)

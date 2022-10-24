@@ -7,12 +7,12 @@
 Node::Node()
 {}
 
-pafcore::BorrowedPtr<Node> Node::PushBack(pafcore::UniquePtr<Node>&& node, pafcore::BorrowedPtr<Node> parentNode)
+paf::BorrowedPtr<Node> Node::PushBack(paf::UniquePtr<Node>&& node, paf::BorrowedPtr<Node> parentNode)
 {
 	PAF_ASSERT(node != nullptr && parentNode != nullptr);
 	PAF_ASSERT(node->m_parent == nullptr && node->m_nextSibling == nullptr && node->m_prevSibling == nullptr && node->m_scene == nullptr);
 
-	pafcore::BorrowedPtr<Node> result(node);
+	paf::BorrowedPtr<Node> result(node);
 	node->m_parent = parentNode;
 	node->m_scene = parentNode->m_scene;
 	if (parentNode->m_childTail != nullptr)
@@ -31,14 +31,14 @@ pafcore::BorrowedPtr<Node> Node::PushBack(pafcore::UniquePtr<Node>&& node, pafco
 	return result;
 }
 
-pafcore::BorrowedPtr<Node> Node::InsertBefore(pafcore::UniquePtr<Node>&& node, pafcore::BorrowedPtr<Node> siblingNode)
+paf::BorrowedPtr<Node> Node::InsertBefore(paf::UniquePtr<Node>&& node, paf::BorrowedPtr<Node> siblingNode)
 {
 	PAF_ASSERT(node != nullptr && siblingNode != nullptr);
 	PAF_ASSERT(node->m_parent == nullptr && node->m_nextSibling == nullptr && node->m_prevSibling == nullptr && node->m_scene == nullptr);
 	PAF_ASSERT(siblingNode->m_parent != nullptr);
 
-	pafcore::BorrowedPtr<Node> result(node);
-	pafcore::BorrowedPtr<Node> parentNode = siblingNode->m_parent;
+	paf::BorrowedPtr<Node> result(node);
+	paf::BorrowedPtr<Node> parentNode = siblingNode->m_parent;
 	node->m_parent = parentNode;
 	node->m_scene = parentNode->m_scene;
 	if (parentNode->m_childHead != siblingNode)
@@ -61,12 +61,12 @@ pafcore::BorrowedPtr<Node> Node::InsertBefore(pafcore::UniquePtr<Node>&& node, p
 	return result;
 }
 
-pafcore::UniquePtr<Node> Node::RemoveFromParent(pafcore::BorrowedPtr<Node> node)
+paf::UniquePtr<Node> Node::RemoveFromParent(paf::BorrowedPtr<Node> node)
 {
 	PAF_ASSERT(node != nullptr && node->m_parent != nullptr && node->m_scene != nullptr);
 
-	pafcore::BorrowedPtr<Node> parentNode = node->m_parent;
-	pafcore::UniquePtr<Node> result(std::move(node->m_nextSibling));
+	paf::BorrowedPtr<Node> parentNode = node->m_parent;
+	paf::UniquePtr<Node> result(std::move(node->m_nextSibling));
 	bool(result) ? result->m_prevSibling : parentNode->m_childTail = node->m_prevSibling;
 	result.swap(bool(node->m_prevSibling) ? node->m_prevSibling->m_nextSibling : parentNode->m_childHead);
 	node->m_prevSibling = nullptr;
@@ -93,8 +93,8 @@ void Node::check__(Scene* scene, Node* parent, int depth)
 	PAF_ASSERT(m_childHead->m_prevSibling == nullptr);
 	PAF_ASSERT(m_childTail->m_nextSibling == nullptr);
 
-	pafcore::UniquePtr<Node>* childNode = &m_childHead;
-	pafcore::UniquePtr<Node>* nextChildNode = &(*childNode)->m_nextSibling;
+	paf::UniquePtr<Node>* childNode = &m_childHead;
+	paf::UniquePtr<Node>* nextChildNode = &(*childNode)->m_nextSibling;
 	while ((*childNode) != nullptr)
 	{
 		(*childNode)->check__(scene, this, depth + 1);

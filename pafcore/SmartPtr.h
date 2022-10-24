@@ -4,16 +4,10 @@
 #include <atomic>
 #include <type_traits>
 
-#ifdef _DEBUG
-#include <mutex>
-#include <unordered_map>
-#include <unordered_set>
-#endif
-
-namespace pafcore
+namespace paf
 {
 	template<typename T>
-	static constexpr bool is_interface = std::is_base_of_v<::pafcore::Interface, T>;
+	static constexpr bool is_interface = std::is_base_of_v<::paf::Interface, T>;
 
 	template<typename T1, typename T2>
 	static constexpr bool convertable_unique_ptr_v = (std::is_base_of_v<T1, T2> || std::is_base_of_v<T2, T1>) && std::has_virtual_destructor_v<T1> && std::has_virtual_destructor_v<T2>;
@@ -663,10 +657,6 @@ namespace pafcore
 	private:
 		UniquePtr(const UniquePtr&) = delete;
 		UniquePtr& operator=(const UniquePtr&) = delete;
-	private:
-		explicit UniquePtr(pointer ptr) noexcept :
-			m_ptr(ptr)
-		{}
 	public:
 		constexpr UniquePtr() noexcept :
 			m_ptr(nullptr)
@@ -674,6 +664,10 @@ namespace pafcore
 
 		constexpr UniquePtr(nullptr_t) noexcept :
 			m_ptr(nullptr)
+		{}
+
+		explicit UniquePtr(pointer ptr) noexcept :
+			m_ptr(ptr)
 		{}
 
 		UniquePtr(UniquePtr&& other) noexcept :

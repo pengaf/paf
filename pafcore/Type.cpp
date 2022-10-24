@@ -6,9 +6,9 @@
 
 BEGIN_PAFCORE
 
-Type::Type(const char* name, MetaCategory category, const char* declarationFile) :
+Type::Type(const char* name, MetaCategory metaCategory, const char* declarationFile) :
 	Metadata(name),
-	m_category(category),
+	m_metaCategory(metaCategory),
 	m_size(0),
 	m_enclosing(0),
 	m_declarationFile(declarationFile)
@@ -17,7 +17,7 @@ Type::Type(const char* name, MetaCategory category, const char* declarationFile)
 
 Type::~Type()
 {
-	if (m_enclosing && MetaCategory::name_space == m_enclosing->get__category_())
+	if (m_enclosing && MetaCategory::name_space == m_enclosing->getType()->getMetaCategory())
 	{
 		static_cast<NameSpace*>(m_enclosing)->unregisterMember(this);
 	}

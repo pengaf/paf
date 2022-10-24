@@ -1,6 +1,6 @@
 #import "ClassType.i"
 
-namespace pafcore
+namespace paf
 {
 
 #{
@@ -16,7 +16,7 @@ namespace pafcore
 		uint32_t offset { get };
 #{
 	public:
-		InstanceField(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound typeCompound, size_t arraySize, size_t offset);
+		InstanceField(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound typeCompound, uint32_t arraySize, uint32_t offset);
 	public:
 		ClassType* m_objectType;
 		Type* m_type;

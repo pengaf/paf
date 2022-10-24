@@ -5,22 +5,22 @@
 
 BEGIN_PAFCORE
 
-void PropertyChangedNotifyHandler::onPropertyChanged(::pafcore::RawPtr<Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, ::pafcore::RawPtr<Iterator> iterator)
+void PropertyChangedNotifyHandler::onPropertyChanged(::paf::RawPtr<Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, ::paf::RawPtr<Iterator> iterator)
 {
 
 }
 
-void PropertyChangedNotifyHandler::onPropertyEditableChanged(::pafcore::RawPtr<Introspectable> sender, string_t propertyName)
+void PropertyChangedNotifyHandler::onPropertyEditableChanged(::paf::RawPtr<Introspectable> sender, string_t propertyName)
 {
 
 }
 
-//void PropertyChangedNotifyHandler::onDynamicPropertyChanged(::pafcore::RawPtr<Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, ::pafcore::RawPtr<Iterator> iterator)
+//void PropertyChangedNotifyHandler::onDynamicPropertyChanged(::paf::RawPtr<Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, ::paf::RawPtr<Iterator> iterator)
 //{
 //
 //}
 //
-//void PropertyChangedNotifyHandler::onUpdateDynamicProperty(::pafcore::RawPtr<Introspectable> sender)
+//void PropertyChangedNotifyHandler::onUpdateDynamicProperty(::paf::RawPtr<Introspectable> sender)
 //{
 //}
 

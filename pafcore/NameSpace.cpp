@@ -33,7 +33,7 @@ NameSpace::~NameSpace()
 	for (; it != end; ++it)
 	{
 		Metadata* member = *it;
-		MetaCategory category = member->get__category_();
+		MetaCategory category = member->getType()->getMetaCategory();
 		switch (category)
 		{
 		case MetaCategory::name_space:
@@ -70,7 +70,7 @@ NameSpace* NameSpace::getNameSpace(const char* name)
 		else
 		{
 			Metadata* member = *it;
-			if(MetaCategory::name_space == member->get__category_())
+			if(MetaCategory::name_space == member->getType()->getMetaCategory())
 			{
 				subNameSpace = static_cast<NameSpace*>(member);
 				PAF_ASSERT(this == subNameSpace->m_enclosing);
@@ -86,7 +86,7 @@ ErrorCode NameSpace::registerMember(Metadata* member)
 	{
 		return ErrorCode::e_invalid_namespace;
 	}
-	MetaCategory category = member->get__category_();
+	MetaCategory category = member->getType()->getMetaCategory();
 	if (MetaCategory::type_alias == category)
 	{
 		static_cast<TypeAlias*>(member)->m_enclosing = this;
@@ -104,7 +104,7 @@ void NameSpace::unregisterMember(Metadata* metadata)
 	m_members.erase(metadata);
 }
 
-::pafcore::RawPtr<Metadata> NameSpace::_findMember_(string_t name)
+::paf::RawPtr<Metadata> NameSpace::_findMember_(string_t name)
 {
 	Metadata* member = 0;
 	char buffer[sizeof(Metadata)];
@@ -123,7 +123,7 @@ size_t NameSpace::_getMemberCount_()
 	return m_members.size();
 }
 
-::pafcore::RawPtr<Metadata> NameSpace::_getMember_(size_t index)
+::paf::RawPtr<Metadata> NameSpace::_getMember_(size_t index)
 {
 	if (index < m_members.size())
 	{
@@ -142,7 +142,7 @@ Metadata* NameSpace::findMember(const char * name)
 	Metadata* member = _findMember_(name);
 	if(0 != member)
 	{
-		if(member->get__category_() == MetaCategory::type_alias)
+		if(member->getType()->getMetaCategory() == MetaCategory::type_alias)
 		{
 			member = static_cast<TypeAlias*>(member)->m_type;
 		}
