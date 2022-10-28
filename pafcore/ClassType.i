@@ -1,6 +1,7 @@
 #import "Type.i"
-#import "InstanceProperty.i"
-#import "InstanceField.i"
+#import "Field.i"
+#import "Property.i"
+#import "Method.i"
 
 namespace paf
 {
@@ -15,6 +16,7 @@ namespace paf
 	class Enumerator;
 	class TypeAlias;
 	class SubclassInvoker;
+	class Variant;
 #}
 	abstract struct #PAFCORE_EXPORT ClassTypeIterator
 	{
@@ -66,6 +68,7 @@ namespace paf
 		//override Type
 		virtual Metadata* findMember(const char* name);
 	public:
+		virtual ::paf::ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs);
 		virtual ::paf::UniquePtr<::paf::Introspectable> createSubclassProxy(SubclassInvoker* subclassInvoker);
 	public:
 		Metadata* findMember(const char* name, bool includeBaseClasses, bool typeAliasToType);
@@ -82,7 +85,8 @@ namespace paf
 		StaticProperty* findStaticProperty(const char* name, bool includeBaseClasses);
 		InstanceMethod* findInstanceMethod(const char* name, bool includeBaseClasses);
 		StaticMethod* findStaticMethod(const char* name, bool includeBaseClasses);
-		bool isIntrospectable() const;
+		bool is_introspectable() const;
+		bool is_trivially_destructible() const;
 		bool hasDynamicInstanceField(bool includeBaseClasses) const;
 		bool hasDynamicInstanceField() const;
 	public:
@@ -116,15 +120,21 @@ namespace paf
 		size_t m_staticPropertyCount;
 		StaticMethod* m_staticMethods;
 		size_t m_staticMethodCount;
-		bool m_introspectable;
+		bool m_is_introspectable;
+		bool m_is_trivially_destructible;
 		bool m_hasDynamicInstanceField;
 #}
 	};
 
 #{
-	inline bool ClassType::isIntrospectable() const
+	inline bool ClassType::is_introspectable() const
 	{
-		return m_introspectable;
+		return m_is_introspectable;
+	}
+
+	inline bool ClassType::is_trivially_destructible() const
+	{
+		return m_is_trivially_destructible;
 	}
 
 	inline InstanceProperty* ClassType::getInstancePropertyBaseClassFirst(size_t index)

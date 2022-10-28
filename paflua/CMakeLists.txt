@@ -1,16 +1,23 @@
 
 set(HeaderFiles
-    "LuaWrapper.h"
+	"ArrayFieldWrapper.h"
+	"ArrayPropertyWrapper.h"
+	"CollectionPropertyWrapper.h"
     "LuaSubclassInvoker.h"
     "paflua.h"
     "Utility.h"
+    "VariantWrapper.h"
 )
 source_group("Header Files" FILES ${HeaderFiles})
 
 set(SourceFiles
-    "LuaWrapper.cpp"
+	"ArrayFieldWrapper.cpp"
+	"ArrayPropertyWrapper.cpp"
+	"CollectionPropertyWrapper.cpp"
     "LuaSubclassInvoker.cpp"
     "paflua.cpp"
+    "Utility.cpp"
+    "VariantWrapper.cpp"
 )
 source_group("Source Files" FILES ${SourceFiles})
        

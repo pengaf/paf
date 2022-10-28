@@ -1,5 +1,4 @@
 #import "Serializable.i"
-#import "Iterator.i"
 #import "NotifyHandler.i"
 
 namespace paf

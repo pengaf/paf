@@ -4,7 +4,7 @@
 #include "String.mc"
 #include <string.h>
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 char* String::s_emptyString = "";
 
@@ -91,4 +91,4 @@ void String::append(string_t str)
 }
 
 
-END_PAFCORE
+END_PAF

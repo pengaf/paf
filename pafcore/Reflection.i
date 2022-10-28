@@ -2,8 +2,8 @@
 #import "TypeAlias.i"
 #import "PrimitiveType.i"
 #import "EnumType.i"
-#import "InstanceField.i"
-#import "InstanceProperty.i"
+#import "Field.i"
+#import "Property.i"
 #import "String.i"
 
 
@@ -12,10 +12,9 @@
 #include "Variant.h"
 #include "PrimitiveType.h"
 #include "EnumType.h"
-#include "InstanceField.h"
-#include "InstanceProperty.h"
-#include "InstanceMethod.h"
-#include "StaticMethod.h"
+#include "Field.h"
+#include "Property.h"
+#include "Method.h"
 #}
 
 namespace paf
@@ -32,9 +31,8 @@ namespace paf
 		static String EnumToString(const Variant& value);
 		static bool StringToEnum(Variant& value, EnumType* enumType, const char* str);
 		
-		static bool IsString(ClassType* type);
-		static bool IsBuffer(ClassType* type);
-
+		//static bool IsString(ClassType* type);
+		//static bool IsBuffer(ClassType* type);
 		//static String ObjectToString(const Variant& value);
 		//static bool StringToObject(Variant& value, ClassType* classType, const char* str);
 		//static String InstancePropertyToString(Introspectable* that, InstanceProperty* instanceProperty);
@@ -42,17 +40,9 @@ namespace paf
 		//static ErrorCode StringToInstanceProperty(Variant& that, InstanceProperty* instanceProperty, const char* str);
 		//static ErrorCode StringToInstanceProperty(Variant& that, const char* propertyName, const char* str);
 
-		//static ErrorCode NewPrimitive(Variant& result, PrimitiveType* primitiveType);
-		//static ErrorCode NewPrimitive(Variant& result, PrimitiveType* primitiveType, Variant* argument);
-		//static ErrorCode NewEnum(Variant& result, EnumType* type);
-		//static ErrorCode NewEnum(Variant& result, EnumType* type, Variant* argument);
-		//static ErrorCode NewClass(Variant& result, ClassType* type);
-		//static ErrorCode NewClass(Variant& result, ClassType* type, Variant* argument);
-		//static ErrorCode NewObject(Variant& result, Type* type);
-		//static ErrorCode NewObject(Variant& result, Type* type, Variant* argument);
-
-		//static ErrorCode GetInstanceFieldRef(Variant& value, Variant* that, InstanceField* field);
-		//static ErrorCode SetInstanceField(Variant* that, InstanceField* field, Variant& value);
+		//static ErrorCode AssignValue(Type* dstType, void* dstPtr, Variant& src);
+		static ErrorCode GetInstanceFieldReference(Variant& result, Variant* that, InstanceField* field);
+		static ErrorCode SetInstanceField(Variant* that, InstanceField* field, Variant& value);
 		
 
 		static ErrorCode SimpleInstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, Variant* value);

@@ -6,7 +6,7 @@
 #include <string.h>
 #include <algorithm>
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 class CompareAttributeByName
 {
@@ -91,4 +91,4 @@ bool CompareMetaDataPtrByName::operator()(const Metadata* m1, const Metadata* m2
 	return strcmp(m1->m_name, m2->m_name) < 0;
 }
 
-END_PAFCORE
+END_PAF

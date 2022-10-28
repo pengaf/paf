@@ -3,7 +3,7 @@
 #include "Editable.ic"
 #include "Editable.mc"
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 void PropertyChangedNotifyHandler::onPropertyChanged(::paf::RawPtr<Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, ::paf::RawPtr<Iterator> iterator)
 {
@@ -25,4 +25,4 @@ void PropertyChangedNotifyHandler::onPropertyEditableChanged(::paf::RawPtr<Intro
 //}
 
 
-END_PAFCORE
+END_PAF

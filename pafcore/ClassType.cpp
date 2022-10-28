@@ -3,15 +3,12 @@
 #include "ClassType.ic"
 #include "ClassType.mc"
 #include "Variant.h"
-#include "InstanceField.h"
-#include "InstanceProperty.h"
-#include "InstanceMethod.h"
-#include "StaticField.h"
-#include "StaticProperty.h"
-#include "StaticMethod.h"
+#include "Field.h"
+#include "Property.h"
+#include "Method.h"
 #include <algorithm>
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 ClassType::ClassType(const char* name, MetaCategory category, const char* declarationFile)
 : Type(name, category, declarationFile)
@@ -330,6 +327,11 @@ Metadata* ClassType::findMember(const char* name)
 	return findMember(name, true, true);
 }
 
+::paf::ErrorCode ClassType::placementNew(void* ptr, ::paf::Variant** args, uint32_t numArgs)
+{
+	return ErrorCode::e_not_implemented;
+}
+
 ::paf::UniquePtr<::paf::Introspectable> ClassType::createSubclassProxy(SubclassInvoker* subclassInvoker)
 {
 	return ::paf::UniquePtr<::paf::Introspectable>(nullptr);
@@ -598,4 +600,4 @@ bool ClassType::hasDynamicInstanceField(bool includeBaseClasses) const
 	}
 }
 
-END_PAFCORE
+END_PAF

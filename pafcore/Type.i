@@ -4,6 +4,7 @@ namespace paf
 {
 #{
 	class NameSpace;
+	class Variant;
 #}
 	abstract class #PAFCORE_EXPORT Type : Metadata
 	{
@@ -14,10 +15,12 @@ namespace paf
 		Type(const char* name, MetaCategory category, const char* declarationFile);
 		~Type();
 	public:
-		virtual bool destruct(void* address) = 0;
-		virtual bool copyConstruct(void* dst, const void* src) = 0;
-		virtual bool copyAssign(void* dst, const void* src) = 0;
-		virtual Metadata* findMember(const char* name) = 0;
+		virtual ::paf::ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs);
+		virtual bool placementNewArray(void* address, size_t count);
+		virtual bool destruct(void* address);
+		virtual bool copyConstruct(void* dst, const void* src);
+		virtual bool copyAssign(void* dst, const void* src);
+		virtual Metadata* findMember(const char* name);
 	public:
 		MetaCategory getMetaCategory() const;
 		bool isPrimitive() const;

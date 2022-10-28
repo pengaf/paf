@@ -2,10 +2,10 @@
 #include "EnumType.mh"
 #include "EnumType.ic"
 #include "EnumType.mc"
-#include "InstanceProperty.h"
+#include "Property.h"
 #include <algorithm>
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 EnumType::EnumType(const char* name, const char* declarationFile)
 : Type(name, MetaCategory::enumeration, declarationFile)
@@ -92,6 +92,41 @@ paf::ErrorCode EnumType::Enum_get__name_(paf::InstanceProperty* instanceProperty
 	return paf::ErrorCode::s_ok;
 }
 
+::paf::ErrorCode EnumType::placementNew(void* address, ::paf::Variant** args, uint32_t numArgs)
+{
+	if (0 == numArgs)
+	{
+		return ::paf::ErrorCode::s_ok;
+	}
+	int a0;
+	if (!args[0]->castToPrimitive(RuntimeTypeOf<int>::RuntimeType::GetSingleton(), &a0))
+	{
+		return ::paf::ErrorCode::e_invalid_arg_type_1;
+	}
+	if (1 == numArgs)
+	{
+		switch (m_size)
+		{
+		case 1:
+			*reinterpret_cast<int8_t*>(address) = a0;
+			break;
+		case 2:
+			*reinterpret_cast<int16_t*>(address) = a0;
+			break;
+		case 4:
+			*reinterpret_cast<int32_t*>(address) = a0;
+			break;
+		}
+		return ::paf::ErrorCode::s_ok;
+	}
+	return ::paf::ErrorCode::e_too_many_arguments;
+}
+
+bool EnumType::placementNewArray(void* address, size_t count)
+{
+	return true;
+}
+
 bool EnumType::destruct(void* address)
 {
 	return true;
@@ -110,9 +145,9 @@ bool EnumType::copyConstruct(void* dst, const void* src)
 	case 4:
 		*reinterpret_cast<int32_t*>(dst) = *reinterpret_cast<const int32_t*>(src);
 		break;
-	case 8:
-		*reinterpret_cast<int64_t*>(dst) = *reinterpret_cast<const int64_t*>(src);
-		break;
+	//case 8:
+	//	*reinterpret_cast<int64_t*>(dst) = *reinterpret_cast<const int64_t*>(src);
+	//	break;
 	default:
 		PAF_ASSERT(false);
 		return false;
@@ -133,9 +168,9 @@ bool EnumType::copyAssign(void* dst, const void* src)
 	case 4:
 		*reinterpret_cast<int32_t*>(dst) = *reinterpret_cast<const int32_t*>(src);
 		break;
-	case 8:
-		*reinterpret_cast<int64_t*>(dst) = *reinterpret_cast<const int64_t*>(src);
-		break;
+	//case 8:
+	//	*reinterpret_cast<int64_t*>(dst) = *reinterpret_cast<const int64_t*>(src);
+	//	break;
 	default:
 		PAF_ASSERT(false);
 		return false;
@@ -196,4 +231,13 @@ void EnumType::castFromPrimitive(void* dst, PrimitiveType* srcType, const void* 
 	}
 }
 
-END_PAFCORE
+
+Enumerator::Enumerator(const char* name, Attributes* attributes, EnumType* type, int value)
+	: Metadata(name, attributes)
+{
+	m_type = type;
+	m_value = value;
+}
+
+
+END_PAF

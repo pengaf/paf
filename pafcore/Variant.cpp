@@ -5,61 +5,162 @@
 #include "EnumType.h"
 #include "ClassType.h"
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
-//
-//#ifdef _DEBUG
-//
-//class VariantLeakReporter
-//{
-//public:
-//	~VariantLeakReporter()
-//	{
-//		m_liveObjects.lock();
-//		for (auto& item : m_liveObjects.m_objects)
-//		{
-//			Variant* variant = item.first;
-//			size_t serialNumber = item.second;
-//			char buf[1024];
-//#ifdef _WIN64
-//			sprintf_s(buf, "pafcore Warning: Live Variant at 0x%p, SerialNumber:%llu\n",
-//				variant, serialNumber);
-//#else
-//			sprintf_s(buf, "pafcore Warning: Live Variant at 0x%p, SerialNumber:%lu\n",
-//				variant, serialNumber);
-//#endif
-//			OutputDebugStringA(buf);
-//		}
-//		m_liveObjects.unlock();
-//	}
-//public:
-//	void onVariantConstruct(Variant* variant)
-//	{
-//		m_liveObjects.addPtr(variant);
-//	}
-//	void onVariantDestruct(Variant* variant)
-//	{
-//		m_liveObjects.removePtr(variant);
-//	}
-//public:
-//	LiveObjects<Variant> m_liveObjects;
-//public:
-//	static VariantLeakReporter* GetInstance()
-//	{
-//		static VariantLeakReporter s_instance;
-//		return &s_instance;
-//	}
-//};
-//
-//#endif//_DEBUG
-//
+
+class GenericBoxImpl : public Box
+{
+	GenericBoxImpl() = default;
+public:
+	void destruct() override
+	{
+		Type* type = *(reinterpret_cast<Type**>(this) - 1);
+		if (type->isObject())
+		{
+			ClassType* classType = static_cast<ClassType*>(type);
+			if (!classType->m_is_trivially_destructible)
+			{
+				classType->destruct(this + 1);
+			}
+		}
+	}
+	void deallocate() override
+	{
+		free(reinterpret_cast<Type**>(this) - 1);
+	}
+public:
+	static ErrorCode New(void*& address, Type* type, ::paf::Variant** args, uint32_t numArgs)
+	{
+		size_t size = sizeof(Type*) + sizeof(GenericBoxImpl) + type->get__size_();
+		void* p = malloc(size);
+		Type** ppType = reinterpret_cast<Type**>(p);
+		GenericBoxImpl* box = reinterpret_cast<GenericBoxImpl*>(ppType + 1);
+		void* ptr = (box + 1);
+		ErrorCode errorCode = type->placementNew(ptr, args, numArgs);
+		if (ErrorCode::s_ok == errorCode)
+		{
+			*ppType = type;
+			new(box)GenericBoxImpl();
+			address = ptr;
+		}
+		else
+		{
+			free(p);
+		}
+		return errorCode;
+	}
+};
+
+class GenericArrayBoxImpl : public ArrayBox
+{
+public:
+	void destructArray(size_t arraySize) override
+	{
+		Type* type = *(reinterpret_cast<Type**>(this) - 1);
+		if (type->isObject())
+		{
+			ClassType* classType = static_cast<ClassType*>(type);
+			if (!classType->is_trivially_destructible())
+			{
+				void* p = this + 1;
+				size_t size = classType->get__size_();
+				for (; arraySize > 0; --arraySize)
+				{
+					classType->destruct(p);
+					p = (void*)(size_t(p) + size);
+				}
+			}
+		}
+	}
+	void deallocate() override
+	{
+		free(reinterpret_cast<Type**>(this) - 1);
+	}
+public:
+	static ErrorCode NewArray(void*& address, Type* type, size_t arraySize)
+	{
+		size_t size = sizeof(Type*) + sizeof(GenericArrayBoxImpl) + type->get__size_() * arraySize;
+		void* p = malloc(size);
+		Type** ppType = reinterpret_cast<Type**>(p);
+		GenericArrayBoxImpl* box = reinterpret_cast<GenericArrayBoxImpl*>(ppType + 1);
+		void* ptr = (box + 1);
+		if (type->placementNewArray(ptr, arraySize))
+		{
+			*ppType = type;
+			new(box)GenericArrayBoxImpl();
+			address = ptr;
+			return ErrorCode::s_ok;
+
+		}
+		else
+		{
+			free(p);
+			return ErrorCode::e_not_implemented;
+		}
+	}
+};
+
+class GenericValueBoxImpl : public ValueBox
+{
+public:
+	void destruct() override
+	{
+		Type* type = *(reinterpret_cast<Type**>(this) - 1);
+		if (type->isObject())
+		{
+			ClassType* classType = static_cast<ClassType*>(type);
+			if (!classType->is_trivially_destructible())
+			{
+				classType->destruct(this + 1);
+			}
+		}
+	}
+	void deallocate() override
+	{
+		free(reinterpret_cast<Type**>(this) - 1);
+	}
+public:
+	static ErrorCode NewSmall(Type* type, void* storage, ::paf::Variant** args, uint32_t numArgs)
+	{
+		static_assert(sizeof(GenericValueBoxImpl) == sizeof(ValueBox), "");
+		GenericValueBoxImpl* box = (GenericValueBoxImpl*)storage;
+		void* ptr = (box + 1);
+		ErrorCode errorCode = type->placementNew(ptr, args, numArgs);
+		if (ErrorCode::s_ok == errorCode)
+		{
+			new(box)GenericValueBoxImpl();
+		}
+		return errorCode;
+	}
+	static ErrorCode NewBig(void*& address, Type* type, ::paf::Variant** args, uint32_t numArgs)
+	{
+		static_assert(sizeof(GenericValueBoxImpl) == sizeof(ValueBox), "");
+		size_t size = sizeof(Type*) + sizeof(GenericValueBoxImpl) + type->get__size_();
+		void* p = malloc(size);
+		Type** ppType = reinterpret_cast<Type**>(p);
+		GenericValueBoxImpl* box = reinterpret_cast<GenericValueBoxImpl*>(ppType + 1);
+		void* ptr = (box + 1);
+		ErrorCode errorCode = type->placementNew(ptr, args, numArgs);
+		if (ErrorCode::s_ok == errorCode)
+		{
+			*ppType = type;
+			new(box)GenericValueBoxImpl();
+			address = ptr;
+		}
+		else
+		{
+			free(p);
+		}
+		return errorCode;
+	}
+};
 
 inline bool IsFinal(Type* type, void* ptr)
 {
 	if (int(type->getMetaCategory()) >= int(MetaCategory::object))
 	{
 		ClassType* classType = static_cast<ClassType*>(type);
-		if (classType->isIntrospectable())
+		if (classType->is_introspectable())
 		{
 			Type* finalType = reinterpret_cast<Introspectable*>(ptr)->getType();
 			return finalType == type;
@@ -73,7 +174,7 @@ inline void DynamicCast(Type*& type, void*& ptr)
 	if (int(type->getMetaCategory()) >= int(MetaCategory::object))
 	{
 		ClassType* classType = static_cast<ClassType*>(type);
-		if (classType->isIntrospectable())
+		if (classType->is_introspectable())
 		{
 			type = reinterpret_cast<Introspectable*>(ptr)->getType();
 			ptr = reinterpret_cast<Introspectable*>(ptr)->getAddress();
@@ -108,10 +209,10 @@ Variant::Variant(Variant&& var)
 
 Variant::~Variant()
 {
-	clear();
-#ifdef _DEBUG
-	//VariantLeakReporter::GetInstance()->onVariantDestruct(this);
-#endif//_DEBUG
+	if (vt_null != m_category)
+	{
+		clear();
+	}
 }
 
 void Variant::assign(Variant&& var)
@@ -177,6 +278,7 @@ void* Variant::getRawPointer() const
 	}
 }
 
+
 void Variant::assignEnumByInt(EnumType* type, int value)
 {
 	clear();
@@ -186,85 +288,121 @@ void Variant::assignEnumByInt(EnumType* type, int value)
 	m_category = vt_small_value;
 }
 
+void Variant::assignReference(Type* type, void* ptr)
+{
+	clear();
+	if (ptr)
+	{
+		DynamicCast(type, ptr);
+		m_type = type;
+		m_ptr = ptr;
+		m_category = vt_reference;
+	}
+}
+
 void Variant::assignRawPtr(Type* type, void* ptr)
 {
 	clear();
-	DynamicCast(type, ptr);
-	m_type = type;
-	m_ptr = ptr;
-	m_category = vt_raw_ptr;
+	if (ptr)
+	{
+		DynamicCast(type, ptr);
+		m_type = type;
+		m_ptr = ptr;
+		m_category = vt_raw_ptr;
+	}
 }
 
 void Variant::assignRawArray(Type* type, void* ptr, size_t size)
 {
 	clear();
-	PAF_ASSERT(IsFinal(type, ptr));
-	m_type = type;
-	m_ptr = ptr;
-	m_arraySize = size;
-	m_category = vt_raw_array;
+	if (ptr)
+	{
+		PAF_ASSERT(IsFinal(type, ptr));
+		m_type = type;
+		m_ptr = ptr;
+		m_arraySize = size;
+		m_category = vt_raw_array;
+	}
 }
 
 void Variant::assignBorrowedPtr(Type* type, void* ptr)
 {
 	clear();
-	DynamicCast(type, ptr);
-	m_type = type;
-	m_ptr = ptr;
-	m_category = vt_borrowed_ptr;
+	if (ptr)
+	{
+		DynamicCast(type, ptr);
+		m_type = type;
+		m_ptr = ptr;
+		m_category = vt_borrowed_ptr;
+	}
 }
 
 void Variant::assignBorrowedArray(Type* type, void* ptr, size_t size)
 {
 	clear();
-	PAF_ASSERT(IsFinal(type, ptr));
-	m_type = type;
-	m_ptr = ptr;
-	m_arraySize = size;
-	m_category = vt_borrowed_array;
+	if (ptr)
+	{
+		PAF_ASSERT(IsFinal(type, ptr));
+		m_type = type;
+		m_ptr = ptr;
+		m_arraySize = size;
+		m_category = vt_borrowed_array;
+	}
 }
 
 void Variant::assignSharedPtr(Type* type, void* ptr)
 {
 	clear();
-	DynamicCast(type, ptr);
-	m_type = type;
-	m_ptr = ptr;
-	m_category = vt_shared_ptr;
+	if (ptr)
+	{
+		DynamicCast(type, ptr);
+		m_type = type;
+		m_ptr = ptr;
+		m_category = vt_shared_ptr;
+	}
 }
 
 void Variant::assignSharedArray(Type* type, void* ptr, size_t size)
 {
 	clear();
-	PAF_ASSERT(IsFinal(type, ptr));
-	m_type = type;
-	m_ptr = ptr;
-	m_arraySize = size;
-	m_category = vt_shared_array;
+	if (ptr)
+	{
+		PAF_ASSERT(IsFinal(type, ptr));
+		m_type = type;
+		m_ptr = ptr;
+		m_arraySize = size;
+		m_category = vt_shared_array;
+	}
 }
 
 void Variant::assignUniquePtr(Type* type, void* ptr)
 {
 	clear();
-	DynamicCast(type, ptr);
-	m_type = type;
-	m_ptr = ptr;
-	m_category = vt_unique_ptr;
+	if (ptr)
+	{
+		DynamicCast(type, ptr);
+		m_type = type;
+		m_ptr = ptr;
+		m_category = vt_unique_ptr;
+	}
 }
 
 void Variant::assignUniqueArray(Type* type, void* ptr, size_t size)
 {
 	clear();
-	PAF_ASSERT(IsFinal(type, ptr));
-	m_type = type;
-	m_ptr = ptr;
-	m_arraySize = size;
-	m_category = vt_unique_array;
+	if (ptr)
+	{
+		PAF_ASSERT(IsFinal(type, ptr));
+		m_type = type;
+		m_ptr = ptr;
+		m_arraySize = size;
+		m_category = vt_unique_array;
+	}
 }
 
 bool Variant::castToPrimitive(PrimitiveType* dstType, void* dst) const
 {
-	if (vt_null == m_category)
+	if (vt_small_value != m_category && vt_reference != m_category)
 	{
 		return false;
 	}
@@ -280,11 +418,12 @@ bool Variant::castToPrimitive(PrimitiveType* dstType, void* dst) const
 		enumType->castToPrimitive(dst, dstType, getRawPointer());
 		return true;
 	}
+	return false;
 }
 
 bool Variant::castToEnum(EnumType* dstType, void* dst) const
 {
-	if (vt_null == m_category)
+	if (vt_small_value != m_category && vt_reference != m_category)
 	{
 		return false;
 	}
@@ -308,7 +447,7 @@ bool Variant::castToEnum(EnumType* dstType, void* dst) const
 
 bool Variant::castToString(string_t& str)
 {
-	if (vt_null == m_category)
+	if (!isValue() && !isReference())
 	{
 		return false;
 	}
@@ -336,7 +475,7 @@ bool Variant::castToString(string_t& str)
 
 bool Variant::castToBuffer(buffer_t& buf)
 {
-	if (vt_null == m_category)
+	if (!isValue() && !isReference())
 	{
 		return false;
 	}
@@ -383,7 +522,7 @@ bool Variant::castToRawPointer(Type* dstType, void** dst) const
 	}
 	if (srcType->isClass() && dstType->isClass())
 	{
-		if (static_cast<ClassType*>(srcType)->isIntrospectable())
+		if (static_cast<ClassType*>(srcType)->is_introspectable())
 		{
 			Introspectable* introspectable = (Introspectable*)src;
 			srcType = introspectable->getType();
@@ -397,6 +536,81 @@ bool Variant::castToRawPointer(Type* dstType, void** dst) const
 		}
 	}
 	return false;
+}
+
+ErrorCode Variant::newValue(Type* type, ::paf::Variant** args, uint32_t numArgs)
+{
+	clear();
+	ErrorCode errorCode;
+	if (sizeof(ValueBox) + type->get__size_() <= sizeof(m_storage))
+	{
+		errorCode = GenericValueBoxImpl::NewSmall(type, m_storage, args, numArgs);
+		if (ErrorCode::s_ok == errorCode)
+		{
+			m_category = vt_small_value;
+			m_type = type;
+		}
+	}
+	else
+	{
+		errorCode = GenericValueBoxImpl::NewBig(m_ptr, type, args, numArgs);
+		if (ErrorCode::s_ok == errorCode)
+		{
+			m_category = vt_big_value;
+			m_type = type;
+		}
+	}
+	return errorCode;
+}
+
+ErrorCode Variant::newUniquePtr(Type* type, ::paf::Variant** args, uint32_t numArgs)
+{
+	clear();
+	ErrorCode errorCode = GenericBoxImpl::New(m_ptr, type, args, numArgs);
+	if (ErrorCode::s_ok == errorCode)
+	{
+		m_category = vt_unique_ptr;
+		m_type = type;
+	}
+	return errorCode;
+}
+
+ErrorCode Variant::newUniqueArray(Type* type, size_t count)
+{
+	clear();
+	ErrorCode errorCode = GenericArrayBoxImpl::NewArray(m_ptr, type, count);
+	if (ErrorCode::s_ok == errorCode)
+	{
+		m_category = vt_unique_array;
+		m_type = type;
+		m_arraySize = count;
+	}
+	return errorCode;
+}
+
+ErrorCode Variant::newSharedPtr(Type* type, ::paf::Variant** args, uint32_t numArgs)
+{
+	clear();
+	ErrorCode errorCode = GenericBoxImpl::New(m_ptr, type, args, numArgs);
+	if (ErrorCode::s_ok == errorCode)
+	{
+		m_category = vt_shared_ptr;
+		m_type = type;
+	}
+	return errorCode;
+}
+
+ErrorCode Variant::newSharedArray(Type* type, size_t count)
+{
+	clear();
+	ErrorCode errorCode = GenericArrayBoxImpl::NewArray(m_ptr, type, count);
+	if (ErrorCode::s_ok == errorCode)
+	{
+		m_category = vt_shared_array;
+		m_type = type;
+		m_arraySize = count;
+	}
+	return errorCode;
 }
 
 ErrorCode Variant::subscript(Variant& var, uint32_t index)
@@ -438,5 +652,42 @@ ErrorCode Variant::subscript(Variant& var, uint32_t index)
 	return ErrorCode::e_is_not_array;
 }
 
-END_PAFCORE
+ErrorCode Variant::newUniqueArray(Type* type, ::paf::Variant** args, uint32_t numArgs)
+{
+	if (numArgs < 1)
+	{
+		return ::paf::ErrorCode::e_too_few_arguments;
+	}
+	::size_t a0;
+	if (!args[0]->castToPrimitive(RuntimeTypeOf<::size_t>::RuntimeType::GetSingleton(), &a0))
+	{
+		return ::paf::ErrorCode::e_invalid_arg_type_1;
+	}
+	if (1 == numArgs)
+	{
+		return newUniqueArray(type, a0);
+	}
+	return ::paf::ErrorCode::e_too_many_arguments;
+}
+
+ErrorCode Variant::newSharedArray(Type* type, ::paf::Variant** args, uint32_t numArgs)
+{
+	if (numArgs < 1)
+	{
+		return ::paf::ErrorCode::e_too_few_arguments;
+	}
+	::size_t a0;
+	if (!args[0]->castToPrimitive(RuntimeTypeOf<::size_t>::RuntimeType::GetSingleton(), &a0))
+	{
+		return ::paf::ErrorCode::e_invalid_arg_type_1;
+	}
+	if (1 == numArgs)
+	{
+		return newSharedArray(type, a0);
+	}
+	return ::paf::ErrorCode::e_too_many_arguments;
+}
+
+
+END_PAF
 

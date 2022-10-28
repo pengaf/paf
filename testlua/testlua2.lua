@@ -10,7 +10,7 @@ function ListPrimitiveMember(var, indent, recursive)
 	count = var:_getMemberCount_();
 	for i = 1, count do
 		member = var:_getMember_(i - 1);
-		print(Indentation(indent) .. member._name_ .. " : " .. member._metaCategory_._name_);
+		print(Indentation(indent) .. member._name_ .. " : " .. idlcpp.paf.MetaCategory:_getEnumeratorByValue_(member._metaCategory_)._name_);
 	end
 end
 
@@ -31,7 +31,7 @@ function ListClassMember(var, indent, recursive)
 	count = var:_getMemberCount_(false);
 	for i = 1, count do
 		member = var:_getMember_(i - 1, false);
-		print(Indentation(indent) .. member._name_ .. " : " .. member._metaCategory_._name_);
+		print(Indentation(indent) .. member._name_ .. " : " .. idlcpp.paf.MetaCategory:_getEnumeratorByValue_(member._metaCategory_)._name_);
 		if recursive then
 			ListMember(member, indent + 1, recursive);
 		end
@@ -42,7 +42,7 @@ function ListNamespaceMember(var, indent, recursive)
 	count = var:_getMemberCount_();
 	for i = 1, count do
 		member = var:_getMember_(i - 1);
-		print(Indentation(indent) .. member._name_ .. " : " .. member._metaCategory_._name_);
+		print(Indentation(indent) .. member._name_ .. " : " .. idlcpp.paf.MetaCategory:_getEnumeratorByValue_(member._metaCategory_)._name_);
 		if recursive then
 			ListMember(member, indent + 1, recursive);
 		end

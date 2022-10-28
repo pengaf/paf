@@ -1,6 +1,4 @@
 #import "Type.i"
-#import "Enumerator.i"
-
 
 namespace paf
 {
@@ -21,6 +19,8 @@ namespace paf
 		EnumType(const char* name, const char* declarationFile);
 	public:
 		//override Type
+		virtual ::paf::ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs) override;
+		virtual bool placementNewArray(void* address, size_t count) override;
 		virtual bool destruct(void* address) override;
 		virtual bool copyConstruct(void* dst, const void* src) override;
 		virtual bool copyAssign(void* dst, const void* src) override;
@@ -38,4 +38,31 @@ namespace paf
 		size_t m_instancePropertyCount;
 #}
 	};
+
+	abstract class(enumerator)#PAFCORE_EXPORT Enumerator : Metadata
+	{
+		EnumType _type_ { get* };
+		int _value_ { get };
+#{
+	public:
+		Enumerator(const char* name, Attributes* attributes, EnumType* type, int value);
+	private:
+		EnumType* m_type;
+		int m_value;
+#}
+	};
+
+
+#{
+	inline ::paf::RawPtr<EnumType> Enumerator::get__type_() const
+	{
+		return m_type;
+	}
+
+	inline int Enumerator::get__value_() const
+	{
+		return m_value;
+	}
+#}
+
 }

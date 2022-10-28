@@ -18,8 +18,8 @@
 #define PAF_RELEASE_ONLY(...) __VA_ARGS__
 #endif
 
-#define BEGIN_PAFCORE namespace paf {
-#define END_PAFCORE }
+#define BEGIN_PAF namespace paf {
+#define END_PAF }
 
 #define PAF_CONCAT_(a, b) a ## b
 #define PAF_CONCAT(a, b)  PAF_CONCAT_(a, b)
@@ -84,62 +84,6 @@ template<typename T>
 struct RuntimeTypeOf
 {};
 
-template<typename T, bool b = std::is_destructible_v<T>>
-struct DestructorCaller
-{
-	static bool Call(void* p)
-	{
-		reinterpret_cast<T*>(p)->~T();
-		return true;
-	}
-};
-
-template<typename T>
-struct DestructorCaller<T, false>
-{
-	static bool Call(void* p)
-	{
-		return false;
-	}
-};
-
-template<typename T, bool b = std::is_copy_constructible_v<T>>
-struct CopyConstructorCaller
-{
-	static bool Call(void* dst, const void* src)
-	{
-		new(dst)T(*reinterpret_cast<const T*>(src));
-		return true;
-	}
-};
-
-template<typename T>
-struct CopyConstructorCaller<T, false>
-{
-	static bool Call(void* dst, const void* src)
-	{
-		return false;
-	}
-};
-
-template<typename T, bool b = std::is_copy_assignable_v<T>>
-struct CopyAssignmentCaller
-{
-	static bool Call(void* dst, const void* src)
-	{
-		*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
-		return true;
-	}
-};
-
-template<typename T>
-struct CopyAssignmentCaller<T, false>
-{
-	static bool Call(void* dst, const void* src)
-	{
-		return false;
-	}
-};
 
 template<typename T>
 struct AutoRegisterType
@@ -214,16 +158,108 @@ typename ptrdiff_t;
 namespace paf
 {
 #{
+	template<typename T, bool b = std::is_default_constructible_v<T>>
+	struct PlacementNewDefaultCaller
+	{
+		static bool Call(void* p)
+		{
+			new(p)T;
+			return true;
+		}
+	};
+	template<typename T>
+	struct PlacementNewDefaultCaller<T, false>
+	{
+		static bool Call(void* p)
+		{
+			return false;
+		}
+	};
+
+	template<typename T, bool b = std::is_default_constructible_v<T>>
+	struct PlacementNewArrayCaller
+	{
+		static bool Call(void* p, size_t count)
+		{
+			new(p)T[count];
+			return true;
+		}
+	};
+	template<typename T>
+	struct PlacementNewArrayCaller<T, false>
+	{
+		static bool Call(void* p, size_t count)
+		{
+			return false;
+		}
+	};
+
+	template<typename T, bool b = std::is_destructible_v<T>>
+	struct DestructorCaller
+	{
+		static bool Call(void* p)
+		{
+			reinterpret_cast<T*>(p)->~T();
+			return true;
+		}
+	};
+
+	template<typename T>
+	struct DestructorCaller<T, false>
+	{
+		static bool Call(void* p)
+		{
+			return false;
+		}
+	};
+
+	template<typename T, bool b = std::is_copy_constructible_v<T>>
+	struct CopyConstructorCaller
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			new(dst)T(*reinterpret_cast<const T*>(src));
+			return true;
+		}
+	};
+
+	template<typename T>
+	struct CopyConstructorCaller<T, false>
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			return false;
+		}
+	};
+
+	template<typename T, bool b = std::is_copy_assignable_v<T>>
+	struct CopyAssignmentCaller
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
+			return true;
+		}
+	};
+
+	template<typename T>
+	struct CopyAssignmentCaller<T, false>
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			return false;
+		}
+	};
+
 	const size_t max_method_param_count = 32;
 
 	enum class ErrorCode
 	{
 		s_ok,
-		e_invalid_namespace,
 		e_name_conflict,
-		e_is_null,
 		e_is_not_type,
 		e_is_not_class,
+		e_is_not_string,
 		e_is_not_array,
 		e_invalid_subscript_type,
 		e_member_not_found,
@@ -240,8 +276,6 @@ namespace paf
 		e_invalid_object_type,
 		e_invalid_field_type,
 		e_invalid_property_type,
-		e_invalid_too_few_arguments,
-		e_invalid_too_many_arguments,
 		e_invalid_this_type,
 		e_invalid_arg_type_1,
 		e_invalid_arg_type_2,
@@ -275,6 +309,8 @@ namespace paf
 		e_invalid_arg_type_30,
 		e_invalid_arg_type_31,
 		e_invalid_arg_type_32,
+		e_too_few_arguments,
+		e_too_many_arguments,
 		e_not_implemented,
 		e_script_error,
 		e_script_dose_not_override,
@@ -397,6 +433,17 @@ namespace paf
 #}
 	};
 
+	class #PAFCORE_EXPORT Iterator
+	{
+#{
+		virtual bool isEnd() const = 0;
+		virtual void moveNext() = 0;
+		virtual void reset() = 0;
+		virtual bool equal(Iterator* other) const = 0;
+#}
+	};
+
+
 	class(noncopyable) #PAFCORE_EXPORT Introspectable ## : public IntrospectableInterface
 	{
 #{
@@ -429,6 +476,145 @@ namespace paf
 		}
 #}
 	};
+
+#{
+	template<typename C, typename I = C::iterator>
+	class IteratorImpl : public Iterator
+	{
+	public:
+		typedef C ContainerType;
+		typedef I IteratorType;
+		typedef IteratorImpl<C, I> ThisType;
+	public:
+		IteratorImpl(C* container) :
+			m_container(container),
+			m_end(container->end()),
+			m_iterator(m_container->begin())
+		{}
+
+		IteratorImpl(C* container, const I& iterator) :
+			m_container(container),
+			m_end(container->end()),
+			m_iterator(iterator)
+		{}
+
+		IteratorImpl(C* container, const I& end, const I& iterator) :
+			m_container(container),
+			m_end(end),
+			m_iterator(iterator)
+		{}
+	public:
+		virtual bool isEnd() const
+		{
+			return (m_end == m_iterator);
+		}
+		virtual void moveNext()
+		{
+			if (m_end != m_iterator)
+			{
+				++m_iterator;
+			}
+		}
+		virtual void reset()
+		{
+			//m_end = m_container->end();
+			m_iterator = m_container->begin();
+		}
+		virtual bool equal(Iterator* other) const
+		{
+			return (static_cast<ThisType*>(other)->m_iterator == m_iterator);
+		}
+	public:
+		ContainerType* getContainer()
+		{
+			return m_container;
+		}
+		IteratorType& getIterator()
+		{
+			return m_iterator;
+		}
+	protected:
+		ContainerType* m_container;
+		IteratorType m_end;
+		IteratorType m_iterator;
+	};
+
+	template<typename T>
+	class ArrayIteratorImpl : public Iterator
+	{
+	public:
+		typedef ArrayIteratorImpl<T> ThisType;
+	public:
+		ArrayIteratorImpl(T* begin, size_t size) :
+			m_begin(begin),
+			m_size(size),
+			m_index(0)
+		{}
+		ArrayIteratorImpl(T* begin, size_t size, size_t index) :
+			m_begin(begin),
+			m_size(size),
+			m_index(index)
+		{}
+	public:
+		virtual bool isEnd() const
+		{
+			return (m_index == m_size);
+		}
+		virtual void moveNext()
+		{
+			if (m_index != m_size)
+			{
+				++m_index;
+			}
+		}
+		virtual void reset()
+		{
+			m_index = 0;
+		}
+		virtual bool equal(Iterator* other) const
+		{
+			ThisType* that = static_cast<ThisType*>(other);
+			return (that->m_begin + that->m_index == m_begin + m_index);
+		}
+	public:
+		T* getBegin()
+		{
+			return m_begin;
+		}
+		size_t getIndex()
+		{
+			return m_index;
+		}
+	protected:
+		T* m_begin;
+		size_t m_size;
+		size_t m_index;
+	};
+
+	template<typename C, typename I>
+	static IteratorImpl<C, I> MakeIterator(C* c, const I& i)
+	{
+		return IteratorImpl<C, I>(c, i);
+	}
+	template<typename C>
+	static IteratorImpl<C, typename C::iteartor> MakeIterator(C* c)
+	{
+		return IteratorImpl<C>IteratorImpl(c);
+	}
+
+	template<typename T>
+	static ArrayIteratorImpl<T> MakeIterator(T* begin, size_t size)
+	{
+		return ArrayIteratorImpl<T>(begin, size);
+	}
+
+	template<typename T>
+	static ArrayIteratorImpl<T> MakeIterator(T* begin, size_t size, size_t index)
+	{
+		return ArrayIteratorImpl<T>(begin, size, index);
+	}
+
+#}
 
 }
 

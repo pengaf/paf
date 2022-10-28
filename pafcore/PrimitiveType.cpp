@@ -5,37 +5,37 @@
 #include "TypeAlias.h"
 #include <algorithm>
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
-size_t PrimitiveType::_getMemberCount_()
-{
-	return m_memberCount;
-}
-
-::paf::RawPtr<Metadata> PrimitiveType::_getMember_(size_t index)
-{
-	if (index < m_memberCount)
-	{
-		return m_members[index];
-	}
-	return nullptr;
-}
-
-::paf::RawPtr<Metadata> PrimitiveType::_findMember_(string_t name)
-{
-	Metadata dummy(name);
-	Metadata** it = std::lower_bound(m_members, m_members + m_memberCount, &dummy, CompareMetaDataPtrByName());
-	if (m_members + m_memberCount != it && strcmp(name, (*it)->m_name) == 0)
-	{
-		return *it;
-	}
-	return nullptr;
-}
-
-Metadata* PrimitiveType::findMember(const char* name)
-{
-	return _findMember_(name);
-}
+//size_t PrimitiveType::_getMemberCount_()
+//{
+//	return m_memberCount;
+//}
+//
+//::paf::RawPtr<Metadata> PrimitiveType::_getMember_(size_t index)
+//{
+//	if (index < m_memberCount)
+//	{
+//		return m_members[index];
+//	}
+//	return nullptr;
+//}
+//
+//::paf::RawPtr<Metadata> PrimitiveType::_findMember_(string_t name)
+//{
+//	Metadata dummy(name);
+//	Metadata** it = std::lower_bound(m_members, m_members + m_memberCount, &dummy, CompareMetaDataPtrByName());
+//	if (m_members + m_memberCount != it && strcmp(name, (*it)->m_name) == 0)
+//	{
+//		return *it;
+//	}
+//	return nullptr;
+//}
+//
+//Metadata* PrimitiveType::findMember(const char* name)
+//{
+//	return _findMember_(name);
+//}
 //
 //InstanceMethod* PrimitiveType::findInstanceMethod(const char* name)
 //{
@@ -48,21 +48,21 @@ Metadata* PrimitiveType::findMember(const char* name)
 //	return 0;
 //}
 
-StaticMethod* PrimitiveType::findStaticMethod(const char* name)
-{
-	Metadata dummy(name);
-	StaticMethod* res = std::lower_bound(m_staticMethods, m_staticMethods + m_staticMethodCount, dummy);
-	if (m_staticMethods + m_staticMethodCount != res && strcmp(name, res->m_name) == 0)
-	{
-		return res;
-	}
-	return 0;
-}
-
-Metadata* PrimitiveType::findTypeMember(const char* name)
-{
-	return findStaticMethod(name);
-}
+//StaticMethod* PrimitiveType::findStaticMethod(const char* name)
+//{
+//	Metadata dummy(name);
+//	StaticMethod* res = std::lower_bound(m_staticMethods, m_staticMethods + m_staticMethodCount, dummy);
+//	if (m_staticMethods + m_staticMethodCount != res && strcmp(name, res->m_name) == 0)
+//	{
+//		return res;
+//	}
+//	return 0;
+//}
+//
+//Metadata* PrimitiveType::findTypeMember(const char* name)
+//{
+//	return findStaticMethod(name);
+//}
 
 //template<bool short_less_int>
 //struct TypePromoter
@@ -179,24 +179,24 @@ CPPPrimitiveType* GetPrimitiveTypeFromTypeCategory(PrimitiveTypeCategory typeCat
 }
 
 
-//BoolType				BoolType::				s_instance("bool");
-//CharType				CharType::				s_instance("char");
-//SignedCharType			SignedCharType::		s_instance("signed char");
-//UnsignedCharType		UnsignedCharType::		s_instance("unsigned char");
-//WcharType				WcharType::				s_instance("wchar_t");
-//ShortType				ShortType::				s_instance("short");
-//UnsignedShortType		UnsignedShortType::		s_instance("unsigned short");
-//LongType				LongType::				s_instance("long");
-//UnsignedLongType		UnsignedLongType::		s_instance("unsigned long");
-//LongLongType			LongLongType::			s_instance("long long");
-//UnsignedLongLongType	UnsignedLongLongType::	s_instance("unsigned long long");
-//IntType					IntType::				s_instance("int");
-//UnsignedIntType			UnsignedIntType::		s_instance("unsigned int");
-//FloatType				FloatType::				s_instance("float");
-//DoubleType				DoubleType::			s_instance("double");
-//LongDoubleType			LongDoubleType::		s_instance("long double");
+BoolType				BoolType::				s_instance("bool");
+CharType				CharType::				s_instance("char");
+SignedCharType			SignedCharType::		s_instance("signed char");
+UnsignedCharType		UnsignedCharType::		s_instance("unsigned char");
+WcharType				WcharType::				s_instance("wchar_t");
+ShortType				ShortType::				s_instance("short");
+UnsignedShortType		UnsignedShortType::		s_instance("unsigned short");
+LongType				LongType::				s_instance("long");
+UnsignedLongType		UnsignedLongType::		s_instance("unsigned long");
+LongLongType			LongLongType::			s_instance("long long");
+UnsignedLongLongType	UnsignedLongLongType::	s_instance("unsigned long long");
+IntType					IntType::				s_instance("int");
+UnsignedIntType			UnsignedIntType::		s_instance("unsigned int");
+FloatType				FloatType::				s_instance("float");
+DoubleType				DoubleType::			s_instance("double");
+LongDoubleType			LongDoubleType::		s_instance("long double");
 
-END_PAFCORE
+END_PAF
 
 AUTO_REGISTER_TYPE(paf::BoolType)
 AUTO_REGISTER_TYPE(paf::CharType)

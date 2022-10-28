@@ -4,7 +4,7 @@
 #include "TypeAlias.mc"
 #include "NameSpace.h"
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 TypeAlias::TypeAlias(const char* name, Type* type, const char* declarationFile) :
 	Metadata(name),
@@ -29,4 +29,4 @@ TypeAlias::~TypeAlias()
 }
 
 
-END_PAFCORE
+END_PAF

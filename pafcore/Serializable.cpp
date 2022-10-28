@@ -3,6 +3,6 @@
 #include "Serializable.ic"
 #include "Serializable.mc"
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
-END_PAFCORE
+END_PAF

@@ -8,7 +8,7 @@
 #include <vector>
 #include <assert.h>
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 size_t NameSpace::Hash_Metadata::operator ()(const Metadata* metadata) const
 {
@@ -82,10 +82,6 @@ NameSpace* NameSpace::getNameSpace(const char* name)
 
 ErrorCode NameSpace::registerMember(Metadata* member)
 {
-	if(0 == this)
-	{
-		return ErrorCode::e_invalid_namespace;
-	}
 	MetaCategory category = member->getType()->getMetaCategory();
 	if (MetaCategory::type_alias == category)
 	{
@@ -156,4 +152,4 @@ NameSpace* NameSpace::GetGlobalNameSpace()
 	return &s_globalNameSpace;
 }
 
-END_PAFCORE
+END_PAF

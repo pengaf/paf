@@ -29,11 +29,10 @@ void PafAssert(wchar_t const* condition, wchar_t const* file, unsigned line, wch
 const char* g_errorStrings[] =
 {
 	"s_ok",
-	"e_invalid_namespace",
 	"e_name_conflict",
-	"e_is_null",
 	"e_is_not_type",
 	"e_is_not_class",
+	"e_is_not_string",	
 	"e_is_not_array",
 	"e_invalid_subscript_type",
 	"e_member_not_found",
@@ -50,8 +49,6 @@ const char* g_errorStrings[] =
 	"e_invalid_object_type",
 	"e_invalid_field_type",
 	"e_invalid_property_type",
-	"e_invalid_too_few_arguments",
-	"e_invalid_too_many_arguments",
 	"e_invalid_this_type",
 	"e_invalid_arg_type_1",
 	"e_invalid_arg_type_2",
@@ -85,12 +82,14 @@ const char* g_errorStrings[] =
 	"e_invalid_arg_type_30",
 	"e_invalid_arg_type_31",
 	"e_invalid_arg_type_32",
+	"e_too_few_arguments",
+	"e_too_many_arguments",
 	"e_not_implemented",
 	"e_script_error",
 	"e_script_dose_not_override",
 };
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 const char* ErrorCodeToString(ErrorCode errorCode)
 {
@@ -119,4 +118,4 @@ void* Introspectable::castTo(ClassType* classType)
 	return 0;
 }
 
-END_PAFCORE
+END_PAF

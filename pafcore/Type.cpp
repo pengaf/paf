@@ -4,7 +4,7 @@
 #include "Type.mc"
 #include "NameSpace.h"
 
-BEGIN_PAFCORE
+BEGIN_PAF
 
 Type::Type(const char* name, MetaCategory metaCategory, const char* declarationFile) :
 	Metadata(name),
@@ -23,5 +23,35 @@ Type::~Type()
 	}
 }
 
+::paf::ErrorCode Type::placementNew(void* address, ::paf::Variant** args, uint32_t numArgs)
+{
+	return ::paf::ErrorCode::e_not_implemented;
+}
 
-END_PAFCORE
+bool Type::placementNewArray(void* address, size_t count)
+{
+	return false;
+}
+
+bool Type::destruct(void* address)
+{
+	return false;
+}
+
+bool Type::copyConstruct(void* dst, const void* src)
+{
+	return false;
+}
+
+bool Type::copyAssign(void* dst, const void* src)
+{
+	return false;
+}
+
+Metadata* Type::findMember(const char* name)
+{
+	return nullptr;
+}
+
+
+END_PAF

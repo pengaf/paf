@@ -19,7 +19,8 @@ namespace paf
 	class Box
 	{
 	public:
-		virtual void destruct(void* p) = 0;
+		virtual void destruct() = 0;
+		virtual void deallocate() = 0;
 	public:
 		void incBorrowCount()
 		{
@@ -32,7 +33,7 @@ namespace paf
 			if (0 == --m_borrow)
 			{
 				PAF_ASSERT(0 == m_owner);
-				free((void*)this);
+				deallocate();
 			}
 		}
 		void incOwnerCount()
@@ -44,7 +45,7 @@ namespace paf
 		{
 			if (0 == --m_owner)
 			{
-				destruct((void*)(this + 1));
+				destruct();
 				decBorrowCount();
 			}
 		}
@@ -91,7 +92,8 @@ namespace paf
 	class ArrayBox
 	{
 	public:
-		virtual void destructArray(void* p, size_t arraySize) = 0;
+		virtual void destructArray(size_t arraySize) = 0;
+		virtual void deallocate() = 0;
 	public:
 		void incBorrowCount()
 		{
@@ -104,7 +106,7 @@ namespace paf
 			if (0 == --m_borrow)
 			{
 				PAF_ASSERT(0 == m_owner);
-				free((void*)this);
+				deallocate();
 			}
 		}
 		void incOwnerCount()
@@ -116,7 +118,7 @@ namespace paf
 		{
 			if (0 == --m_owner)
 			{
-				destructArray((void*)(this + 1), arraySize);
+				destructArray(arraySize);
 				decBorrowCount();
 			}
 		}
@@ -190,9 +192,13 @@ namespace paf
 	{
 		BoxImpl() = default;
 	public:
-		void destruct(void* p) override
+		void destruct() override
 		{
-			D::Destruct(reinterpret_cast<T*>(p));
+			D::Destruct(reinterpret_cast<T*>(this + 1));
+		}
+		void deallocate() override
+		{
+			free(this);
 		}
 	public:
 		template<typename... Types>
@@ -212,9 +218,13 @@ namespace paf
 	class ArrayBoxImpl : public ArrayBox
 	{
 	public:
-		void destructArray(void* p, size_t arraySize) override
+		void destructArray(size_t arraySize) override
 		{
-			D::DestructArray(reinterpret_cast<T*>(p), arraySize);
+			D::DestructArray(reinterpret_cast<T*>(this + 1), arraySize);
+		}
+		void deallocate() override
+		{
+			free(this);
 		}
 	public:
 		static T* NewArray(size_t arraySize)
@@ -249,6 +259,20 @@ namespace paf
 
 	class Variant;
 
+	class GenericPtr
+	{
+	public:
+		void* m_ptr;
+	};
+
+
+	class GenericArray
+	{
+	public:
+		void* m_ptr;
+		size_t m_size;
+	};
+
 
 	template<typename T, typename D>
 	class SharedPtr
@@ -263,6 +287,8 @@ namespace paf
 		friend class SharedPtr;
 
 		friend class Variant;
+
+		static_assert(sizeof(SharedPtr) == sizeof(GenericPtr));
 	public:
 		using pointer = T * ;
 		using reference = T & ;
@@ -486,6 +512,7 @@ namespace paf
 
 		friend class Variant;
 
+		static_assert(sizeof(SharedArray) == sizeof(GenericArray));
 	public:
 		using pointer = T * ;
 		using reference = T & ;
@@ -823,6 +850,7 @@ namespace paf
 		}
 	};
 
+
 	template<typename T, typename D>
 	class UniqueArray
 	{
@@ -1002,6 +1030,7 @@ namespace paf
 		friend class SharedPtr;
 
 		friend class Variant;
+
 	public:
 		using element_type = T;
 		using pointer = T * ;
@@ -1235,6 +1264,7 @@ namespace paf
 		friend class SharedArray;
 
 		friend class Variant;
+
 	public:
 		using element_type = T;
 		using pointer = T * ;
@@ -1445,6 +1475,7 @@ namespace paf
 		friend class SharedPtr;
 
 		friend class Variant;
+
 	public:
 		using element_type = T;
 		using pointer = T * ;
@@ -1634,6 +1665,7 @@ namespace paf
 		friend class SharedArray;
 
 		friend class Variant;
+
 	public:
 		using element_type = T;
 		using pointer = T * ;
@@ -1789,162 +1821,5 @@ namespace paf
 		T* m_ptr;
 		size_t m_size;
 	};
-
-	//template<typename T>
-	//class SharedInterface
-	//{
-	//public:
-	//	constexpr SharedInterface() noexcept :
-	//		m_ptr(nullptr), m_box(nullptr)
-	//	{}
-	//
-	//	constexpr SharedInterface(nullptr_t) noexcept :
-	//		m_ptr(nullptr), m_box(nullptr)
-	//	{}
-	//
-	//	SharedInterface(const SharedInterface& other) noexcept :
-	//		m_ptr(other.m_ptr), m_box(other.m_box)
-	//	{
-	//		incOwnerCount();
-	//	}
-	//
-	//	template <typename T2, typename D2, std::enable_if_t<convertable_shared_ptr_v<T, T2>, int> = 0>
-	//	SharedInterface(const SharedPtr<T2, D2>& other) noexcept :
-	//		m_ptr(other.get())£¬m_box(other.getBox())
-	//	{
-	//		incOwnerCount();
-	//	}
-	//
-	//	SharedInterface(SharedInterface&& other) noexcept :
-	//		m_ptr(other.m_ptr), m_box(other.m_box)
-	//	{
-	//		other.m_ptr = nullptr;
-	//		other.m_box = nullptr;
-	//	}
-	//
-	//	template <typename T2, typename D2, std::enable_if_t<convertable_shared_ptr_v<T, T2>, int> = 0>
-	//	SharedInterface(SharedPtr<T2, D2>&& other) noexcept :
-	//		m_ptr(static_cast<T*>(other.get()))£¬m_box(other.getBox())
-	//	{
-	//		other.m_ptr = nullptr;
-	//	}
-	//
-	//	~SharedInterface() noexcept
-	//	{
-	//		decOwnerCount();
-	//	}
-	//
-	//	SharedInterface& operator=(nullptr_t other) noexcept
-	//	{
-	//		decOwnerCount();
-	//		m_ptr = nullptr;
-	//		m_box = nullptr;
-	//		return *this;
-	//	}
-	//
-	//	SharedInterface& operator=(const SharedInterface& other) noexcept
-	//	{
-	//		SharedPtr(other).swap(*this);
-	//		return *this;
-	//	}
-	//
-	//	template <typename T2, typename D2, std::enable_if_t<convertable_shared_ptr_v<T, T2>, int> = 0>
-	//	SharedInterface& operator=(const SharedPtr<T2, D2>& other) noexcept
-	//	{
-	//		SharedInterface(other).swap(*this);
-	//		return *this;
-	//	}
-	//
-	//	SharedInterface& operator=(SharedInterface&& other) noexcept
-	//	{
-	//		decOwnerCount();
-	//		m_ptr = other.m_ptr;
-	//		m_box = other.m_box;
-	//		other.m_ptr = nullptr;
-	//		other.m_box = nullptr;
-	//		return *this;
-	//	}
-	//
-	//	template <typename T2, typename D2, std::enable_if_t<convertable_shared_ptr_v<T, T2>, int> = 0>
-	//	SharedInterface& operator=(SharedPtr<T2, D2>&& other) noexcept
-	//	{
-	//		PAF_ASSERT(paf_base_offset_of(T, T2) == 0);
-	//		decOwnerCount();
-	//		m_ptr = static_cast<T*>(other.get());
-	//		m_box = other.getBox();
-	//		other.m_ptr = nullptr;
-	//		return *this;
-	//	}
-	//
-	//	reference operator*() const noexcept
-	//	{
-	//		PAF_ASSERT(m_ptr);
-	//		return *m_ptr;
-	//	}
-	//
-	//	pointer operator->() const noexcept
-	//	{
-	//		PAF_ASSERT(m_ptr);
-	//		return m_ptr;
-	//	}
-	//
-	//	explicit operator bool() const noexcept
-	//	{
-	//		return static_cast<bool>(m_ptr);
-	//	}
-	//
-	//	bool operator==(const T* ptr) const
-	//	{
-	//		return m_ptr == ptr;
-	//	}
-	//
-	//	bool operator!=(const T* ptr) const
-	//	{
-	//		return m_ptr != ptr;
-	//	}
-	//
-	//	bool operator==(const SharedInterface& other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-	//
-	//	bool operator!=(const SharedInterface& other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-	//
-	//	pointer get() const noexcept
-	//	{
-	//		return m_ptr;
-	//	}
-	//
-	//	void swap(SharedInterface& other) noexcept
-	//	{
-	//		std::swap(m_ptr, other.m_ptr);
-	//		std::swap(m_box, other.m_box);
-	//	}
-	//private:
-	//	void incOwnerCount()
-	//	{
-	//		if (m_box)
-	//		{
-	//			m_box->incOwnerCount();
-	//		}
-	//	}
-	//	void decOwnerCount()
-	//	{
-	//		if (m_box)
-	//		{
-	//			m_box->decOwnerCount();
-	//		}
-	//	}
-	//	bool isDangling()
-	//	{
-	//		return m_box ? m_box->dangling() : false;
-	//	}
-	//private:
-	//	T* m_ptr;
-	//	Box* m_box;
-	//};
 
 }

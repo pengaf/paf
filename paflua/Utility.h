@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../pafcore/Utility.h"
+#include "../3rd/lua/src/lua.hpp"
 
 #if defined PAFLUA_EXPORTS
 	#define PAFLUA_EXPORT __declspec(dllexport)
@@ -11,5 +12,24 @@
 #define BEGIN_PAFLUA namespace paflua {
 #define END_PAFLUA }
 
-#define BEGIN_PAFLUA2 namespace paflua2 {
-#define END_PAFLUA2 }
+
+BEGIN_PAFLUA
+
+void RaiseLuaError(lua_State *L, const char* name, paf::ErrorCode errorCode);
+bool LuaToInt(int& value, lua_State *L, int index);
+paf::Variant* LuaToVariant(paf::Variant* value, lua_State *L, int index);
+void VariantToLua(lua_State *L, paf::Variant* variant);
+bool Variant_ParseIntegerSubscript(size_t& num, lua_State *L);
+
+
+enum SubscriptCategory
+{
+	sc_error,
+	sc_integer,
+	sc_string,
+};
+
+
+SubscriptCategory Variant_ParseSubscript(size_t& num, const char*& str, lua_State *L);
+
+END_PAFLUA

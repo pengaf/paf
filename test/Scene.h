@@ -13,8 +13,14 @@ class Scene : public paf::Introspectable
 {
 public:
 	static ::paf::ClassType* GetType();
-	::paf::ClassType* getType();
-	void* getAddress();
+	::paf::ClassType* getType()
+	{
+		return GetType();
+	}
+	void* getAddress()
+	{
+		return this;
+	}
 
 	Scene();
 
