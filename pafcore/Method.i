@@ -76,7 +76,7 @@ namespace paf
 
 #{
 
-	inline paf::RawPtr<Type> MethodArgument::get_type() const
+	inline paf::Type* MethodArgument::get_type() const
 	{
 		return m_type;
 	}
@@ -91,7 +91,7 @@ namespace paf
 		return m_typeCompound;
 	}
 
-	inline ::paf::RawPtr<Type> MethodResult::get_type() const
+	inline Type* MethodResult::get_type() const
 	{
 		return m_type;
 	}
@@ -101,7 +101,7 @@ namespace paf
 		return m_typeCompound;
 	}
 
-	inline RawPtr<MethodResult> InstanceMethod::getResult()
+	inline MethodResult* InstanceMethod::getResult()
 	{
 		return m_result;
 	}
@@ -111,7 +111,7 @@ namespace paf
 		return m_argCount;
 	}
 
-	inline RawPtr<MethodArgument> InstanceMethod::getArgument(uint32_t index)
+	inline MethodArgument* InstanceMethod::getArgument(uint32_t index)
 	{
 		if (index < m_argCount)
 		{
@@ -125,7 +125,7 @@ namespace paf
 		return m_firstDefaultArg;
 	}
 
-	inline RawPtr<MethodResult> StaticMethod::getResult()
+	inline MethodResult* StaticMethod::getResult()
 	{
 		return m_result;
 	}
@@ -135,7 +135,7 @@ namespace paf
 		return m_argCount;
 	}
 
-	inline RawPtr<MethodArgument> StaticMethod::getArgument(uint32_t index)
+	inline MethodArgument* StaticMethod::getArgument(uint32_t index)
 	{
 		if (index < m_argCount)
 		{

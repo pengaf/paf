@@ -5,7 +5,7 @@ pt = idlcpp.tutorial.Point();
 pt.x = 1;
 pt.y = 2;
 
-x = paf.float.New();
+x = idlcpp.float._NewUniquePtr_();
 pt:getX(x);
 
 print(x[0]);

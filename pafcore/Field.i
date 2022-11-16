@@ -49,12 +49,12 @@ namespace paf
 	};
 
 #{
-	inline RawPtr<ClassType> InstanceField::get_objectType() const
+	inline ClassType* InstanceField::get_objectType() const
 	{
 		return m_objectType;
 	}
 
-	inline RawPtr<Type> InstanceField::get_type() const
+	inline Type* InstanceField::get_type() const
 	{
 		return m_type;
 	}
@@ -74,7 +74,7 @@ namespace paf
 		return m_offset;
 	}
 
-	inline RawPtr<Type> StaticField::get_type() const
+	inline Type* StaticField::get_type() const
 	{
 		return m_type;
 	}

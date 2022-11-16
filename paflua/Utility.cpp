@@ -1,6 +1,7 @@
 #include "Utility.h"
 #include "../3rd/lua/src/lua.hpp"
 #include "../pafcore/Utility.h"
+#include "../pafcore/Utility.mh"
 #include "../pafcore/String.h"
 #include "../pafcore/String.mh"
 #include "../pafcore/Type.h"
@@ -92,12 +93,12 @@ SubscriptCategory Variant_ParseSubscript(size_t& num, const char*& str, lua_Stat
 		paf::Variant* variant = (paf::Variant*)luaL_checkudata(L, index, variant_metatable_name);
 		if (variant)
 		{
-			if (variant->castToPrimitive(num))
+			if (variant->castToValue(num))
 			{
 				return sc_integer;
 			}
 			paf::string_t s;
-			if (variant->castToString(s))
+			if (variant->castToValue(s))
 			{
 				str = s.c_str();
 				return sc_string;
@@ -229,7 +230,7 @@ void VariantToLua(lua_State *L, paf::Variant* variant)
 		{
 			paf::EnumType* enumType = static_cast<paf::EnumType*>(type);
 			lua_Integer value;
-			enumType->castToPrimitive(&value, RuntimeTypeOf<lua_Integer>::RuntimeType::GetSingleton(), variant->getRawPointer());
+			enumType->cast(RuntimeTypeOf<lua_Integer>::RuntimeType::GetSingleton(), &value, variant->getRawPointer());
 			lua_pushinteger(L, value);
 			return;
 		}

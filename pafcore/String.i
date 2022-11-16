@@ -23,9 +23,12 @@ namespace paf
 //#}
 //	};
 
-	class #PAFCORE_EXPORT String : StringBase
+	class #PAFCORE_EXPORT String //: StringBase
 	{
 		String();
+		nocode operator string_t() const;
+		nocode operator = (string_t);
+		nocode operator = (String const &);
 #{
 	public:
 		explicit String(const char* str);
@@ -33,8 +36,20 @@ namespace paf
 		String(String&& arg);
 		~String();
 	public:
-		string_t toString() const override;
-		void fromString(string_t str) override;
+		operator string_t()const
+		{
+			return m_str;
+		}
+
+		String& operator =(string_t str)
+		{
+			assign(str);
+			return *this;
+		}
+
+
+		//string_t toString() const override;
+		//void fromString(string_t str) override;
 	public:
 		bool empty() const;
 		const char* c_str() const;
@@ -150,15 +165,15 @@ namespace paf
 		return 0 != strcmp(m_str, str);
 	}
 
-	inline string_t String::toString() const
-	{
-		return m_str;
-	}
+	//inline string_t String::toString() const
+	//{
+	//	return m_str;
+	//}
 
-	inline void String::fromString(string_t str)
-	{
-		assign(str);
-	}
+	//inline void String::fromString(string_t str)
+	//{
+	//	assign(str);
+	//}
 
 	inline void Hash_Combine(size_t& seed, size_t value)
 	{

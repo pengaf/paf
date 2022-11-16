@@ -127,7 +127,7 @@ NotifyHandlerList::~NotifyHandlerList()
 	}
 }
 
-void NotifyHandlerList::addNotifyHandler(::paf::RawPtr<NotifyHandler> handler) const
+void NotifyHandlerList::addNotifyHandler(NotifyHandler* handler) const
 {
 	if (!NotifyHandlerLink::FindInList(m_notifyHandler, handler))
 	{
@@ -135,15 +135,15 @@ void NotifyHandlerList::addNotifyHandler(::paf::RawPtr<NotifyHandler> handler) c
 	}
 }
 
-void NotifyHandlerList::removeNotifyHandler(::paf::RawPtr<NotifyHandler> handler) const
+void NotifyHandlerList::removeNotifyHandler(NotifyHandler* handler) const
 {
 	if (NotifyHandlerLink::FindInList(m_notifyHandler, handler))
 	{
-		paf::NotifyHandlerLink::RemoveFromList(m_notifyHandler, handler);
+		NotifyHandlerLink::RemoveFromList(m_notifyHandler, handler);
 	}
 }
 
-bool NotifyHandlerList::findNotifyHandler(::paf::RawPtr<NotifyHandler> handler) const
+bool NotifyHandlerList::findNotifyHandler(NotifyHandler* handler) const
 {
 	return NotifyHandlerLink::FindInList(m_notifyHandler, handler);
 }

@@ -288,7 +288,6 @@ namespace paf
 
 		friend class Variant;
 
-		static_assert(sizeof(SharedPtr) == sizeof(GenericPtr));
 	public:
 		using pointer = T * ;
 		using reference = T & ;
@@ -512,7 +511,6 @@ namespace paf
 
 		friend class Variant;
 
-		static_assert(sizeof(SharedArray) == sizeof(GenericArray));
 	public:
 		using pointer = T * ;
 		using reference = T & ;
@@ -1459,367 +1457,367 @@ namespace paf
 	};
 
 
-	template<typename T>
-	class RawPtr
-	{
-		template <typename T2>
-		friend class RawPtr;
-
-		template <typename T2>
-		friend class BorrowedPtr;
-
-		template <typename T2, typename D2>
-		friend class UniquePtr;
-
-		template<typename T2, typename D2>
-		friend class SharedPtr;
-
-		friend class Variant;
-
-	public:
-		using element_type = T;
-		using pointer = T * ;
-		using reference = T & ;
-	public:
-		constexpr RawPtr() noexcept :
-			m_ptr(nullptr)
-		{}
-
-		constexpr RawPtr(nullptr_t) noexcept :
-			m_ptr(nullptr)
-		{}
-
-		RawPtr(pointer ptr) noexcept :
-			m_ptr(ptr)
-		{}
-
-		RawPtr(const RawPtr& other) noexcept :
-			m_ptr(other.m_ptr)
-		{}
-
-		template<typename T2>
-		RawPtr(const RawPtr<T2>& other) noexcept :
-			m_ptr(other.m_ptr)
-		{}
-
-		template<typename T2>
-		RawPtr(const BorrowedPtr<T2>& other) noexcept :
-			m_ptr(other.m_ptr)
-		{}
-
-		template<typename T2, typename D2>
-		explicit RawPtr(const UniquePtr<T2, D2>& other) noexcept :
-			m_ptr(other.m_ptr)
-		{}
-
-		template<typename T2, typename D2>
-		explicit RawPtr(const SharedPtr<T2, D2>& other) noexcept :
-			m_ptr(other.m_ptr)
-		{}
-
-		RawPtr& operator=(nullptr_t other) noexcept
-		{
-			m_ptr = nullptr;
-			return *this;
-		}
-
-		RawPtr& operator=(const RawPtr& other) noexcept
-		{
-			m_ptr = other.m_ptr;
-			return *this;
-		}
-
-		template<typename T2>
-		RawPtr& operator=(const BorrowedPtr<T2>& other) noexcept
-		{
-			m_ptr = other.m_ptr;
-			return *this;
-		}
-
-		template<typename T2, typename D2>
-		RawPtr& operator=(const UniquePtr<T2, D2>& other) noexcept
-		{
-			m_ptr = other.m_ptr;
-			return *this;
-		}
-
-		template<typename T2, typename D2>
-		RawPtr& operator=(const SharedPtr<T2, D2>& other) noexcept
-		{
-			m_ptr = other.m_ptr;
-			return *this;
-		}
-
-		reference operator*() const noexcept
-		{
-			PAF_ASSERT(m_ptr);
-			return *m_ptr;
-		}
-
-		pointer operator->() const noexcept
-		{
-			PAF_ASSERT(m_ptr);
-			return m_ptr;
-		}
-
-		explicit operator bool() const noexcept
-		{
-			return static_cast<bool>(m_ptr);
-		}
-
-		bool operator==(const T* ptr) const
-		{
-			return m_ptr == ptr;
-		}
-
-		bool operator!=(const T* ptr) const
-		{
-			return m_ptr != ptr;
-		}
-
-		template<typename T2>
-		bool operator==(const RawPtr<T2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		template<typename T2>
-		bool operator!=(const RawPtr<T2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		template<typename T2>
-		bool operator==(const BorrowedPtr<T2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		template<typename T2>
-		bool operator!=(const BorrowedPtr<T2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator==(const UniquePtr<T2, D2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator!=(const UniquePtr<T2, D2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator==(const SharedPtr<T2, D2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator!=(const SharedPtr<T2, D2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		operator const T*() const
-		{
-			return  m_ptr;
-		}
-
-		operator T*() const
-		{
-			return  m_ptr;
-		}
-
-		pointer get() const noexcept
-		{
-			return m_ptr;
-		}
-
-		void assignRawPointer(pointer ptr)
-		{
-			m_ptr = ptr;
-		}
-	private:
-		T* m_ptr;
-	};
-
-
-	template<typename T>
-	class RawArray
-	{
-		template <typename T2>
-		friend class RawArray;
-
-		template <typename T2>
-		friend class BorrowedArray;
-
-		template <typename T2, typename D2>
-		friend class UniqueArray;
-
-		template<typename T2, typename D2>
-		friend class SharedArray;
-
-		friend class Variant;
-
-	public:
-		using element_type = T;
-		using pointer = T * ;
-		using reference = T & ;
-		using size_type = size_t;
-	public:
-		constexpr RawArray() noexcept :
-			m_ptr(nullptr),
-			m_size(0)
-		{}
-
-		RawArray(const RawArray& other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
-		{}
-
-		RawArray(RawArray&& other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
-		{
-			other.m_ptr = nullptr;
-			other.m_size = 0;
-		}
-
-		explicit RawArray(const UniqueArray<T>&other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
-		{}
-
-		explicit RawArray(const SharedArray<T>&other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
-		{}
-
-		RawArray& operator=(nullptr_t other) noexcept
-		{
-			m_ptr = nullptr;
-			m_size = 0;
-			return *this;
-		}
-
-		RawArray& operator=(const RawArray& other) noexcept
-		{
-			m_ptr = other.get();
-			m_size = other.size();
-			return *this;
-		}
-
-		RawArray& operator=(const BorrowedArray<T> & other) noexcept
-		{
-			m_ptr = other.get();
-			m_size = other.size();
-			return *this;
-		}
-
-		RawArray& operator=(const UniqueArray<T>&other) noexcept
-		{
-			m_ptr = other.get();
-			m_size = other.size();
-			return *this;
-		}
-
-		RawArray& operator=(const SharedArray<T>&other) noexcept
-		{
-			m_ptr = other.get();
-			m_size = other.size();
-			return *this;
-		}
-
-		reference operator[](size_t idx) const noexcept
-		{
-			PAF_ASSERT(m_ptr && idx < m_size);
-			return m_ptr[idx];
-		}
-
-		explicit operator bool() const noexcept
-		{
-			return static_cast<bool>(m_ptr);
-		}
-
-		bool operator==(const T * ptr) const
-		{
-			return m_ptr == ptr;
-		}
-
-		bool operator!=(const T * ptr) const
-		{
-			return m_ptr != ptr;
-		}
-
-		bool operator==(const RawArray & other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const RawArray & other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		bool operator==(const BorrowedArray<T> & other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const BorrowedArray<T> & other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		bool operator==(const UniqueArray<T>&other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const UniqueArray<T>&other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		bool operator==(const SharedArray<T>&other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const SharedArray<T>&other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		pointer get() const noexcept
-		{
-			return m_ptr;
-		}
-
-		pointer get(size_t idx) const noexcept
-		{
-			PAF_ASSERT(0 == idx || idx < m_size);
-			return idx < m_size ? m_ptr + idx : nullptr;
-		}
-
-		size_type size() const noexcept
-		{
-			return m_size;
-		}
-
-		void assignRawPointer(pointer ptr, size_t size)
-		{
-			m_ptr = ptr;
-			m_size = size;
-		}
-	private:
-		T* m_ptr;
-		size_t m_size;
-	};
+	//template<typename T>
+	//class RawPtr
+	//{
+	//	template <typename T2>
+	//	friend class RawPtr;
+
+	//	template <typename T2>
+	//	friend class BorrowedPtr;
+
+	//	template <typename T2, typename D2>
+	//	friend class UniquePtr;
+
+	//	template<typename T2, typename D2>
+	//	friend class SharedPtr;
+
+	//	friend class Variant;
+
+	//public:
+	//	using element_type = T;
+	//	using pointer = T * ;
+	//	using reference = T & ;
+	//public:
+	//	constexpr RawPtr() noexcept :
+	//		m_ptr(nullptr)
+	//	{}
+
+	//	constexpr RawPtr(nullptr_t) noexcept :
+	//		m_ptr(nullptr)
+	//	{}
+
+	//	RawPtr(pointer ptr) noexcept :
+	//		m_ptr(ptr)
+	//	{}
+
+	//	RawPtr(const RawPtr& other) noexcept :
+	//		m_ptr(other.m_ptr)
+	//	{}
+
+	//	template<typename T2>
+	//	RawPtr(const T2*& other) noexcept :
+	//		m_ptr(other.m_ptr)
+	//	{}
+
+	//	template<typename T2>
+	//	RawPtr(const BorrowedPtr<T2>& other) noexcept :
+	//		m_ptr(other.m_ptr)
+	//	{}
+
+	//	template<typename T2, typename D2>
+	//	explicit RawPtr(const UniquePtr<T2, D2>& other) noexcept :
+	//		m_ptr(other.m_ptr)
+	//	{}
+
+	//	template<typename T2, typename D2>
+	//	explicit RawPtr(const SharedPtr<T2, D2>& other) noexcept :
+	//		m_ptr(other.m_ptr)
+	//	{}
+
+	//	RawPtr& operator=(nullptr_t other) noexcept
+	//	{
+	//		m_ptr = nullptr;
+	//		return *this;
+	//	}
+
+	//	RawPtr& operator=(const RawPtr& other) noexcept
+	//	{
+	//		m_ptr = other.m_ptr;
+	//		return *this;
+	//	}
+
+	//	template<typename T2>
+	//	RawPtr& operator=(const BorrowedPtr<T2>& other) noexcept
+	//	{
+	//		m_ptr = other.m_ptr;
+	//		return *this;
+	//	}
+
+	//	template<typename T2, typename D2>
+	//	RawPtr& operator=(const UniquePtr<T2, D2>& other) noexcept
+	//	{
+	//		m_ptr = other.m_ptr;
+	//		return *this;
+	//	}
+
+	//	template<typename T2, typename D2>
+	//	RawPtr& operator=(const SharedPtr<T2, D2>& other) noexcept
+	//	{
+	//		m_ptr = other.m_ptr;
+	//		return *this;
+	//	}
+
+	//	reference operator*() const noexcept
+	//	{
+	//		PAF_ASSERT(m_ptr);
+	//		return *m_ptr;
+	//	}
+
+	//	pointer operator->() const noexcept
+	//	{
+	//		PAF_ASSERT(m_ptr);
+	//		return m_ptr;
+	//	}
+
+	//	explicit operator bool() const noexcept
+	//	{
+	//		return static_cast<bool>(m_ptr);
+	//	}
+
+	//	bool operator==(const T* ptr) const
+	//	{
+	//		return m_ptr == ptr;
+	//	}
+
+	//	bool operator!=(const T* ptr) const
+	//	{
+	//		return m_ptr != ptr;
+	//	}
+
+	//	template<typename T2>
+	//	bool operator==(const T2*& other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	template<typename T2>
+	//	bool operator!=(const T2*& other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	template<typename T2>
+	//	bool operator==(const BorrowedPtr<T2>& other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	template<typename T2>
+	//	bool operator!=(const BorrowedPtr<T2>& other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	template<typename T2, typename D2>
+	//	bool operator==(const UniquePtr<T2, D2>& other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	template<typename T2, typename D2>
+	//	bool operator!=(const UniquePtr<T2, D2>& other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	template<typename T2, typename D2>
+	//	bool operator==(const SharedPtr<T2, D2>& other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	template<typename T2, typename D2>
+	//	bool operator!=(const SharedPtr<T2, D2>& other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	operator const T*() const
+	//	{
+	//		return  m_ptr;
+	//	}
+
+	//	operator T*() const
+	//	{
+	//		return  m_ptr;
+	//	}
+
+	//	pointer get() const noexcept
+	//	{
+	//		return m_ptr;
+	//	}
+
+	//	void assignRawPointer(pointer ptr)
+	//	{
+	//		m_ptr = ptr;
+	//	}
+	//private:
+	//	T* m_ptr;
+	//};
+
+
+	//template<typename T>
+	//class RawArray
+	//{
+	//	template <typename T2>
+	//	friend class RawArray;
+
+	//	template <typename T2>
+	//	friend class BorrowedArray;
+
+	//	template <typename T2, typename D2>
+	//	friend class UniqueArray;
+
+	//	template<typename T2, typename D2>
+	//	friend class SharedArray;
+
+	//	friend class Variant;
+
+	//public:
+	//	using element_type = T;
+	//	using pointer = T * ;
+	//	using reference = T & ;
+	//	using size_type = size_t;
+	//public:
+	//	constexpr RawArray() noexcept :
+	//		m_ptr(nullptr),
+	//		m_size(0)
+	//	{}
+
+	//	RawArray(const RawArray& other) noexcept :
+	//		m_ptr(other.get()),
+	//		m_size(other.size())
+	//	{}
+
+	//	RawArray(RawArray&& other) noexcept :
+	//		m_ptr(other.get()),
+	//		m_size(other.size())
+	//	{
+	//		other.m_ptr = nullptr;
+	//		other.m_size = 0;
+	//	}
+
+	//	explicit RawArray(const UniqueArray<T>&other) noexcept :
+	//		m_ptr(other.get()),
+	//		m_size(other.size())
+	//	{}
+
+	//	explicit RawArray(const SharedArray<T>&other) noexcept :
+	//		m_ptr(other.get()),
+	//		m_size(other.size())
+	//	{}
+
+	//	RawArray& operator=(nullptr_t other) noexcept
+	//	{
+	//		m_ptr = nullptr;
+	//		m_size = 0;
+	//		return *this;
+	//	}
+
+	//	RawArray& operator=(const RawArray& other) noexcept
+	//	{
+	//		m_ptr = other.get();
+	//		m_size = other.size();
+	//		return *this;
+	//	}
+
+	//	RawArray& operator=(const BorrowedArray<T> & other) noexcept
+	//	{
+	//		m_ptr = other.get();
+	//		m_size = other.size();
+	//		return *this;
+	//	}
+
+	//	RawArray& operator=(const UniqueArray<T>&other) noexcept
+	//	{
+	//		m_ptr = other.get();
+	//		m_size = other.size();
+	//		return *this;
+	//	}
+
+	//	RawArray& operator=(const SharedArray<T>&other) noexcept
+	//	{
+	//		m_ptr = other.get();
+	//		m_size = other.size();
+	//		return *this;
+	//	}
+
+	//	reference operator[](size_t idx) const noexcept
+	//	{
+	//		PAF_ASSERT(m_ptr && idx < m_size);
+	//		return m_ptr[idx];
+	//	}
+
+	//	explicit operator bool() const noexcept
+	//	{
+	//		return static_cast<bool>(m_ptr);
+	//	}
+
+	//	bool operator==(const T * ptr) const
+	//	{
+	//		return m_ptr == ptr;
+	//	}
+
+	//	bool operator!=(const T * ptr) const
+	//	{
+	//		return m_ptr != ptr;
+	//	}
+
+	//	bool operator==(const RawArray & other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	bool operator!=(const RawArray & other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	bool operator==(const BorrowedArray<T> & other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	bool operator!=(const BorrowedArray<T> & other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	bool operator==(const UniqueArray<T>&other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	bool operator!=(const UniqueArray<T>&other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	bool operator==(const SharedArray<T>&other) const
+	//	{
+	//		return m_ptr == other.m_ptr;
+	//	}
+
+	//	bool operator!=(const SharedArray<T>&other) const
+	//	{
+	//		return m_ptr != other.m_ptr;
+	//	}
+
+	//	pointer get() const noexcept
+	//	{
+	//		return m_ptr;
+	//	}
+
+	//	pointer get(size_t idx) const noexcept
+	//	{
+	//		PAF_ASSERT(0 == idx || idx < m_size);
+	//		return idx < m_size ? m_ptr + idx : nullptr;
+	//	}
+
+	//	size_type size() const noexcept
+	//	{
+	//		return m_size;
+	//	}
+
+	//	void assignRawPointer(pointer ptr, size_t size)
+	//	{
+	//		m_ptr = ptr;
+	//		m_size = size;
+	//	}
+	//private:
+	//	T* m_ptr;
+	//	size_t m_size;
+	//};
 
 }

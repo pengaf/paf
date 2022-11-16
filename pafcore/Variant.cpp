@@ -29,7 +29,7 @@ public:
 		free(reinterpret_cast<Type**>(this) - 1);
 	}
 public:
-	static ErrorCode New(void*& address, Type* type, ::paf::Variant** args, uint32_t numArgs)
+	static ErrorCode New(void*& address, Type* type, Variant** args, uint32_t numArgs)
 	{
 		size_t size = sizeof(Type*) + sizeof(GenericBoxImpl) + type->get__size_();
 		void* p = malloc(size);
@@ -120,7 +120,7 @@ public:
 		free(reinterpret_cast<Type**>(this) - 1);
 	}
 public:
-	static ErrorCode NewSmall(Type* type, void* storage, ::paf::Variant** args, uint32_t numArgs)
+	static ErrorCode NewSmall(Type* type, void* storage, Variant** args, uint32_t numArgs)
 	{
 		static_assert(sizeof(GenericValueBoxImpl) == sizeof(ValueBox), "");
 		GenericValueBoxImpl* box = (GenericValueBoxImpl*)storage;
@@ -132,7 +132,7 @@ public:
 		}
 		return errorCode;
 	}
-	static ErrorCode NewBig(void*& address, Type* type, ::paf::Variant** args, uint32_t numArgs)
+	static ErrorCode NewBig(void*& address, Type* type, Variant** args, uint32_t numArgs)
 	{
 		static_assert(sizeof(GenericValueBoxImpl) == sizeof(ValueBox), "");
 		size_t size = sizeof(Type*) + sizeof(GenericValueBoxImpl) + type->get__size_();
@@ -400,103 +400,32 @@ void Variant::assignUniqueArray(Type* type, void* ptr, size_t size)
 	}
 }
 
-bool Variant::castToPrimitive(PrimitiveType* dstType, void* dst) const
+bool Variant::castToValue(Type* dstType, void* dst) const
 {
-	if (vt_small_value != m_category && vt_reference != m_category)
+	if (isNull())
 	{
 		return false;
 	}
-	if (m_type->isPrimitive())
+	void* src = getRawPointer();
+	if (dstType == m_type)
 	{
-		PrimitiveType* primitiveType = reinterpret_cast<PrimitiveType*>(m_type);
-		primitiveType->castTo(dst, dstType, getRawPointer());
+		return m_type->copyAssign(dst, src);
+	}
+	else
+	{
+		void* castedSrc;
+		if (castToRawPointer(dstType, &castedSrc))
+		{
+			return m_type->copyAssign(dst, castedSrc);
+		}
+	}
+	if (m_type->cast(dstType, dst, src))
+	{
 		return true;
 	}
-	else if (m_type->isEnumeration())
+	else if(dstType->assign(dst, m_type, src))
 	{
-		EnumType* enumType = reinterpret_cast<EnumType*>(m_type);
-		enumType->castToPrimitive(dst, dstType, getRawPointer());
 		return true;
-	}
-	return false;
-}
-
-bool Variant::castToEnum(EnumType* dstType, void* dst) const
-{
-	if (vt_small_value != m_category && vt_reference != m_category)
-	{
-		return false;
-	}
-	if (m_type->isPrimitive())
-	{
-		PrimitiveType* primitiveType = reinterpret_cast<PrimitiveType*>(m_type);
-		dstType->castFromPrimitive(dst, primitiveType, getRawPointer());
-		return true;
-	}
-	else if (m_type->isEnumeration())
-	{
-		EnumType* enumType = reinterpret_cast<EnumType*>(m_type);
-		if (dstType == enumType)
-		{
-			memcpy(dst, getRawPointer(), dstType->get__size_());
-			return true;
-		}
-	}
-	return false;
-}
-
-bool Variant::castToString(string_t& str)
-{
-	if (!isValue() && !isReference())
-	{
-		return false;
-	}
-	if (m_type->isString())
-	{ 
-		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
-		if (paf::string_t::GetType() == classType)
-		{
-			str = *static_cast<paf::string_t*>(getRawPointer());
-			return true;
-		}
-	}
-	else if (m_type->isObject())
-	{
-		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
-		size_t offset;
-		if (classType->getClassOffset(offset, paf::StringBase::GetType()))
-		{
-			str = reinterpret_cast<paf::StringBase*>((size_t)getRawPointer() + offset)->toString();
-			return true;
-		}
-	}
-	return false;
-}
-
-bool Variant::castToBuffer(buffer_t& buf)
-{
-	if (!isValue() && !isReference())
-	{
-		return false;
-	}
-	if (m_type->isBuffer())
-	{
-		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
-		if (paf::buffer_t::GetType() == classType)
-		{
-			buf = *static_cast<paf::buffer_t*>(getRawPointer());
-			return true;
-		}
-	}
-	else if (m_type->isObject())
-	{
-		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
-		size_t offset;
-		if (classType->getClassOffset(offset, paf::BufferBase::GetType()))
-		{
-			buf = reinterpret_cast<paf::BufferBase*>((size_t)getRawPointer() + offset)->toBuffer();
-			return true;
-		}
 	}
 	return false;
 }
@@ -538,7 +467,21 @@ bool Variant::castToRawPointer(Type* dstType, void** dst) const
 	return false;
 }
 
-ErrorCode Variant::newValue(Type* type, ::paf::Variant** args, uint32_t numArgs)
+bool Variant::castToRawPointerOrValue(Type* dstType, void* dstValue, void** dstPtr) const
+{
+	if (castToRawPointer(dstType, dstPtr))
+	{
+		return true;
+	}
+	if(castToValue(dstType, dstValue))
+	{
+		*dstPtr = dstValue;
+		return true;
+	}
+	return false;
+}
+
+ErrorCode Variant::newValue(Type* type, Variant** args, uint32_t numArgs)
 {
 	clear();
 	ErrorCode errorCode;
@@ -563,7 +506,7 @@ ErrorCode Variant::newValue(Type* type, ::paf::Variant** args, uint32_t numArgs)
 	return errorCode;
 }
 
-ErrorCode Variant::newUniquePtr(Type* type, ::paf::Variant** args, uint32_t numArgs)
+ErrorCode Variant::newUniquePtr(Type* type, Variant** args, uint32_t numArgs)
 {
 	clear();
 	ErrorCode errorCode = GenericBoxImpl::New(m_ptr, type, args, numArgs);
@@ -588,7 +531,7 @@ ErrorCode Variant::newUniqueArray(Type* type, size_t count)
 	return errorCode;
 }
 
-ErrorCode Variant::newSharedPtr(Type* type, ::paf::Variant** args, uint32_t numArgs)
+ErrorCode Variant::newSharedPtr(Type* type, Variant** args, uint32_t numArgs)
 {
 	clear();
 	ErrorCode errorCode = GenericBoxImpl::New(m_ptr, type, args, numArgs);
@@ -652,42 +595,143 @@ ErrorCode Variant::subscript(Variant& var, uint32_t index)
 	return ErrorCode::e_is_not_array;
 }
 
-ErrorCode Variant::newUniqueArray(Type* type, ::paf::Variant** args, uint32_t numArgs)
+ErrorCode Variant::newUniqueArray(Type* type, Variant** args, uint32_t numArgs)
 {
 	if (numArgs < 1)
 	{
-		return ::paf::ErrorCode::e_too_few_arguments;
+		return ErrorCode::e_too_few_arguments;
 	}
 	::size_t a0;
-	if (!args[0]->castToPrimitive(RuntimeTypeOf<::size_t>::RuntimeType::GetSingleton(), &a0))
+	if (!args[0]->castToValue(RuntimeTypeOf<::size_t>::RuntimeType::GetSingleton(), &a0))
 	{
-		return ::paf::ErrorCode::e_invalid_arg_type_1;
+		return ErrorCode::e_invalid_arg_type_1;
 	}
 	if (1 == numArgs)
 	{
 		return newUniqueArray(type, a0);
 	}
-	return ::paf::ErrorCode::e_too_many_arguments;
+	return ErrorCode::e_too_many_arguments;
 }
 
-ErrorCode Variant::newSharedArray(Type* type, ::paf::Variant** args, uint32_t numArgs)
+ErrorCode Variant::newSharedArray(Type* type, Variant** args, uint32_t numArgs)
 {
 	if (numArgs < 1)
 	{
-		return ::paf::ErrorCode::e_too_few_arguments;
+		return ErrorCode::e_too_few_arguments;
 	}
 	::size_t a0;
-	if (!args[0]->castToPrimitive(RuntimeTypeOf<::size_t>::RuntimeType::GetSingleton(), &a0))
+	if (!args[0]->castToValue(RuntimeTypeOf<::size_t>::RuntimeType::GetSingleton(), &a0))
 	{
-		return ::paf::ErrorCode::e_invalid_arg_type_1;
+		return ErrorCode::e_invalid_arg_type_1;
 	}
 	if (1 == numArgs)
 	{
 		return newSharedArray(type, a0);
 	}
-	return ::paf::ErrorCode::e_too_many_arguments;
+	return ErrorCode::e_too_many_arguments;
 }
 
+
+//bool Variant::castToPrimitive(PrimitiveType* dstType, void* dst) const
+//{
+//	if (vt_small_value != m_category && vt_reference != m_category)
+//	{
+//		return false;
+//	}
+//	if (m_type->isPrimitive())
+//	{
+//		PrimitiveType* primitiveType = reinterpret_cast<PrimitiveType*>(m_type);
+//		primitiveType->cast(dstType, dst, getRawPointer());
+//		return true;
+//	}
+//	else if (m_type->isEnumeration())
+//	{
+//		EnumType* enumType = reinterpret_cast<EnumType*>(m_type);
+//		enumType->cast(dstType, dst, getRawPointer());
+//		return true;
+//	}
+//	return false;
+//}
+//
+//bool Variant::castToEnum(EnumType* dstType, void* dst) const
+//{
+//	if (vt_small_value != m_category && vt_reference != m_category)
+//	{
+//		return false;
+//	}
+//	if (m_type->isPrimitive())
+//	{
+//		PrimitiveType* primitiveType = reinterpret_cast<PrimitiveType*>(m_type);
+//		dstType->cast(primitiveType, dst, getRawPointer());
+//		return true;
+//	}
+//	else if (m_type->isEnumeration())
+//	{
+//		EnumType* enumType = reinterpret_cast<EnumType*>(m_type);
+//		if (dstType == enumType)
+//		{
+//			memcpy(dst, getRawPointer(), dstType->get__size_());
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+//
+//bool Variant::castToString(string_t& str)
+//{
+//	if (!isValue() && !isReference())
+//	{
+//		return false;
+//	}
+//	if (m_type->isString())
+//	{ 
+//		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
+//		if (paf::string_t::GetType() == classType)
+//		{
+//			str = *static_cast<paf::string_t*>(getRawPointer());
+//			return true;
+//		}
+//	}
+//	else if (m_type->isObject())
+//	{
+//		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
+//		size_t offset;
+//		if (classType->getClassOffset(offset, paf::StringBase::GetType()))
+//		{
+//			str = reinterpret_cast<paf::StringBase*>((size_t)getRawPointer() + offset)->toString();
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+//
+//bool Variant::castToBuffer(buffer_t& buf)
+//{
+//	if (!isValue() && !isReference())
+//	{
+//		return false;
+//	}
+//	if (m_type->isBuffer())
+//	{
+//		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
+//		if (paf::buffer_t::GetType() == classType)
+//		{
+//			buf = *static_cast<paf::buffer_t*>(getRawPointer());
+//			return true;
+//		}
+//	}
+//	else if (m_type->isObject())
+//	{
+//		paf::ClassType* classType = static_cast<paf::ClassType*>(m_type);
+//		size_t offset;
+//		if (classType->getClassOffset(offset, paf::BufferBase::GetType()))
+//		{
+//			buf = reinterpret_cast<paf::BufferBase*>((size_t)getRawPointer() + offset)->toBuffer();
+//			return true;
+//		}
+//	}
+//	return false;
+//}
 
 END_PAF
 

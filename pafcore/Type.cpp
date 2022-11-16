@@ -23,9 +23,9 @@ Type::~Type()
 	}
 }
 
-::paf::ErrorCode Type::placementNew(void* address, ::paf::Variant** args, uint32_t numArgs)
+ErrorCode Type::placementNew(void* address, Variant** args, uint32_t numArgs)
 {
-	return ::paf::ErrorCode::e_not_implemented;
+	return ErrorCode::e_not_implemented;
 }
 
 bool Type::placementNewArray(void* address, size_t count)
@@ -38,12 +38,17 @@ bool Type::destruct(void* address)
 	return false;
 }
 
-bool Type::copyConstruct(void* dst, const void* src)
+bool Type::copyAssign(void* dst, const void* src)
 {
 	return false;
 }
 
-bool Type::copyAssign(void* dst, const void* src)
+bool Type::assign(void* self, Type* srcType, const void* src)
+{
+	return false;
+}
+
+bool Type::cast(Type* dstType, void* dst, const void* self)
 {
 	return false;
 }

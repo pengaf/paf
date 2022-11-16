@@ -23,7 +23,7 @@ TypeAlias::~TypeAlias()
 }
 
 
-::paf::RawPtr<Type> TypeAlias::get_type() const
+Type* TypeAlias::get_type() const
 {
 	return m_type;
 }

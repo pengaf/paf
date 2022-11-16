@@ -217,19 +217,23 @@ public:
 	void* getRawPointer() const;
 	void clear();
 	void assignEnumByInt(EnumType* type, int value);
-	bool castToPrimitive(PrimitiveType* dstType, void* dst) const;
-	bool castToEnum(EnumType* dstType, void* dst) const;
-	bool castToString(string_t& str);
-	bool castToBuffer(buffer_t& buf);
-	bool castToRawPointer(Type* dstType, void** dst) const;
 
-	ErrorCode newValue(Type* type, ::paf::Variant** args, uint32_t numArgs);
-	ErrorCode newUniquePtr(Type* type, ::paf::Variant** args, uint32_t numArgs);
+	//bool castToPrimitive(PrimitiveType* dstType, void* dst) const;
+	//bool castToEnum(EnumType* dstType, void* dst) const;
+	//bool castToString(string_t& str);
+	//bool castToBuffer(buffer_t& buf);
+
+	bool castToValue(Type* dstType, void* dst) const;
+	bool castToRawPointer(Type* dstType, void** dst) const;
+	bool castToRawPointerOrValue(Type* dstType, void* dstValue, void** dstPtr) const;
+
+	ErrorCode newValue(Type* type, Variant** args, uint32_t numArgs);
+	ErrorCode newUniquePtr(Type* type, Variant** args, uint32_t numArgs);
 	ErrorCode newUniqueArray(Type* type, size_t count);
-	ErrorCode newUniqueArray(Type* type, ::paf::Variant** args, uint32_t numArgs);
-	ErrorCode newSharedPtr(Type* type, ::paf::Variant** args, uint32_t numArgs);
+	ErrorCode newUniqueArray(Type* type, Variant** args, uint32_t numArgs);
+	ErrorCode newSharedPtr(Type* type, Variant** args, uint32_t numArgs);
 	ErrorCode newSharedArray(Type* type, size_t count);
-	ErrorCode newSharedArray(Type* type, ::paf::Variant** args, uint32_t numArgs);
+	ErrorCode newSharedArray(Type* type, Variant** args, uint32_t numArgs);
 	ErrorCode subscript(Variant& var, uint32_t index);
 public:
 	template <typename T, typename... Types>
@@ -254,14 +258,14 @@ public:
 	}
 
 	template<typename T>
-	void assignRawPtr(RawPtr<T> const& rawPtr)
+	void assignRawPtr(T* rawPtr)
 	{
 		Type* type = typename RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		assignRawPtr(type, rawPtr.get());
+		assignRawPtr(type, rawPtr);
 	}
 
 	template<typename T>
-	void assignRawArray(RawArray<T> const& rawArray)
+	void assignRawArray(array_t<T> const& rawArray)
 	{
 		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 		assignRawArray(type, rawArray.get(), rawArray.size());
@@ -359,16 +363,22 @@ public:
 		assignUniqueArray(type, ptr, size);
 	}
 
+	template<typename T>
+	bool castToValue(T& dst) const
+	{
+		return castToValue(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), (void*)&dst);
+	}
+
 	template<typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
 	bool castToPrimitive(T& dst) const
 	{
-		return castToPrimitive(static_cast<PrimitiveType*>(RuntimeTypeOf<T>::RuntimeType::GetSingleton()), (void*)&dst);
+		return castToValue(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), (void*)&dst);
 	}
 
 	template<typename T, std::enable_if_t<std::is_enum_v<T>, int> = 0>
 	bool castToEnum(T& dst) const
 	{
-		return castToEnum(static_cast<EnumType*>(RuntimeTypeOf<T>::RuntimeType::GetSingleton()), (void*)&dst);
+		return castToValue(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), (void*)&dst);
 	}
 
 	template<typename T>
@@ -378,7 +388,7 @@ public:
 	}
 
 	template<typename T>
-	bool castToRawPtr(RawPtr<T>& rawPtr) const
+	bool castToRawPtr(T*& rawPtr) const
 	{
 		if (vt_raw_ptr == m_category || vt_borrowed_ptr == m_category || vt_unique_ptr == m_category || vt_shared_ptr == m_category)
 		{
@@ -386,7 +396,7 @@ public:
 			T* rawPointer;
 			if (castToRawPointer(type, (void**)&rawPointer))
 			{
-				rawPtr.assignRawPointer((T*)m_ptr);
+				rawPtr = (T*)m_ptr;
 				return true;
 			}
 		}
@@ -394,7 +404,7 @@ public:
 	}
 
 	template<typename T>
-	bool castToRawArray(RawArray<T>& rawArray) const
+	bool castToRawArray(array_t<T>& rawArray) const
 	{
 		if (vt_raw_array == m_category || vt_borrowed_array == m_category || vt_unique_array == m_category || vt_shared_array == m_category)
 		{
@@ -402,7 +412,7 @@ public:
 			T* rawPointer;
 			if (castToRawPointer(type, (void**)&rawPointer))
 			{
-				rawArray.assignRawPointer((T*)m_ptr, m_arraySize);
+				rawArray.assign((T*)m_ptr, m_arraySize);
 				return true;
 			}
 		}

@@ -24,13 +24,13 @@ namespace tutorial
 	{
 		float x;
 		float y;
-		nocode Point();
-		nocode void getX(float* f) const;
+		nocode void getX(float& f);
 		nocode paf::string_t test();
+		nocode Point();
 #{
-		void getX(float* f) const
+		void getX(float& f)
 		{
-			*f = x;
+			f = x;
 		}
 		paf::string_t test()
 		{

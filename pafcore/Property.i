@@ -131,12 +131,12 @@ namespace paf
 	};
 
 #{
-	inline RawPtr<ClassType> InstanceProperty::get_objectType() const
+	inline ClassType* InstanceProperty::get_objectType() const
 	{
 		return m_objectType;
 	}
 
-	inline RawPtr<Type> InstanceProperty::get_type() const
+	inline Type* InstanceProperty::get_type() const
 	{
 		return m_type;
 	}
@@ -156,7 +156,7 @@ namespace paf
 		return m_propertyCategory;
 	}
 
-	inline RawPtr<Type> StaticProperty::get_type() const
+	inline Type* StaticProperty::get_type() const
 	{
 		return m_type;
 	}

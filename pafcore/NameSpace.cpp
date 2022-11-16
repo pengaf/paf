@@ -100,7 +100,7 @@ void NameSpace::unregisterMember(Metadata* metadata)
 	m_members.erase(metadata);
 }
 
-::paf::RawPtr<Metadata> NameSpace::_findMember_(string_t name)
+Metadata* NameSpace::_findMember_(string_t name)
 {
 	Metadata* member = 0;
 	char buffer[sizeof(Metadata)];
@@ -119,7 +119,7 @@ size_t NameSpace::_getMemberCount_()
 	return m_members.size();
 }
 
-::paf::RawPtr<Metadata> NameSpace::_getMember_(size_t index)
+Metadata* NameSpace::_getMember_(size_t index)
 {
 	if (index < m_members.size())
 	{

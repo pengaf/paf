@@ -176,6 +176,24 @@ namespace paf
 		}
 	};
 
+	template<typename T, bool b = std::is_copy_constructible_v<T>>
+	struct PlacementNewCopyCaller
+	{
+		static bool Call(void* p, const void* other)
+		{
+			new(p)T(*reinterpret_cast<const T*>(other));
+			return true;
+		}
+	};
+	template<typename T>
+	struct PlacementNewCopyCaller<T, false>
+	{
+		static bool Call(void* p, const void* other)
+		{
+			return false;
+		}
+	};
+
 	template<typename T, bool b = std::is_default_constructible_v<T>>
 	struct PlacementNewArrayCaller
 	{
@@ -213,25 +231,6 @@ namespace paf
 		}
 	};
 
-	template<typename T, bool b = std::is_copy_constructible_v<T>>
-	struct CopyConstructorCaller
-	{
-		static bool Call(void* dst, const void* src)
-		{
-			new(dst)T(*reinterpret_cast<const T*>(src));
-			return true;
-		}
-	};
-
-	template<typename T>
-	struct CopyConstructorCaller<T, false>
-	{
-		static bool Call(void* dst, const void* src)
-		{
-			return false;
-		}
-	};
-
 	template<typename T, bool b = std::is_copy_assignable_v<T>>
 	struct CopyAssignmentCaller
 	{
@@ -249,6 +248,80 @@ namespace paf
 		{
 			return false;
 		}
+	};
+
+	template<typename T, typename U, bool b = std::is_assignable_v<T, U>>
+	struct AssignmentCaller
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const U*>(src);
+			return true;
+		}
+	};
+
+	template<typename T, typename U>
+	struct AssignmentCaller<T, U, false>
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			return false;
+		}
+	};
+
+	template<typename T, typename U, bool b = std::is_convertible_v<U, T>>
+	struct CastCaller
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const U*>(src);
+			return true;
+		}
+	};
+
+	template<typename T, typename U>
+	struct CastCaller<T, U, false>
+	{
+		static bool Call(void* dst, const void* src)
+		{
+			return false;
+		}
+	};
+
+	template<typename T>
+	class array_t
+	{
+	public:
+		array_t() noexcept : m_ptr(nullptr), m_size(0)
+		{}
+		array_t(T* ptr, size_t size) noexcept : m_ptr(ptr), m_size(size)
+		{}
+	public:
+		void assign(T* ptr, size_t size)
+		{
+			m_ptr = ptr;
+			m_size = size;
+		}
+		T* get() const noexcept
+		{
+			return m_ptr;
+		}
+		size_t size() const noexcept
+		{
+			return m_size;
+		}
+		T& operator[](size_t idx) const noexcept
+		{
+			PAF_ASSERT(m_ptr && idx < m_size);
+			return m_ptr[idx];
+		}
+		explicit operator bool() const noexcept
+		{
+			return static_cast<bool>(m_ptr);
+		}
+	private:
+		T* m_ptr;
+		size_t m_size;
 	};
 
 	const size_t max_method_param_count = 32;

@@ -44,7 +44,7 @@ bool LuaToInt(int& value, lua_State *L, int index)
 		if (variant && (variant->isValue() || variant->isReference()))
 		{
 			PAF_ASSERT(false);//unreachable
-			res = variant->castToPrimitive(RuntimeTypeOf<int>::RuntimeType::GetSingleton(), &value);
+			res = variant->castToValue(value);
 		}
 		break; }
 	}
@@ -434,7 +434,7 @@ int Variant_ToString(lua_State *L)
 	paf::Variant* variant = (paf::Variant*)lua_touserdata(L, 1);
 	PAF_ASSERT(!variant->isNull());
 	paf::string_t str;
-	if (variant->castToString(str))
+	if (variant->castToValue(str))
 	{
 		lua_pushstring(L, str.c_str());
 		return 1;
@@ -525,7 +525,7 @@ int Variant_ComparisonOperator(lua_State *L, CompareOperation op)
 		break; }
 	case paf::MetaCategory::enumeration: {
 		int lhs, rhs;
-		if(variant->castToPrimitive(RuntimeTypeOf<int>::RuntimeType::GetSingleton(), &lhs)
+		if(variant->castToValue(lhs)
 			&& LuaToInt(rhs, L, 2))
 		{ 
 			bool compareResult = false;
@@ -590,7 +590,7 @@ paf::ErrorCode Variant_Index_Identify(lua_State *L, paf::Variant* variant, const
 			if(0 != member)
 			{
 				paf::Variant value;
-				value.assignRawPtr<paf::Metadata>(member);
+				value.assignRawPtr(member);
 				VariantToLua(L, &value);
 				return paf::ErrorCode::s_ok;
 			}
@@ -760,21 +760,25 @@ paf::ErrorCode Variant_Index_Identify(lua_State *L, paf::Variant* variant, const
 					{
 						lua_pushlightuserdata(L, type);
 						lua_pushcclosure(L, Closure_NewUniquePtr, 1);
+						return paf::ErrorCode::s_ok;
 					}
 					else if (strcmp(&name[4], "UniqueArray_") == 0)//_NewUniqueArray_
 					{
 						lua_pushlightuserdata(L, type);
 						lua_pushcclosure(L, Closure_NewUniqueArray, 1);
+						return paf::ErrorCode::s_ok;
 					}
 					else if (strcmp(&name[4], "SharedPtr_") == 0)//_NewSharedPtr_
 					{
 						lua_pushlightuserdata(L, type);
 						lua_pushcclosure(L, Closure_NewSharedPtr, 1);
+						return paf::ErrorCode::s_ok;
 					}
 					else if (strcmp(&name[4], "SharedArray_") == 0)//_NewSharedArray_
 					{
 						lua_pushlightuserdata(L, type);
 						lua_pushcclosure(L, Closure_NewSharedArray, 1);
+						return paf::ErrorCode::s_ok;
 					}
 				}
 			}

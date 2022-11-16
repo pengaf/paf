@@ -7,12 +7,27 @@
 
 BEGIN_PAF
 
+size_t PrimitiveType::_getMemberCount_()
+{
+	return 0;
+}
+
+Metadata* PrimitiveType::_getMember_(size_t index)
+{
+	return nullptr;
+}
+
+Metadata* PrimitiveType::_findMember_(string_t name)
+{
+	return nullptr;
+}
+
 //size_t PrimitiveType::_getMemberCount_()
 //{
 //	return m_memberCount;
 //}
 //
-//::paf::RawPtr<Metadata> PrimitiveType::_getMember_(size_t index)
+//Metadata* PrimitiveType::_getMember_(size_t index)
 //{
 //	if (index < m_memberCount)
 //	{
@@ -21,7 +36,7 @@ BEGIN_PAF
 //	return nullptr;
 //}
 //
-//::paf::RawPtr<Metadata> PrimitiveType::_findMember_(string_t name)
+//Metadata* PrimitiveType::_findMember_(string_t name)
 //{
 //	Metadata dummy(name);
 //	Metadata** it = std::lower_bound(m_members, m_members + m_memberCount, &dummy, CompareMetaDataPtrByName());

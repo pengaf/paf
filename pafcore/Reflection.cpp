@@ -9,7 +9,7 @@
 BEGIN_PAF
 
 
-String Reflection::GetTypeFullName(::paf::RawPtr<Type>  type)
+String Reflection::GetTypeFullName(Type*  type)
 {
 	const char* localName = type->get__name_();
 	size_t totalLength = strlen(localName) + 1;
@@ -50,7 +50,7 @@ String Reflection::GetTypeFullName(::paf::RawPtr<Type>  type)
 	return String(name.c_str());
 }
 
-String Reflection::GetTypeAliasFullName(::paf::RawPtr<TypeAlias> typeAlias)
+String Reflection::GetTypeAliasFullName(TypeAlias* typeAlias)
 {
 	const char* localName = typeAlias->get__name_();
 	size_t totalLength = strlen(localName) + 1;
@@ -91,7 +91,7 @@ String Reflection::GetTypeAliasFullName(::paf::RawPtr<TypeAlias> typeAlias)
 	return String(name.c_str());
 }
 
-::paf::RawPtr<Type> Reflection::GetTypeFromFullName(string_t fullName)
+Type* Reflection::GetTypeFromFullName(string_t fullName)
 {
 	std::string name;
 	const char* nameBegin = fullName;
@@ -310,7 +310,7 @@ String Reflection::EnumToString(const Variant& value)
 	}
 	EnumType* enumType = static_cast<EnumType*>(type);
 	int enumValue = 0;
-	value.castToEnum(enumType, &enumValue);
+	value.castToValue(enumType, &enumValue);
 	Enumerator* enumerator = enumType->_getEnumeratorByValue_(enumValue);
 	if (enumerator)
 	{

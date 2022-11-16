@@ -15,11 +15,13 @@ namespace paf
 		Type(const char* name, MetaCategory category, const char* declarationFile);
 		~Type();
 	public:
-		virtual ::paf::ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs);
+		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs);
 		virtual bool placementNewArray(void* address, size_t count);
-		virtual bool destruct(void* address);
-		virtual bool copyConstruct(void* dst, const void* src);
-		virtual bool copyAssign(void* dst, const void* src);
+		virtual bool destruct(void* self);
+		virtual bool copyAssign(void* self, const void* src);
+		virtual bool assign(void* self, Type* srcType, const void* src);
+		virtual bool cast(Type* dstType, void* dst, const void* self);
+	public:
 		virtual Metadata* findMember(const char* name);
 	public:
 		MetaCategory getMetaCategory() const;

@@ -19,8 +19,8 @@ namespace paf
 		primitive,
 		enumeration,
 		object,
-		string,//::paf::string_t
-		buffer,//::paf::buffer_t
+		string,//::paf::string_t ::paf::String, etc
+		buffer,//::paf::buffer_t ::paf::Buffer, etc
 		enumerator,
 		instance_field,
 		static_field,

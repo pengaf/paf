@@ -34,15 +34,15 @@ namespace paf
 
 	class(primitive_type)#PAFCORE_EXPORT PrimitiveType : Type
 	{
-		//size_t _getMemberCount_();
-		//Metadata* _getMember_(size_t index);
-		//Metadata* _findMember_(string_t name);
+		size_t _getMemberCount_();
+		Metadata* _getMember_(size_t index);
+		Metadata* _findMember_(string_t name);
 #{
 	public:
 		PrimitiveType(const char* name) : Type(name, MetaCategory::primitive, "")
 		{}
-	public:
-		virtual void castTo(void* dst, PrimitiveType* dstType, const void* src) = 0;
+	//public:
+	//	virtual void castTo(void* dst, PrimitiveType* dstType, const void* src) = 0;
 	public:
 		//StaticMethod* findStaticMethod(const char* name);
 		//Metadata* findTypeMember(const char* name);
@@ -206,167 +206,168 @@ namespace paf
 			m_typeCategory = (PrimitiveTypeCategory)PrimitiveTypeTraits<T>::type_category;
 			m_name = name;
 			m_size = sizeof(T);
-
-			//static ::paf::MethodResult s_staticResults[] =
-			//{
-			//	::paf::MethodResult(this, TypeCompound::unique_ptr),
-			//	::paf::MethodResult(this, TypeCompound::unique_array),
-			//};
-			//static ::paf::MethodArgument s_staticArguments[] =
-			//{
-			//	::paf::MethodArgument("arg", this, ::paf::TypeCompound::none, ::paf::Passing::value),
-			//	::paf::MethodArgument("count", RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), ::paf::TypeCompound::none, ::paf::Passing::value),
-			//};
-			//static ::paf::StaticMethod s_staticMethods[] =
-			//{
-			//	::paf::StaticMethod("New", nullptr, Primitive_New, &s_staticResults[0], &s_staticArguments[0], 1, 0),
-			//	::paf::StaticMethod("NewArray", nullptr, Primitive_NewArray, &s_staticResults[1], &s_staticArguments[1], 1, 1),
-			//};
-			//m_staticMethods = s_staticMethods;
-			//m_staticMethodCount = paf_array_size_of(s_staticMethods);
-			//static ::paf::Metadata* s_members[] =
-			//{
-			//	&s_staticMethods[0],
-			//	&s_staticMethods[1],
-			//};
-			//m_members = s_members;
-			//m_memberCount = paf_array_size_of(s_members);
-			//m_staticMethods = nullptr;
-			//m_staticMethodCount = 0;
-			//m_members = nullptr;
-			//m_memberCount = 0;// paf_array_size_of(s_members);
-			::paf::NameSpace::GetGlobalNameSpace()->registerMember(this);
+			NameSpace::GetGlobalNameSpace()->registerMember(this);
 		}
-		//static ::paf::ErrorCode Primitive_New(Variant* result, Variant** args, uint32_t numArgs)
-		//{
-		//	if (0 == numArgs)
-		//	{
-		//		result->assignUniquePtr(::paf::UniquePtr<T>::Make());
-		//		return ::paf::ErrorCode::s_ok;
-		//	}
-		//	T a0;
-		//	if (!args[0]->castToPrimitive(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), &a0))
-		//	{
-		//		return ::paf::ErrorCode::e_invalid_arg_type_1;
-		//	}
-		//	if (1 == numArgs)
-		//	{
-		//		result->assignUniquePtr(::paf::UniquePtr<T>::Make(a0));
-		//		return ::paf::ErrorCode::s_ok;
-		//	}
-		//	return ::paf::ErrorCode::e_too_many_arguments;
-		//}
-		//static ::paf::ErrorCode Primitive_NewArray(Variant* result, Variant** args, uint32_t numArgs)
-		//{
-		//	if (numArgs < 1)
-		//	{
-		//		return ::paf::ErrorCode::e_too_few_arguments;
-		//	}
-		//	unsigned int a0;
-		//	if (!args[0]->castToPrimitive(RuntimeTypeOf<unsigned int>::RuntimeType::GetSingleton(), &a0))
-		//	{
-		//		return ::paf::ErrorCode::e_invalid_arg_type_1;
-		//	}
-		//	if (1 == numArgs)
-		//	{
-		//		result->assignUniqueArray(::paf::UniqueArray<T>::Make(a0));
-		//		return ::paf::ErrorCode::s_ok;
-		//	}
-		//	return ::paf::ErrorCode::e_too_many_arguments;
-		//}
-		virtual ::paf::ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs) override
+		virtual ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs) override
 		{
 			if (0 == numArgs)
 			{
-				return ::paf::ErrorCode::s_ok;
+				return ErrorCode::s_ok;
 			}
 			T a0;
-			if (!args[0]->castToPrimitive(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), &a0))
+			if (!args[0]->castToValue(RuntimeTypeOf<T>::RuntimeType::GetSingleton(), &a0))
 			{
-				return ::paf::ErrorCode::e_invalid_arg_type_1;
+				return ErrorCode::e_invalid_arg_type_1;
 			}
 			if (1 == numArgs)
 			{
 				new(address)T(a0);
-				return ::paf::ErrorCode::s_ok;
+				return ErrorCode::s_ok;
 			}
-			return ::paf::ErrorCode::e_too_many_arguments;
+			return ErrorCode::e_too_many_arguments;
 		}
 		virtual bool placementNewArray(void* address, size_t count) override
 		{
 			new(address)T[count];
 			return true;
 		}
-		virtual bool destruct(void* address) override
+		virtual bool destruct(void* self) override
 		{
 			return true;
 		}
-		virtual bool copyConstruct(void* dst, const void* src) override
+		//virtual bool copyConstruct(void* dst, const void* src) override
+		//{
+		//	*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
+		//	return true;
+		//}
+		virtual bool copyAssign(void* self, const void* src) override
 		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
+			*reinterpret_cast<T*>(self) = *reinterpret_cast<const T*>(src);
 			return true;
 		}
-		virtual bool copyAssign(void* dst, const void* src) override
+		virtual bool assign(void* self, Type* srcType, const void* src) override
 		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
-			return true;
-		}
-		virtual void castTo(void* dst, PrimitiveType* dstType, const void* src) override
-		{
-			PAF_ASSERT(dst && dstType && src);
-			switch (dstType->getPrimitiveTypeCategory())
+			PAF_ASSERT(self && srcType && src);
+			if (!srcType->isPrimitive())
+			{
+				return false;
+			}
+			switch (static_cast<PrimitiveType*>(srcType)->getPrimitiveTypeCategory())
 			{
 			case bool_type:
-				*reinterpret_cast<bool_t*>(dst) = *reinterpret_cast<const T*>(src) != 0;
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const bool_t*>(src));
 				break;
 			case char_type:
-				*reinterpret_cast<char_t*>(dst) = static_cast<char_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const char_t*>(src));
 				break;
 			case signed_char_type:
-				*reinterpret_cast<schar_t*>(dst) = static_cast<char_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const schar_t*>(src));
 				break;
 			case unsigned_char_type:
-				*reinterpret_cast<uchar_t*>(dst) = static_cast<uchar_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const uchar_t*>(src));
 				break;
 			case wchar_type:
-				*reinterpret_cast<wchar_t*>(dst) = static_cast<wchar_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const wchar_t*>(src));
 				break;
 			case short_type:
-				*reinterpret_cast<short_t*>(dst) = static_cast<short_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const short_t*>(src));
 				break;
 			case unsigned_short_type:
-				*reinterpret_cast<ushort_t*>(dst) = static_cast<ushort_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const ushort_t*>(src));
 				break;
 			case int_type:
-				*reinterpret_cast<int_t*>(dst) = static_cast<int_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const int_t*>(src));
 				break;
 			case unsigned_int_type:
-				*reinterpret_cast<uint_t*>(dst) = static_cast<uint_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const uint_t*>(src));
 				break;
 			case long_type:
-				*reinterpret_cast<long_t*>(dst) = static_cast<long_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const long_t*>(src));
 				break;
 			case unsigned_long_type:
-				*reinterpret_cast<ulong_t*>(dst) = static_cast<ulong_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const ulong_t*>(src));
 				break;
 			case long_long_type:
-				*reinterpret_cast<longlong_t*>(dst) = static_cast<longlong_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const longlong_t*>(src));
 				break;
 			case unsigned_long_long_type:
-				*reinterpret_cast<ulonglong_t*>(dst) = static_cast<ulonglong_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const ulonglong_t*>(src));
 				break;
 			case float_type:
-				*reinterpret_cast<float_t*>(dst) = static_cast<float_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const float_t*>(src));
 				break;
 			case double_type:
-				*reinterpret_cast<double_t*>(dst) = static_cast<double_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const double_t*>(src));
 				break;
 			case long_double_type:
-				*reinterpret_cast<longdouble_t*>(dst) = static_cast<longdouble_t>(*reinterpret_cast<const T*>(src));
+				*reinterpret_cast<T*>(self) = static_cast<T>(*reinterpret_cast<const longdouble_t*>(src));
 				break;
 			default:
 				PAF_ASSERT(false);
 			}
+			return true;
+		}
+		virtual bool cast(Type* dstType, void* dst, const void* self) override
+		{
+			PAF_ASSERT(dst && dstType && self);
+			if (!dstType->isPrimitive())
+			{
+				return false;
+			}
+			switch (static_cast<PrimitiveType*>(dstType)->getPrimitiveTypeCategory())
+			{
+			case bool_type:
+				*reinterpret_cast<bool_t*>(dst) = static_cast<bool_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case char_type:
+				*reinterpret_cast<char_t*>(dst) = static_cast<char_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case signed_char_type:
+				*reinterpret_cast<schar_t*>(dst) = static_cast<schar_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case unsigned_char_type:
+				*reinterpret_cast<uchar_t*>(dst) = static_cast<uchar_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case wchar_type:
+				*reinterpret_cast<wchar_t*>(dst) = static_cast<wchar_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case short_type:
+				*reinterpret_cast<short_t*>(dst) = static_cast<short_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case unsigned_short_type:
+				*reinterpret_cast<ushort_t*>(dst) = static_cast<ushort_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case int_type:
+				*reinterpret_cast<int_t*>(dst) = static_cast<int_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case unsigned_int_type:
+				*reinterpret_cast<uint_t*>(dst) = static_cast<uint_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case long_type:
+				*reinterpret_cast<long_t*>(dst) = static_cast<long_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case unsigned_long_type:
+				*reinterpret_cast<ulong_t*>(dst) = static_cast<ulong_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case long_long_type:
+				*reinterpret_cast<longlong_t*>(dst) = static_cast<longlong_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case unsigned_long_long_type:
+				*reinterpret_cast<ulonglong_t*>(dst) = static_cast<ulonglong_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case float_type:
+				*reinterpret_cast<float_t*>(dst) = static_cast<float_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case double_type:
+				*reinterpret_cast<double_t*>(dst) = static_cast<double_t>(*reinterpret_cast<const T*>(self));
+				break;
+			case long_double_type:
+				*reinterpret_cast<longdouble_t*>(dst) = static_cast<longdouble_t>(*reinterpret_cast<const T*>(self));
+				break;
+			default:
+				PAF_ASSERT(false);
+			}
+			return true;
 		}
 	public:
 		static PrimitiveTypeImpl s_instance;

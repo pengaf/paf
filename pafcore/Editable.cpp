@@ -5,22 +5,22 @@
 
 BEGIN_PAF
 
-void PropertyChangedNotifyHandler::onPropertyChanged(::paf::RawPtr<Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, ::paf::RawPtr<Iterator> iterator)
+void PropertyChangedNotifyHandler::onPropertyChanged(Introspectable* sender, string_t propertyName, PropertyChangedFlag flag, Iterator* iterator)
 {
 
 }
 
-void PropertyChangedNotifyHandler::onPropertyEditableChanged(::paf::RawPtr<Introspectable> sender, string_t propertyName)
+void PropertyChangedNotifyHandler::onPropertyEditableChanged(Introspectable* sender, string_t propertyName)
 {
 
 }
 
-//void PropertyChangedNotifyHandler::onDynamicPropertyChanged(::paf::RawPtr<Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, ::paf::RawPtr<Iterator> iterator)
+//void PropertyChangedNotifyHandler::onDynamicPropertyChanged(Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, RawPtr<Iterator* iterator)
 //{
 //
 //}
 //
-//void PropertyChangedNotifyHandler::onUpdateDynamicProperty(::paf::RawPtr<Introspectable> sender)
+//void PropertyChangedNotifyHandler::onUpdateDynamicProperty(Introspectable* sender)
 //{
 //}
 

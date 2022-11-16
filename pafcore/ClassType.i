@@ -29,11 +29,11 @@ namespace paf
 			m_next = iterator;
 			m_classType = classType;
 		}
-		::paf::RawPtr<ClassTypeIterator> next()
+		ClassTypeIterator* next()
 		{
 			return m_next;
 		}
-		::paf::RawPtr<ClassType> value()
+		ClassType* value()
 		{
 			return m_classType;
 		}
@@ -68,8 +68,8 @@ namespace paf
 		//override Type
 		virtual Metadata* findMember(const char* name);
 	public:
-		virtual ::paf::ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs);
-		virtual ::paf::UniquePtr<::paf::Introspectable> createSubclassProxy(SubclassInvoker* subclassInvoker);
+		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs);
+		virtual UniquePtr<Introspectable> createSubclassProxy(SubclassInvoker* subclassInvoker);
 	public:
 		Metadata* findMember(const char* name, bool includeBaseClasses, bool typeAliasToType);
 		Metadata* findClassMember(const char* name, bool includeBaseClasses, bool typeAliasToType);

@@ -235,7 +235,7 @@ StaticMethod* ClassType::findStaticMethod(const char* name, bool includeBaseClas
 	return 0;
 }
 
-::paf::RawPtr<Metadata> ClassType::_findMember_(string_t name, bool includeBaseClasses)
+Metadata* ClassType::_findMember_(string_t name, bool includeBaseClasses)
 {
 	Metadata dummy(name);
 	Metadata** it = std::lower_bound(m_members, m_members + m_memberCount, &dummy, CompareMetaDataPtrByName());
@@ -327,14 +327,14 @@ Metadata* ClassType::findMember(const char* name)
 	return findMember(name, true, true);
 }
 
-::paf::ErrorCode ClassType::placementNew(void* ptr, ::paf::Variant** args, uint32_t numArgs)
+ErrorCode ClassType::placementNew(void* ptr, Variant** args, uint32_t numArgs)
 {
 	return ErrorCode::e_not_implemented;
 }
 
-::paf::UniquePtr<::paf::Introspectable> ClassType::createSubclassProxy(SubclassInvoker* subclassInvoker)
+UniquePtr<Introspectable> ClassType::createSubclassProxy(SubclassInvoker* subclassInvoker)
 {
-	return ::paf::UniquePtr<::paf::Introspectable>(nullptr);
+	return UniquePtr<Introspectable>(nullptr);
 }
 
 size_t ClassType::_getMemberCount_(bool includeBaseClasses)
@@ -350,7 +350,7 @@ size_t ClassType::_getMemberCount_(bool includeBaseClasses)
 	return count;
 }
 	
-::paf::RawPtr<Metadata> ClassType::_getMember_(size_t index, bool includeBaseClasses)
+Metadata* ClassType::_getMember_(size_t index, bool includeBaseClasses)
 {
 	if(includeBaseClasses)
 	{
@@ -388,7 +388,7 @@ size_t ClassType::_getBaseClassCount_()
 	return m_baseClassCount;
 }
 
-::paf::RawPtr<Metadata> ClassType::_getBaseClass_(size_t index)
+Metadata* ClassType::_getBaseClass_(size_t index)
 {
 	if(index < m_baseClassCount)
 	{
@@ -421,7 +421,7 @@ bool ClassType::getClassOffset(size_t& offset, ClassType* otherType)
 	return getClassOffset_(offset, otherType);
 }
 
-::paf::RawPtr<ClassTypeIterator> ClassType::_getFirstDerivedClass_()
+ClassTypeIterator* ClassType::_getFirstDerivedClass_()
 {
 	return m_firstDerivedClass;
 }
@@ -439,7 +439,7 @@ size_t ClassType::_getInstancePropertyCount_(bool includeBaseClasses)
 	return count;
 }
 
-::paf::RawPtr<InstanceProperty> ClassType::_getInstanceProperty_(size_t index, bool includeBaseClasses)
+InstanceProperty* ClassType::_getInstanceProperty_(size_t index, bool includeBaseClasses)
 {
 	if (includeBaseClasses)
 	{
@@ -505,7 +505,7 @@ size_t ClassType::_getInstanceFieldCount_(bool includeBaseClasses)
 	return count;
 }
 
-::paf::RawPtr<InstanceField> ClassType::_getInstanceField_(size_t index, bool includeBaseClasses)
+InstanceField* ClassType::_getInstanceField_(size_t index, bool includeBaseClasses)
 {
 	if (includeBaseClasses)
 	{

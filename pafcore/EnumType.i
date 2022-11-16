@@ -19,18 +19,19 @@ namespace paf
 		EnumType(const char* name, const char* declarationFile);
 	public:
 		//override Type
-		virtual ::paf::ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs) override;
+		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs) override;
 		virtual bool placementNewArray(void* address, size_t count) override;
-		virtual bool destruct(void* address) override;
-		virtual bool copyConstruct(void* dst, const void* src) override;
-		virtual bool copyAssign(void* dst, const void* src) override;
+		virtual bool destruct(void* self) override;
+		virtual bool copyAssign(void* self, const void* src) override;
+		virtual bool assign(void* self, Type* srcType, const void* src) override;
+		virtual bool cast(Type* dstType, void* dst, const void* self) override;
 		virtual Metadata* findMember(const char* name) override;
 	public:
-		void castToPrimitive(void* dst, PrimitiveType* dstType, const void* src);
-		void castFromPrimitive(void* dst, PrimitiveType* srcType, const void* src);
+		//void castToPrimitive(void* dst, PrimitiveType* dstType, const void* src);
+		//void castFromPrimitive(void* dst, PrimitiveType* srcType, const void* src);
 		Enumerator* findEnumerator(const char* name);
 	public:
-		static paf::ErrorCode Enum_get__name_(paf::InstanceProperty* instanceProperty, paf::Variant* that, paf::Variant* value);
+		static paf::ErrorCode Enum_get__name_(InstanceProperty* instanceProperty, Variant* that, Variant* value);
 	public:
 		Enumerator* m_enumerators;
 		size_t m_enumeratorCount;
@@ -54,7 +55,7 @@ namespace paf
 
 
 #{
-	inline ::paf::RawPtr<EnumType> Enumerator::get__type_() const
+	inline EnumType* Enumerator::get__type_() const
 	{
 		return m_type;
 	}
