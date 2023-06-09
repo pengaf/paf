@@ -332,9 +332,9 @@ ErrorCode ClassType::placementNew(void* ptr, Variant** args, uint32_t numArgs)
 	return ErrorCode::e_not_implemented;
 }
 
-UniquePtr<Introspectable> ClassType::createSubclassProxy(SubclassInvoker* subclassInvoker)
+SharedPtr<Introspectable> ClassType::createSubclassProxy(SubclassInvoker* subclassInvoker)
 {
-	return UniquePtr<Introspectable>(nullptr);
+	return SharedPtr<Introspectable>(nullptr);
 }
 
 size_t ClassType::_getMemberCount_(bool includeBaseClasses)

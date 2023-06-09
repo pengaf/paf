@@ -226,6 +226,11 @@ namespace paf
 			}
 			return ErrorCode::e_too_many_arguments;
 		}
+		virtual bool placementNewCopy(void* dst, const void* src) override
+		{
+			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
+			return true;
+		}
 		virtual bool placementNewArray(void* address, size_t count) override
 		{
 			new(address)T[count];
@@ -235,11 +240,6 @@ namespace paf
 		{
 			return true;
 		}
-		//virtual bool copyConstruct(void* dst, const void* src) override
-		//{
-		//	*reinterpret_cast<T*>(dst) = *reinterpret_cast<const T*>(src);
-		//	return true;
-		//}
 		virtual bool copyAssign(void* self, const void* src) override
 		{
 			*reinterpret_cast<T*>(self) = *reinterpret_cast<const T*>(src);

@@ -4,6 +4,7 @@
 #include "PrimitiveType.h"
 #include "EnumType.h"
 #include "ClassType.h"
+#include "Utility.mh"
 
 BEGIN_PAF
 
@@ -243,23 +244,11 @@ void Variant::clear()
 	case vt_big_value:
 		ValueBox::Delete(m_ptr);
 		break;
-	case vt_borrowed_ptr:
-		Box::DecBorrowCount(m_ptr);
-		break;
-	case vt_borrowed_array:
-		ArrayBox::DecBorrowCount(m_ptr);
-		break;
-	case vt_unique_ptr:
-		Box::DecOwnerCount(m_ptr);
-		break;
-	case vt_unique_array:
-		ArrayBox::DecOwnerCount(m_ptr, m_arraySize);
-		break;
 	case vt_shared_ptr:
-		Box::DecOwnerCount(m_ptr);
+		Box::DecStrongCount(m_ptr);
 		break;
 	case vt_shared_array:
-		ArrayBox::DecOwnerCount(m_ptr, m_arraySize);
+		ArrayBox::DecStrongCount(m_ptr, m_arraySize);
 		break;
 	}
 	m_category = vt_null;
@@ -325,31 +314,6 @@ void Variant::assignRawArray(Type* type, void* ptr, size_t size)
 	}
 }
 
-void Variant::assignBorrowedPtr(Type* type, void* ptr)
-{
-	clear();
-	if (ptr)
-	{
-		DynamicCast(type, ptr);
-		m_type = type;
-		m_ptr = ptr;
-		m_category = vt_borrowed_ptr;
-	}
-}
-
-void Variant::assignBorrowedArray(Type* type, void* ptr, size_t size)
-{
-	clear();
-	if (ptr)
-	{
-		PAF_ASSERT(IsFinal(type, ptr));
-		m_type = type;
-		m_ptr = ptr;
-		m_arraySize = size;
-		m_category = vt_borrowed_array;
-	}
-}
-
 void Variant::assignSharedPtr(Type* type, void* ptr)
 {
 	clear();
@@ -372,31 +336,6 @@ void Variant::assignSharedArray(Type* type, void* ptr, size_t size)
 		m_ptr = ptr;
 		m_arraySize = size;
 		m_category = vt_shared_array;
-	}
-}
-
-void Variant::assignUniquePtr(Type* type, void* ptr)
-{
-	clear();
-	if (ptr)
-	{
-		DynamicCast(type, ptr);
-		m_type = type;
-		m_ptr = ptr;
-		m_category = vt_unique_ptr;
-	}
-}
-
-void Variant::assignUniqueArray(Type* type, void* ptr, size_t size)
-{
-	clear();
-	if (ptr)
-	{
-		PAF_ASSERT(IsFinal(type, ptr));
-		m_type = type;
-		m_ptr = ptr;
-		m_arraySize = size;
-		m_category = vt_unique_array;
 	}
 }
 
@@ -506,31 +445,6 @@ ErrorCode Variant::newValue(Type* type, Variant** args, uint32_t numArgs)
 	return errorCode;
 }
 
-ErrorCode Variant::newUniquePtr(Type* type, Variant** args, uint32_t numArgs)
-{
-	clear();
-	ErrorCode errorCode = GenericBoxImpl::New(m_ptr, type, args, numArgs);
-	if (ErrorCode::s_ok == errorCode)
-	{
-		m_category = vt_unique_ptr;
-		m_type = type;
-	}
-	return errorCode;
-}
-
-ErrorCode Variant::newUniqueArray(Type* type, size_t count)
-{
-	clear();
-	ErrorCode errorCode = GenericArrayBoxImpl::NewArray(m_ptr, type, count);
-	if (ErrorCode::s_ok == errorCode)
-	{
-		m_category = vt_unique_array;
-		m_type = type;
-		m_arraySize = count;
-	}
-	return errorCode;
-}
-
 ErrorCode Variant::newSharedPtr(Type* type, Variant** args, uint32_t numArgs)
 {
 	clear();
@@ -562,8 +476,6 @@ ErrorCode Variant::subscript(Variant& var, uint32_t index)
 	switch (m_category)
 	{
 	case vt_raw_array:
-	case vt_borrowed_array:
-	case vt_unique_array:
 	case vt_shared_array:
 		if (index < m_arraySize)
 		{
@@ -577,8 +489,6 @@ ErrorCode Variant::subscript(Variant& var, uint32_t index)
 			return ErrorCode::e_index_out_of_range;
 		}
 	case vt_raw_ptr:
-	case vt_borrowed_ptr:
-	case vt_unique_ptr:
 	case vt_shared_ptr:
 		if (0 == index)
 		{
@@ -593,24 +503,6 @@ ErrorCode Variant::subscript(Variant& var, uint32_t index)
 		}
 	}
 	return ErrorCode::e_is_not_array;
-}
-
-ErrorCode Variant::newUniqueArray(Type* type, Variant** args, uint32_t numArgs)
-{
-	if (numArgs < 1)
-	{
-		return ErrorCode::e_too_few_arguments;
-	}
-	::size_t a0;
-	if (!args[0]->castToValue(RuntimeTypeOf<::size_t>::RuntimeType::GetSingleton(), &a0))
-	{
-		return ErrorCode::e_invalid_arg_type_1;
-	}
-	if (1 == numArgs)
-	{
-		return newUniqueArray(type, a0);
-	}
-	return ErrorCode::e_too_many_arguments;
 }
 
 ErrorCode Variant::newSharedArray(Type* type, Variant** args, uint32_t numArgs)
@@ -732,6 +624,26 @@ ErrorCode Variant::newSharedArray(Type* type, Variant** args, uint32_t numArgs)
 //	}
 //	return false;
 //}
+
+bool Variant::castToPrimitive(PrimitiveType* dstType, void* dst) const
+{
+	return castToValue(dstType, dst);
+}
+
+bool Variant::castToEnum(EnumType* dstType, void* dst) const
+{
+	return castToValue(dstType, dst);
+}
+
+bool Variant::castToString(string_t& str)
+{
+	return castToValue(RuntimeTypeOf<string_t>::RuntimeType::GetSingleton(), &str);
+}
+
+bool Variant::castToBuffer(buffer_t& buf)
+{
+	return castToValue(RuntimeTypeOf<buffer_t>::RuntimeType::GetSingleton(), &buf);
+}
 
 END_PAF
 

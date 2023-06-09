@@ -713,7 +713,7 @@ ErrorCode Reflection::CollectionInstancePropertySet(InstanceProperty* instancePr
 	return errorCode;
 }
 
-ErrorCode Reflection::CollectionInstancePropertyIterate(InstanceProperty* instanceProperty, Variant* that, UniquePtr<Iterator>& iterator)
+ErrorCode Reflection::CollectionInstancePropertyIterate(InstanceProperty* instanceProperty, Variant* that, SharedPtr<Iterator>& iterator)
 {
 	PAF_ASSERT(instanceProperty && that);
 	if (PropertyCategory::collection_property != instanceProperty->get_propertyCategory())

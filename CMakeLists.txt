@@ -28,7 +28,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${PROJECT_SOURCE_DIR}/bin)
 
 set(CMAKE_DEBUG_POSTFIX _d)
 
-add_subdirectory(3rd/lua)
+#add_subdirectory(3rd/lua)
 add_subdirectory(pafcore)
 add_subdirectory(paflua)
 add_subdirectory(test)

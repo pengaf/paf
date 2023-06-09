@@ -16,6 +16,7 @@ namespace paf
 		~Type();
 	public:
 		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs);
+		virtual bool placementNewCopy(void* self, const void* src);
 		virtual bool placementNewArray(void* address, size_t count);
 		virtual bool destruct(void* self);
 		virtual bool copyAssign(void* self, const void* src);

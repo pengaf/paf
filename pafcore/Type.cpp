@@ -28,6 +28,11 @@ ErrorCode Type::placementNew(void* address, Variant** args, uint32_t numArgs)
 	return ErrorCode::e_not_implemented;
 }
 
+bool Type::placementNewCopy(void* self, const void* src)
+{
+	return false;
+}
+
 bool Type::placementNewArray(void* address, size_t count)
 {
 	return false;

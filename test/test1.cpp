@@ -36,27 +36,26 @@ void test1()
 		char name[222];
 		sprintf(name, "%d", i);
 		node->m_name = name;
-		auto bn = scene->getRootNode()->addChild(std::move(node));
+		scene->getRootNode()->addChild(node);
 		for (int j = 0; j < 5; ++j)
 		{
 			auto node = Node::New();
 			sprintf(name, "%d-%d", i,j);
 			node->m_name = name;
-			if (bn->m_childHead && j > 2)
+			if (node->m_childHead && j > 2)
 			{
-				bn->m_childHead->m_nextSibling->m_nextSibling->addSibling(std::move(node));
+				node->m_childHead->m_nextSibling->m_nextSibling->addSibling(node);
 			}
 			else
 			{
-				bn->addChild(std::move(node));
+				node->addChild(node);
 			}
 		}
-
 	}
 	scene->check__();
 
 
-	std::cout << sizeof(paf::UniquePtr<Node>) << "  " << sizeof(paf::SharedPtr<Node>) << "  " << sizeof(paf::BorrowedPtr<Node>);
+	std::cout << sizeof(paf::SharedPtr<Node>) << "  " << sizeof(paf::WeakPtr<Node>);
 }
 
 class AA
