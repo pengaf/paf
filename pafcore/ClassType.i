@@ -69,7 +69,7 @@ namespace paf
 		virtual Metadata* findMember(const char* name);
 	public:
 		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs);
-		virtual UniquePtr<Introspectable> createSubclassProxy(SubclassInvoker* subclassInvoker);
+		virtual SharedPtr<Introspectable> createSubclassProxy(SubclassInvoker* subclassInvoker);
 	public:
 		Metadata* findMember(const char* name, bool includeBaseClasses, bool typeAliasToType);
 		Metadata* findClassMember(const char* name, bool includeBaseClasses, bool typeAliasToType);

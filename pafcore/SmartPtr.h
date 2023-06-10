@@ -3,6 +3,9 @@
 #include "Utility.h"
 #include <atomic>
 #include <type_traits>
+#include <memory>
+
+//std::shared_ptr<int>
 
 namespace paf
 {
@@ -10,11 +13,7 @@ namespace paf
 	static constexpr bool is_interface = std::is_base_of_v<::paf::Interface, T>;
 
 	template<typename T1, typename T2>
-	static constexpr bool convertable_unique_ptr_v = (std::is_base_of_v<T1, T2> || std::is_base_of_v<T2, T1>) && std::has_virtual_destructor_v<T1> && std::has_virtual_destructor_v<T2>;
-
-	template<typename T1, typename T2>
 	static constexpr bool convertable_shared_ptr_v = (std::is_base_of_v<T1, T2> || std::is_base_of_v<T2, T1>) && std::has_virtual_destructor_v<T1> && std::has_virtual_destructor_v<T2>;
-
 
 	class Box
 	{
@@ -22,40 +21,40 @@ namespace paf
 		virtual void destruct() = 0;
 		virtual void deallocate() = 0;
 	public:
-		void incBorrowCount()
+		void incWeakCount()
 		{
 			PAF_ASSERT(!dangling());
-			++m_borrow;
+			++m_weakCount;
 		}
-		void decBorrowCount()
+		void decWeakCount()
 		{
-			PAF_ASSERT(0 < m_borrow);
-			if (0 == --m_borrow)
+			PAF_ASSERT(0 < m_weakCount);
+			if (0 == --m_weakCount)
 			{
-				PAF_ASSERT(0 == m_owner);
+				PAF_ASSERT(0 == m_strongCount);
 				deallocate();
 			}
 		}
-		void incOwnerCount()
+		void incStrongCount()
 		{
 			PAF_ASSERT(!dangling());
-			++m_owner;
+			++m_strongCount;
 		}
-		void decOwnerCount()
+		void decStrongCount()
 		{
-			if (0 == --m_owner)
+			if (0 == --m_strongCount)
 			{
 				destruct();
-				decBorrowCount();
+				decWeakCount();
 			}
 		}
 		bool dangling() const
 		{
-			return 0 == m_owner;
+			return 0 == m_strongCount;
 		}
 	protected:
-		mutable long m_owner{ 1 };
-		mutable long m_borrow{ 1 };
+		mutable long m_strongCount{ 1 };
+		mutable long m_weakCount{ 1 };
 	public:
 		static Box* FromRawPtr(const void* ptr)
 		{
@@ -68,24 +67,24 @@ namespace paf
 			return ptr ? static_cast<const Box*>(ptr)->dangling() : false;
 		}
 
-		static void IncBorrowCount(const void* ptr)
+		static void IncWeakCount(const void* ptr)
 		{
-			FromRawPtr(ptr)->incBorrowCount();
+			FromRawPtr(ptr)->incWeakCount();
 		}
 
-		static void DecBorrowCount(const void* ptr)
+		static void DecWeakCount(const void* ptr)
 		{
-			FromRawPtr(ptr)->decBorrowCount();
+			FromRawPtr(ptr)->decWeakCount();
 		}
 
-		static void IncOwnerCount(const void* ptr)
+		static void IncStrongCount(const void* ptr)
 		{
-			FromRawPtr(ptr)->incOwnerCount();
+			FromRawPtr(ptr)->incStrongCount();
 		}
 
-		static void DecOwnerCount(const void* ptr)
+		static void DecStrongCount(const void* ptr)
 		{
-			FromRawPtr(ptr)->decOwnerCount();
+			FromRawPtr(ptr)->decStrongCount();
 		}
 	};
 
@@ -95,40 +94,40 @@ namespace paf
 		virtual void destructArray(size_t arraySize) = 0;
 		virtual void deallocate() = 0;
 	public:
-		void incBorrowCount()
+		void incWeakCount()
 		{
 			PAF_ASSERT(!dangling());
-			++m_borrow;
+			++m_weakCount;
 		}
-		void decBorrowCount()
+		void decWeakCount()
 		{
-			PAF_ASSERT(0 < m_borrow);
-			if (0 == --m_borrow)
+			PAF_ASSERT(0 < m_weakCount);
+			if (0 == --m_weakCount)
 			{
-				PAF_ASSERT(0 == m_owner);
+				PAF_ASSERT(0 == m_strongCount);
 				deallocate();
 			}
 		}
-		void incOwnerCount()
+		void incStrongCount()
 		{
 			PAF_ASSERT(!dangling());
-			++m_owner;
+			++m_strongCount;
 		}
-		void decOwnerCount(size_t arraySize)
+		void decStrongCount(size_t arraySize)
 		{
-			if (0 == --m_owner)
+			if (0 == --m_strongCount)
 			{
 				destructArray(arraySize);
-				decBorrowCount();
+				decWeakCount();
 			}
 		}
 		bool dangling() const
 		{
-			return 0 == m_owner;
+			return 0 == m_strongCount;
 		}
 	protected:
-		mutable long m_owner{ 1 };
-		mutable long m_borrow{ 1 };
+		mutable long m_strongCount{ 1 };
+		mutable long m_weakCount{ 1 };
 	public:
 		static ArrayBox* FromRawPtr(const void* ptr)
 		{
@@ -141,24 +140,24 @@ namespace paf
 			return ptr ? static_cast<const ArrayBox*>(ptr)->dangling() : false;
 		}
 
-		static void IncBorrowCount(const void* ptr)
+		static void IncWeakCount(const void* ptr)
 		{
-			FromRawPtr(ptr)->incBorrowCount();
+			FromRawPtr(ptr)->incWeakCount();
 		}
 
-		static void DecBorrowCount(const void* ptr)
+		static void DecWeakCount(const void* ptr)
 		{
-			FromRawPtr(ptr)->decBorrowCount();
+			FromRawPtr(ptr)->decWeakCount();
 		}
 
-		static void IncOwnerCount(const void* ptr)
+		static void IncStrongCount(const void* ptr)
 		{
-			FromRawPtr(ptr)->incOwnerCount();
+			FromRawPtr(ptr)->incStrongCount();
 		}
 
-		static void DecOwnerCount(const void* ptr, size_t arraySize)
+		static void DecStrongCount(const void* ptr, size_t arraySize)
 		{
-			FromRawPtr(ptr)->decOwnerCount(arraySize);
+			FromRawPtr(ptr)->decStrongCount(arraySize);
 		}
 	};
 
@@ -240,22 +239,16 @@ namespace paf
 	};
 
 	template<typename T, typename D = Destructor<T>>
-	class UniquePtr;
-
-	template<typename T, typename D = Destructor<T>>
-	class UniqueArray;
-
-	template<typename T, typename D = Destructor<T>>
 	class SharedPtr;
 
 	template<typename T, typename D = Destructor<T>>
 	class SharedArray;
 
 	template<typename T>
-	class BorrowedPtr;
+	class WeakPtr;
 
 	template<typename T>
-	class BorrowedArray;
+	class WeakArray;
 
 	class Variant;
 
@@ -278,10 +271,7 @@ namespace paf
 	class SharedPtr
 	{
 		template <typename T2>
-		friend class BorrowedPtr;
-
-		template<typename T2, typename D2>
-		friend class UniquePtr;
+		friend class WeakPtr;
 
 		template<typename T2, typename D2>
 		friend class SharedPtr;
@@ -292,14 +282,14 @@ namespace paf
 		using pointer = T * ;
 		using reference = T & ;
 	private:
-		explicit SharedPtr(pointer ptr) noexcept :
+		SharedPtr(pointer ptr) noexcept :
 			m_ptr(ptr)
 		{}
 		//for shared from other raw pointer
 		SharedPtr(pointer ptr, std::true_type tag) noexcept :
 			m_ptr(ptr)
 		{
-			incOwnerCount();
+			incStrongCount();
 		}
 	public:
 		constexpr SharedPtr() noexcept :
@@ -313,7 +303,7 @@ namespace paf
 		SharedPtr(const SharedPtr& other) noexcept :
 			m_ptr(other.m_ptr)
 		{
-			incOwnerCount();
+			incStrongCount();
 		}
 
 		template <typename T2, typename D2, std::enable_if_t<convertable_shared_ptr_v<T, T2>, int> = 0>
@@ -321,7 +311,7 @@ namespace paf
 			m_ptr(static_cast<T*>(other.m_ptr))
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			incOwnerCount();
+			incStrongCount();
 		}
 
 		SharedPtr(SharedPtr&& other) noexcept :
@@ -340,13 +330,19 @@ namespace paf
 
 		~SharedPtr() noexcept
 		{
-			decOwnerCount();
+			decStrongCount();
 		}
 
-		SharedPtr& operator=(nullptr_t other) noexcept
+		SharedPtr& operator=(nullptr_t) noexcept
 		{
-			decOwnerCount();
+			decStrongCount();
 			m_ptr = nullptr;
+			return *this;
+		}
+
+		SharedPtr& operator=(pointer ptr) noexcept
+		{
+			assignRawPointer(ptr);
 			return *this;
 		}
 
@@ -366,7 +362,7 @@ namespace paf
 
 		SharedPtr& operator=(SharedPtr&& other) noexcept
 		{
-			decOwnerCount();
+			decStrongCount();
 			m_ptr = other.m_ptr;
 			other.m_ptr = nullptr;
 			return *this;
@@ -376,11 +372,12 @@ namespace paf
 		SharedPtr& operator=(SharedPtr<T2, D2>&& other) noexcept
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			decOwnerCount();
+			decStrongCount();
 			m_ptr = static_cast<T*>(other.m_ptr);
 			other.m_ptr = nullptr;
 			return *this;
 		}
+
 
 		reference operator*() const noexcept
 		{
@@ -394,6 +391,11 @@ namespace paf
 			return m_ptr;
 		}
 
+		operator pointer() const noexcept
+		{
+			return m_ptr;
+		}
+		
 		explicit operator bool() const noexcept
 		{
 			return static_cast<bool>(m_ptr);
@@ -410,13 +412,13 @@ namespace paf
 		}
 
 		template<typename T2>
-		bool operator==(const BorrowedPtr<T2>& other) const
+		bool operator==(const WeakPtr<T2>& other) const
 		{
 			return m_ptr == other.m_ptr;
 		}
 
 		template<typename T2>
-		bool operator!=(const BorrowedPtr<T2>& other) const
+		bool operator!=(const WeakPtr<T2>& other) const
 		{
 			return m_ptr != other.m_ptr;
 		}
@@ -453,31 +455,31 @@ namespace paf
 			return m_ptr ? Box::FromRawPtr(m_ptr) : nullptr;
 		}
 	private:
-		void incOwnerCount()
+		void incStrongCount()
 		{
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::IncOwnerCount(m_ptr->getAddress());
+					Box::IncStrongCount(m_ptr->getAddress());
 				}
 				else
 				{
-					Box::IncOwnerCount(m_ptr);
+					Box::IncStrongCount(m_ptr);
 				}
 			}
 		}
-		void decOwnerCount()
+		void decStrongCount()
 		{
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::DecOwnerCount(m_ptr->getAddress());
+					Box::DecStrongCount(m_ptr->getAddress());
 				}
 				else
 				{
-					Box::DecOwnerCount(m_ptr);
+					Box::DecStrongCount(m_ptr);
 				}
 			}
 		}
@@ -492,7 +494,7 @@ namespace paf
 		}
 		static SharedPtr SharedFrom(T* ptr)
 		{
-			return SharedPtr(p, std::true_type());
+			return SharedPtr(ptr, std::true_type());
 		}
 	};
 
@@ -501,13 +503,10 @@ namespace paf
 	class SharedArray
 	{
 		template <typename T2>
-		friend class BorrowedArray;
+		friend class WeakArray;
 
 		template<typename T2, typename D2>
 		friend class SharedArray;
-
-		template<typename T2, typename D2>
-		friend class UniqueArray;
 
 		friend class Variant;
 
@@ -535,7 +534,7 @@ namespace paf
 			m_ptr(other.m_ptr),
 			m_size(other.m_size)
 		{
-			incOwnerCount();
+			incStrongCount();
 		}
 
 		SharedArray(SharedArray&& other) noexcept :
@@ -548,7 +547,7 @@ namespace paf
 
 		~SharedArray() noexcept
 		{
-			decOwnerCount();
+			decStrongCount();
 		}
 
 		SharedArray& operator=(SharedArray const& other) noexcept
@@ -584,12 +583,12 @@ namespace paf
 			return m_ptr != ptr;
 		}
 
-		bool operator==(const BorrowedArray<T>& other) const
+		bool operator==(const WeakArray<T>& other) const
 		{
 			return m_ptr == other.m_ptr;
 		}
 
-		bool operator!=(const BorrowedArray<T>& other) const
+		bool operator!=(const WeakArray<T>& other) const
 		{
 			return m_ptr != other.m_ptr;
 		}
@@ -629,24 +628,24 @@ namespace paf
 		//for variant
 		void assignRawPointer(pointer ptr, size_t size)
 		{
-			ArrayBox::IncOwnerCount(ptr);
-			ArrayBox::DecOwnerCount(m_ptr, m_size);
+			ArrayBox::IncStrongCount(ptr);
+			ArrayBox::DecStrongCount(m_ptr, m_size);
 			m_ptr = ptr;
 			m_size = size;
 		}
 	private:
-		void incOwnerCount()
+		void incStrongCount()
 		{
 			if (m_ptr)
 			{
-				ArrayBox::IncOwnerCount(m_ptr);
+				ArrayBox::IncStrongCount(m_ptr);
 			}
 		}
-		void decOwnerCount()
+		void decStrongCount()
 		{
 			if (m_ptr)
 			{
-				ArrayBox::DecOwnerCount(m_ptr, m_size);
+				ArrayBox::DecStrongCount(m_ptr, m_size);
 			}
 		}
 	private:
@@ -661,368 +660,12 @@ namespace paf
 	};
 
 
-	template<typename T, typename D>
-	class UniquePtr
-	{
-		template <typename T2>
-		friend class BorrowedPtr;
-
-		template <typename T2, typename D2>
-		friend class UniquePtr;
-
-		template <typename T2, typename D2>
-		friend class SharedPtr;
-
-		friend class Variant;
-
-	public:
-		using element_type = T;
-		using pointer = T * ;
-		using reference = T & ;
-	private:
-		UniquePtr(const UniquePtr&) = delete;
-		UniquePtr& operator=(const UniquePtr&) = delete;
-	public:
-		constexpr UniquePtr() noexcept :
-			m_ptr(nullptr)
-		{}
-
-		constexpr UniquePtr(nullptr_t) noexcept :
-			m_ptr(nullptr)
-		{}
-
-		explicit UniquePtr(pointer ptr) noexcept :
-			m_ptr(ptr)
-		{}
-
-		UniquePtr(UniquePtr&& other) noexcept :
-			m_ptr(other.get())
-		{
-			other.m_ptr = nullptr;
-		}
-
-		template<typename T2, typename D2, std::enable_if_t<convertable_unique_ptr_v<T, T2>, int> = 0>
-		UniquePtr(UniquePtr<T2, D2>&& other) noexcept :
-			m_ptr(static_cast<T*>(other.get()))
-		{
-			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			other.m_ptr = nullptr;
-		}
-
-		~UniquePtr() noexcept
-		{
-			decOwnerCount();
-		}
-
-		UniquePtr& operator=(nullptr_t other) noexcept
-		{
-			decOwnerCount();
-			m_ptr = nullptr;
-			return *this;
-		}
-
-		UniquePtr& operator=(UniquePtr&& other) noexcept
-		{
-			if (this != std::addressof(other))
-			{
-				decOwnerCount();
-				m_ptr = other.m_ptr;
-				other.m_ptr = nullptr;
-			}
-			return *this;
-		}
-
-		template<typename T2, typename D2, std::enable_if_t<convertable_unique_ptr_v<T, T2>, int> = 0>
-		UniquePtr& operator=(UniquePtr<T2, D2>&& other) noexcept
-		{
-			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			decOwnerCount();
-			m_ptr = static_cast<T*>(other.m_ptr);
-			other.m_ptr = nullptr;
-			return *this;
-		}
-
-		reference operator*() const noexcept
-		{
-			PAF_ASSERT(m_ptr);
-			return *m_ptr;
-		}
-
-		pointer operator->() const noexcept
-		{
-			PAF_ASSERT(m_ptr);
-			return m_ptr;
-		}
-
-		explicit operator bool() const noexcept
-		{
-			return static_cast<bool>(m_ptr);
-		}
-
-		bool operator==(const T* ptr) const
-		{
-			return m_ptr == ptr;
-		}
-
-		bool operator!=(const T* ptr) const
-		{
-			return m_ptr != ptr;
-		}
-
-		template<typename T2>
-		bool operator==(const BorrowedPtr<T2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		template<typename T2>
-		bool operator!=(const BorrowedPtr<T2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator==(const UniquePtr<T2, D2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator!=(const UniquePtr<T2, D2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		pointer get() const noexcept
-		{
-			return m_ptr;
-		}
-
-		void swap(UniquePtr& other) noexcept
-		{
-			std::swap(m_ptr, other.m_ptr);
-		}
-	private:
-		void assignRawPointer(pointer ptr)
-		{
-			decOwnerCount();
-			m_ptr = ptr;
-		}
-	private:
-		void incOwnerCount()
-		{
-			if (m_ptr)
-			{
-				if constexpr (is_interface<T>)
-				{
-					Box::IncOwnerCount(m_ptr->getAddress());
-				}
-				else
-				{
-					Box::IncOwnerCount(m_ptr);
-				}
-			}
-		}
-		void decOwnerCount()
-		{
-			if (m_ptr)
-			{
-				if constexpr (is_interface<T>)
-				{
-					Box::DecOwnerCount(m_ptr->getAddress());
-				}
-				else
-				{
-					Box::DecOwnerCount(m_ptr);
-				}
-			}
-		}
-	private:
-		T* m_ptr;
-	public:
-		template <typename... Types>
-		static UniquePtr Make(Types&&... args)
-		{
-			T* p = BoxImpl<T, D>::New(std::forward<Types>(args)...);
-			return UniquePtr(p);
-		}
-	};
-
-
-	template<typename T, typename D>
-	class UniqueArray
-	{
-		template <typename T2>
-		friend class BorrowedArray;
-
-		template <typename T2, typename D2>
-		friend class UniqueArray;
-
-		template <typename T2, typename D2>
-		friend class SharedArray;
-
-		friend class Variant;
-
-	public:
-		using element_type = T;
-		using pointer = T * ;
-		using reference = T & ;
-		using size_type = size_t;
-	private:
-		UniqueArray(const UniqueArray&) = delete;
-		UniqueArray& operator=(const UniqueArray&) = delete;
-		UniqueArray(pointer ptr, size_type size) noexcept :
-			m_ptr(ptr),
-			m_size(size)
-		{}
-	public:
-		constexpr UniqueArray() noexcept :
-			m_ptr(nullptr),
-			m_size(0)
-		{}
-
-		constexpr UniqueArray(nullptr_t) noexcept :
-			m_ptr(nullptr),
-			m_size(0)
-		{}
-
-		UniqueArray(UniqueArray&& other) noexcept :
-			m_ptr(other.m_ptr),
-			m_size(other.m_size)
-		{
-			other.m_ptr = nullptr;
-			other.m_size = 0;
-		}
-
-		~UniqueArray() noexcept
-		{
-			decOwnerCount();
-		}
-
-		UniqueArray& operator=(nullptr_t other) noexcept
-		{
-			decOwnerCount();
-			m_ptr = nullptr;
-			m_size = 0;
-			return *this;
-		}
-
-		UniqueArray& operator=(UniqueArray&& other) noexcept
-		{
-			if (this != std::addressof(other))
-			{
-				m_ptr = other.m_ptr;
-				m_size = other.m_size;
-				other.m_ptr = nullptr;
-				other.m_size = 0;
-			}
-			return *this;
-		}
-
-		reference operator[](size_t idx) const noexcept
-		{
-			PAF_ASSERT(m_ptr && idx < m_size);
-			return m_ptr[idx];
-		}
-
-		explicit operator bool() const noexcept
-		{
-			return static_cast<bool>(m_ptr);
-		}
-
-		bool operator==(const T* ptr) const
-		{
-			return m_ptr == ptr;
-		}
-
-		bool operator!=(const T* ptr) const
-		{
-			return m_ptr != ptr;
-		}
-
-		bool operator==(const BorrowedArray<T>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const BorrowedArray<T>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		bool operator==(const UniqueArray& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const UniqueArray& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		pointer get() const noexcept
-		{
-			return m_ptr;
-		}
-
-		pointer get(size_t idx) const noexcept
-		{
-			PAF_ASSERT(0 == idx || idx < m_size);
-			return idx < m_size ? m_ptr + idx : nullptr;
-		}
-
-		size_type size() const noexcept
-		{
-			return m_size;
-		}
-
-		void swap(UniqueArray& other) noexcept
-		{
-			std::swap(m_ptr, other.m_ptr);
-			std::swap(m_size, other.m_size);
-		}
-	private:
-		void assignRawPointer(pointer ptr, size_t size)
-		{
-			decOwnerCount();
-			m_ptr = ptr;
-			m_size = size;
-		}
-	private:
-		void incOwnerCount()
-		{
-			if (m_ptr)
-			{
-				ArrayBox::IncOwnerCount(m_ptr);
-			}
-		}
-		void decOwnerCount()
-		{
-			if (m_ptr)
-			{
-				ArrayBox::DecOwnerCount(m_ptr, m_size);
-			}
-		}
-	private:
-		T* m_ptr;
-		size_t m_size;
-	public:
-		static UniqueArray Make(const size_t size)
-		{
-			T* p = ArrayBoxImpl<T, D>::NewArray(size);
-			return UniqueArray(p, size);
-		}
-	};
-
 
 	template<typename T>
-	class BorrowedPtr
+	class WeakPtr
 	{
 		template <typename T2>
-		friend class BorrowedPtr;
-
-		template <typename T2, typename D2>
-		friend class UniquePtr;
+		friend class WeakPtr;
 
 		template<typename T2, typename D2>
 		friend class SharedPtr;
@@ -1034,64 +677,56 @@ namespace paf
 		using pointer = T * ;
 		using reference = T & ;
 	public:
-		constexpr BorrowedPtr() noexcept :
+		constexpr WeakPtr() noexcept :
 			m_ptr(nullptr)
 		{}
 
-		constexpr BorrowedPtr(nullptr_t) noexcept :
+		constexpr WeakPtr(nullptr_t) noexcept :
 			m_ptr(nullptr)
 		{}
 
-		explicit BorrowedPtr(pointer ptr) noexcept :
+		explicit WeakPtr(pointer ptr) noexcept :
 			m_ptr(ptr)
 		{
-			incBorrowCount();
+			incWeakCount();
 		}
 
-		BorrowedPtr(const BorrowedPtr& other) noexcept :
+		WeakPtr(const WeakPtr& other) noexcept :
 			m_ptr(other.m_ptr)
 		{
-			incBorrowCount();
+			incWeakCount();
 		}
 
 		template<typename T2>
-		BorrowedPtr(const BorrowedPtr<T2>& other) noexcept :
+		WeakPtr(const WeakPtr<T2>& other) noexcept :
 			m_ptr(static_cast<T*>(other.get()))
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			incBorrowCount();
+			incWeakCount();
 		}
 
 		template<typename T2, typename D2>
-		explicit BorrowedPtr(const UniquePtr<T2, D2>& other) noexcept :
+		explicit WeakPtr(const SharedPtr<T2, D2>& other) noexcept :
 			m_ptr(static_cast<T*>(other.get()))
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			incBorrowCount();
+			incWeakCount();
 		}
 
-		template<typename T2, typename D2>
-		explicit BorrowedPtr(const SharedPtr<T2, D2>& other) noexcept :
-			m_ptr(static_cast<T*>(other.get()))
+		WeakPtr& operator=(nullptr_t other) noexcept
 		{
-			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			incBorrowCount();
-		}
-
-		BorrowedPtr& operator=(nullptr_t other) noexcept
-		{
-			decBorrowCount();
+			decWeakCount();
 			m_ptr = nullptr;
 			return *this;
 		}
 
-		BorrowedPtr& operator=(pointer ptr) noexcept
+		WeakPtr& operator=(pointer ptr) noexcept
 		{
 			reset(ptr);
 			return *this;
 		}
 
-		BorrowedPtr& operator=(const BorrowedPtr& other) noexcept
+		WeakPtr& operator=(const WeakPtr& other) noexcept
 		{
 			if (this != std::addressof(other))
 			{
@@ -1101,7 +736,7 @@ namespace paf
 		}
 
 		template<typename T2>
-		BorrowedPtr& operator=(const BorrowedPtr<T2>& other) noexcept
+		WeakPtr& operator=(const WeakPtr<T2>& other) noexcept
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
 			reset(other.get());
@@ -1109,15 +744,7 @@ namespace paf
 		}
 
 		template<typename T2, typename D2>
-		BorrowedPtr& operator=(const UniquePtr<T2, D2>& other) noexcept
-		{
-			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
-			reset(other.get());
-			return *this;
-		}
-
-		template<typename T2, typename D2>
-		BorrowedPtr& operator=(const SharedPtr<T2, D2>& other) noexcept
+		WeakPtr& operator=(const SharedPtr<T2, D2>& other) noexcept
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
 			reset(other.get());
@@ -1154,25 +781,13 @@ namespace paf
 		}
 
 		template<typename T2>
-		bool operator==(const BorrowedPtr<T2>& other) const
+		bool operator==(const WeakPtr<T2>& other) const
 		{
 			return m_ptr == other.m_ptr;
 		}
 
 		template<typename T2>
-		bool operator!=(const BorrowedPtr<T2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator==(const UniquePtr<T2, D2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		template<typename T2, typename D2>
-		bool operator!=(const UniquePtr<T2, D2>& other) const
+		bool operator!=(const WeakPtr<T2>& other) const
 		{
 			return m_ptr != other.m_ptr;
 		}
@@ -1197,48 +812,44 @@ namespace paf
 	private:
 		void assignRawPointer(pointer ptr)
 		{
-			decBorrowCount();
+			decWeakCount();
 			m_ptr = ptr;
-			incBorrowCount();
+			incWeakCount();
 		}
 	private:
-		void incBorrowCount()
+		void incWeakCount()
 		{
-#if _DEBUG
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::IncBorrowCount(m_ptr->getAddress());
+					Box::IncWeakCount(m_ptr->getAddress());
 				}
 				else
 				{
-					Box::IncBorrowCount(m_ptr);
+					Box::IncWeakCount(m_ptr);
 				}
 			}
-#endif
 		}
-		void decBorrowCount()
+		void decWeakCount()
 		{
-#if _DEBUG
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::DecBorrowCount(m_ptr->getAddress());
+					Box::DecWeakCount(m_ptr->getAddress());
 				}
 				else
 				{
-					Box::DecBorrowCount(m_ptr);
+					Box::DecWeakCount(m_ptr);
 				}
 			}
-#endif
 		}
 		void reset(T* ptr)
 		{
-			decBorrowCount();
+			decWeakCount();
 			m_ptr = ptr;
-			incBorrowCount();
+			incWeakCount();
 		}
 		bool isDangling() const 
 		{
@@ -1250,13 +861,10 @@ namespace paf
 
 
 	template<typename T>
-	class BorrowedArray
+	class WeakArray
 	{
 		template <typename T2>
-		friend class BorrowedArray;
-
-		template <typename T2, typename D2>
-		friend class UniqueArray;
+		friend class WeakArray;
 
 		template<typename T2, typename D2>
 		friend class SharedArray;
@@ -1269,19 +877,19 @@ namespace paf
 		using reference = T & ;
 		using size_type = size_t;
 	public:
-		constexpr BorrowedArray() noexcept :
+		constexpr WeakArray() noexcept :
 			m_ptr(nullptr),
 			m_size(0)
 		{}
 
-		BorrowedArray(const BorrowedArray& other) noexcept :
+		WeakArray(const WeakArray& other) noexcept :
 			m_ptr(other.get()),
 			m_size(other.size())
 		{
-			incBorrowCount();
+			incWeakCount();
 		}
 
-		BorrowedArray(BorrowedArray&& other) noexcept :
+		WeakArray(WeakArray&& other) noexcept :
 			m_ptr(other.get()),
 			m_size(other.size())
 		{
@@ -1289,55 +897,39 @@ namespace paf
 			other.m_size = 0;
 		}
 
-		explicit BorrowedArray(const UniqueArray<T>&other) noexcept :
+		explicit WeakArray(const SharedArray<T>&other) noexcept :
 			m_ptr(other.get()),
 			m_size(other.size())
 		{
-			incBorrowCount();
+			incWeakCount();
 		}
 
-		explicit BorrowedArray(const SharedArray<T>&other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
+		WeakArray& operator=(nullptr_t other) noexcept
 		{
-			incBorrowCount();
-		}
-
-		BorrowedArray& operator=(nullptr_t other) noexcept
-		{
-			decBorrowCount();
+			decWeakCount();
 			m_ptr = nullptr;
 			m_size = 0;
 			return *this;
 		}
 
-		BorrowedArray& operator=(const BorrowedArray & other) noexcept
+		WeakArray& operator=(const WeakArray & other) noexcept
 		{
 			if (this != std::addressof(other))
 			{
-				decBorrowCount();
+				decWeakCount();
 				m_ptr = other.get();
 				m_size = other.size();
-				incBorrowCount();
+				incWeakCount();
 			}
 			return *this;
 		}
 
-		BorrowedArray& operator=(const UniqueArray<T>&other) noexcept
+		WeakArray& operator=(const SharedArray<T>&other) noexcept
 		{
-			decBorrowCount();
+			decWeakCount();
 			m_ptr = other.get();
 			m_size = other.size();
-			incBorrowCount();
-			return *this;
-		}
-
-		BorrowedArray& operator=(const SharedArray<T>&other) noexcept
-		{
-			decBorrowCount();
-			m_ptr = other.get();
-			m_size = other.size();
-			incBorrowCount();
+			incWeakCount();
 			return *this;
 		}
 
@@ -1363,22 +955,12 @@ namespace paf
 			return m_ptr != ptr;
 		}
 
-		bool operator==(const BorrowedArray & other) const
+		bool operator==(const WeakArray & other) const
 		{
 			return m_ptr == other.m_ptr;
 		}
 
-		bool operator!=(const BorrowedArray & other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		bool operator==(const UniqueArray<T>&other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const UniqueArray<T>&other) const
+		bool operator!=(const WeakArray & other) const
 		{
 			return m_ptr != other.m_ptr;
 		}
@@ -1413,411 +995,43 @@ namespace paf
 	private:
 		void assignRawPointer(pointer ptr, size_t size)
 		{
-			decBorrowCount();
+			decWeakCount();
 			m_ptr = ptr;
 			m_size = size;
-			incBorrowCount();
+			incWeakCount();
 		}
 	private:
-		void incBorrowCount()
+		void incWeakCount()
 		{
-#if _DEBUG
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
 				{
-					ArrayBox::IncBorrowCount(m_ptr->getAddress());
+					ArrayBox::IncWeakCount(m_ptr->getAddress());
 				}
 				else
 				{
-					ArrayBox::IncBorrowCount(m_ptr);
+					ArrayBox::IncWeakCount(m_ptr);
 				}
 			}
-#endif
 		}
-		void decBorrowCount()
+		void decWeakCount()
 		{
-#if _DEBUG
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
 				{
-					ArrayBox::DecBorrowCount(m_ptr->getAddress());
+					ArrayBox::DecWeakCount(m_ptr->getAddress());
 				}
 				else
 				{
-					ArrayBox::DecBorrowCount(m_ptr);
+					ArrayBox::DecWeakCount(m_ptr);
 				}
 			}
-#endif
 		}
 	private:
 		T* m_ptr;
 		size_t m_size;
 	};
-
-
-	//template<typename T>
-	//class RawPtr
-	//{
-	//	template <typename T2>
-	//	friend class RawPtr;
-
-	//	template <typename T2>
-	//	friend class BorrowedPtr;
-
-	//	template <typename T2, typename D2>
-	//	friend class UniquePtr;
-
-	//	template<typename T2, typename D2>
-	//	friend class SharedPtr;
-
-	//	friend class Variant;
-
-	//public:
-	//	using element_type = T;
-	//	using pointer = T * ;
-	//	using reference = T & ;
-	//public:
-	//	constexpr RawPtr() noexcept :
-	//		m_ptr(nullptr)
-	//	{}
-
-	//	constexpr RawPtr(nullptr_t) noexcept :
-	//		m_ptr(nullptr)
-	//	{}
-
-	//	RawPtr(pointer ptr) noexcept :
-	//		m_ptr(ptr)
-	//	{}
-
-	//	RawPtr(const RawPtr& other) noexcept :
-	//		m_ptr(other.m_ptr)
-	//	{}
-
-	//	template<typename T2>
-	//	RawPtr(const T2*& other) noexcept :
-	//		m_ptr(other.m_ptr)
-	//	{}
-
-	//	template<typename T2>
-	//	RawPtr(const BorrowedPtr<T2>& other) noexcept :
-	//		m_ptr(other.m_ptr)
-	//	{}
-
-	//	template<typename T2, typename D2>
-	//	explicit RawPtr(const UniquePtr<T2, D2>& other) noexcept :
-	//		m_ptr(other.m_ptr)
-	//	{}
-
-	//	template<typename T2, typename D2>
-	//	explicit RawPtr(const SharedPtr<T2, D2>& other) noexcept :
-	//		m_ptr(other.m_ptr)
-	//	{}
-
-	//	RawPtr& operator=(nullptr_t other) noexcept
-	//	{
-	//		m_ptr = nullptr;
-	//		return *this;
-	//	}
-
-	//	RawPtr& operator=(const RawPtr& other) noexcept
-	//	{
-	//		m_ptr = other.m_ptr;
-	//		return *this;
-	//	}
-
-	//	template<typename T2>
-	//	RawPtr& operator=(const BorrowedPtr<T2>& other) noexcept
-	//	{
-	//		m_ptr = other.m_ptr;
-	//		return *this;
-	//	}
-
-	//	template<typename T2, typename D2>
-	//	RawPtr& operator=(const UniquePtr<T2, D2>& other) noexcept
-	//	{
-	//		m_ptr = other.m_ptr;
-	//		return *this;
-	//	}
-
-	//	template<typename T2, typename D2>
-	//	RawPtr& operator=(const SharedPtr<T2, D2>& other) noexcept
-	//	{
-	//		m_ptr = other.m_ptr;
-	//		return *this;
-	//	}
-
-	//	reference operator*() const noexcept
-	//	{
-	//		PAF_ASSERT(m_ptr);
-	//		return *m_ptr;
-	//	}
-
-	//	pointer operator->() const noexcept
-	//	{
-	//		PAF_ASSERT(m_ptr);
-	//		return m_ptr;
-	//	}
-
-	//	explicit operator bool() const noexcept
-	//	{
-	//		return static_cast<bool>(m_ptr);
-	//	}
-
-	//	bool operator==(const T* ptr) const
-	//	{
-	//		return m_ptr == ptr;
-	//	}
-
-	//	bool operator!=(const T* ptr) const
-	//	{
-	//		return m_ptr != ptr;
-	//	}
-
-	//	template<typename T2>
-	//	bool operator==(const T2*& other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	template<typename T2>
-	//	bool operator!=(const T2*& other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	template<typename T2>
-	//	bool operator==(const BorrowedPtr<T2>& other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	template<typename T2>
-	//	bool operator!=(const BorrowedPtr<T2>& other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	template<typename T2, typename D2>
-	//	bool operator==(const UniquePtr<T2, D2>& other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	template<typename T2, typename D2>
-	//	bool operator!=(const UniquePtr<T2, D2>& other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	template<typename T2, typename D2>
-	//	bool operator==(const SharedPtr<T2, D2>& other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	template<typename T2, typename D2>
-	//	bool operator!=(const SharedPtr<T2, D2>& other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	operator const T*() const
-	//	{
-	//		return  m_ptr;
-	//	}
-
-	//	operator T*() const
-	//	{
-	//		return  m_ptr;
-	//	}
-
-	//	pointer get() const noexcept
-	//	{
-	//		return m_ptr;
-	//	}
-
-	//	void assignRawPointer(pointer ptr)
-	//	{
-	//		m_ptr = ptr;
-	//	}
-	//private:
-	//	T* m_ptr;
-	//};
-
-
-	//template<typename T>
-	//class RawArray
-	//{
-	//	template <typename T2>
-	//	friend class RawArray;
-
-	//	template <typename T2>
-	//	friend class BorrowedArray;
-
-	//	template <typename T2, typename D2>
-	//	friend class UniqueArray;
-
-	//	template<typename T2, typename D2>
-	//	friend class SharedArray;
-
-	//	friend class Variant;
-
-	//public:
-	//	using element_type = T;
-	//	using pointer = T * ;
-	//	using reference = T & ;
-	//	using size_type = size_t;
-	//public:
-	//	constexpr RawArray() noexcept :
-	//		m_ptr(nullptr),
-	//		m_size(0)
-	//	{}
-
-	//	RawArray(const RawArray& other) noexcept :
-	//		m_ptr(other.get()),
-	//		m_size(other.size())
-	//	{}
-
-	//	RawArray(RawArray&& other) noexcept :
-	//		m_ptr(other.get()),
-	//		m_size(other.size())
-	//	{
-	//		other.m_ptr = nullptr;
-	//		other.m_size = 0;
-	//	}
-
-	//	explicit RawArray(const UniqueArray<T>&other) noexcept :
-	//		m_ptr(other.get()),
-	//		m_size(other.size())
-	//	{}
-
-	//	explicit RawArray(const SharedArray<T>&other) noexcept :
-	//		m_ptr(other.get()),
-	//		m_size(other.size())
-	//	{}
-
-	//	RawArray& operator=(nullptr_t other) noexcept
-	//	{
-	//		m_ptr = nullptr;
-	//		m_size = 0;
-	//		return *this;
-	//	}
-
-	//	RawArray& operator=(const RawArray& other) noexcept
-	//	{
-	//		m_ptr = other.get();
-	//		m_size = other.size();
-	//		return *this;
-	//	}
-
-	//	RawArray& operator=(const BorrowedArray<T> & other) noexcept
-	//	{
-	//		m_ptr = other.get();
-	//		m_size = other.size();
-	//		return *this;
-	//	}
-
-	//	RawArray& operator=(const UniqueArray<T>&other) noexcept
-	//	{
-	//		m_ptr = other.get();
-	//		m_size = other.size();
-	//		return *this;
-	//	}
-
-	//	RawArray& operator=(const SharedArray<T>&other) noexcept
-	//	{
-	//		m_ptr = other.get();
-	//		m_size = other.size();
-	//		return *this;
-	//	}
-
-	//	reference operator[](size_t idx) const noexcept
-	//	{
-	//		PAF_ASSERT(m_ptr && idx < m_size);
-	//		return m_ptr[idx];
-	//	}
-
-	//	explicit operator bool() const noexcept
-	//	{
-	//		return static_cast<bool>(m_ptr);
-	//	}
-
-	//	bool operator==(const T * ptr) const
-	//	{
-	//		return m_ptr == ptr;
-	//	}
-
-	//	bool operator!=(const T * ptr) const
-	//	{
-	//		return m_ptr != ptr;
-	//	}
-
-	//	bool operator==(const RawArray & other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	bool operator!=(const RawArray & other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	bool operator==(const BorrowedArray<T> & other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	bool operator!=(const BorrowedArray<T> & other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	bool operator==(const UniqueArray<T>&other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	bool operator!=(const UniqueArray<T>&other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	bool operator==(const SharedArray<T>&other) const
-	//	{
-	//		return m_ptr == other.m_ptr;
-	//	}
-
-	//	bool operator!=(const SharedArray<T>&other) const
-	//	{
-	//		return m_ptr != other.m_ptr;
-	//	}
-
-	//	pointer get() const noexcept
-	//	{
-	//		return m_ptr;
-	//	}
-
-	//	pointer get(size_t idx) const noexcept
-	//	{
-	//		PAF_ASSERT(0 == idx || idx < m_size);
-	//		return idx < m_size ? m_ptr + idx : nullptr;
-	//	}
-
-	//	size_type size() const noexcept
-	//	{
-	//		return m_size;
-	//	}
-
-	//	void assignRawPointer(pointer ptr, size_t size)
-	//	{
-	//		m_ptr = ptr;
-	//		m_size = size;
-	//	}
-	//private:
-	//	T* m_ptr;
-	//	size_t m_size;
-	//};
 
 }

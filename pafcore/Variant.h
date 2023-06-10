@@ -2,6 +2,8 @@
 
 #include "Utility.h"
 #include "SmartPtr.h"
+#include "PrimitiveType.h"
+#include "EnumType.h"
 
 BEGIN_PAF
 
@@ -189,13 +191,10 @@ public:
 		vt_reference,
 		vt_raw_ptr,
 		vt_raw_array,
-		vt_borrowed_ptr,
-		vt_borrowed_array,
-		vt_unique_ptr,
-		vt_unique_array,
+		vt_raw_array_element,
 		vt_shared_ptr,
 		vt_shared_array,
-		vt_borrowed_array_element,
+		vt_weak_array_element,
 	};
 private:
 	Variant(Variant const& var) = delete;
@@ -218,23 +217,22 @@ public:
 	void clear();
 	void assignEnumByInt(EnumType* type, int value);
 
-	//bool castToPrimitive(PrimitiveType* dstType, void* dst) const;
-	//bool castToEnum(EnumType* dstType, void* dst) const;
-	//bool castToString(string_t& str);
-	//bool castToBuffer(buffer_t& buf);
-
 	bool castToValue(Type* dstType, void* dst) const;
 	bool castToRawPointer(Type* dstType, void** dst) const;
 	bool castToRawPointerOrValue(Type* dstType, void* dstValue, void** dstPtr) const;
 
 	ErrorCode newValue(Type* type, Variant** args, uint32_t numArgs);
-	ErrorCode newUniquePtr(Type* type, Variant** args, uint32_t numArgs);
-	ErrorCode newUniqueArray(Type* type, size_t count);
-	ErrorCode newUniqueArray(Type* type, Variant** args, uint32_t numArgs);
 	ErrorCode newSharedPtr(Type* type, Variant** args, uint32_t numArgs);
 	ErrorCode newSharedArray(Type* type, size_t count);
 	ErrorCode newSharedArray(Type* type, Variant** args, uint32_t numArgs);
 	ErrorCode subscript(Variant& var, uint32_t index);
+
+public:
+	bool castToPrimitive(PrimitiveType* dstType, void* dst) const;
+	bool castToEnum(EnumType* dstType, void* dst) const;
+	bool castToString(string_t& str);
+	bool castToBuffer(buffer_t& buf);
+
 public:
 	template <typename T, typename... Types>
 	void newValue(Types&&... args)
@@ -272,39 +270,39 @@ public:
 	}
 
 	template<typename T>
-	void assignBorrowedPtr(BorrowedPtr<T> const& borrowedPtr)
+	void assignWeakPtr(WeakPtr<T> const& weakPtr)
 	{
 		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		borrowedPtr.incBorrowCount();
-		assignBorrowedPtr(type, borrowedPtr.get());
+		weakPtr.incBorrowCount();
+		assignWeakPtr(type, weakPtr.get());
 	}
 
 	template<typename T>
-	void assignBorrowedPtr(BorrowedPtr<T>&& borrowedPtr)
+	void assignWeakPtr(WeakPtr<T>&& weakPtr)
 	{
 		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		T* ptr = borrowedPtr.get();
-		borrowedPtr.m_ptr = nullptr;
-		assignBorrowedPtr(type, ptr);
+		T* ptr = weakPtr.get();
+		weakPtr.m_ptr = nullptr;
+		assignWeakPtr(type, ptr);
 	}
 
 	template<typename T>
-	void assignBorrowedArray(BorrowedArray<T> const& borrowedArray)
+	void assignWeakArray(WeakArray<T> const& weakArray)
 	{
 		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		borrowedArray.incBorrowCount();
-		assignBorrowedArray(type, borrowedArray.get(), borrowedArray.size());
+		weakArray.incBorrowCount();
+		assignWeakArray(type, weakArray.get(), weakArray.size());
 	}
 
 	template<typename T>
-	void assignBorrowedArray(BorrowedArray<T>&& borrowedArray)
+	void assignWeakArray(WeakArray<T>&& weakArray)
 	{
 		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		T* ptr = borrowedArray.get();
-		size_t size = borrowedArray.size();
-		borrowedArray.m_ptr = nullptr;
-		borrowedArray.m_size = 0;
-		assignBorrowedArray(type, ptr, size);
+		T* ptr = weakArray.get();
+		size_t size = weakArray.size();
+		weakArray.m_ptr = nullptr;
+		weakArray.m_size = 0;
+		assignWeakArray(type, ptr, size);
 	}
 
 	template<typename T, typename D>
@@ -343,26 +341,6 @@ public:
 		assignSharedArray(type, ptr, size);
 	}
 
-	template<typename T, typename D>
-	void assignUniquePtr(UniquePtr<T, D>&& uniquePtr)
-	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		T* ptr = uniquePtr.get();
-		uniquePtr.m_ptr = nullptr;
-		assignUniquePtr(type, ptr);
-	}
-
-	template<typename T, typename D>
-	void assignUniqueArray(UniqueArray<T, D>&& uniqueArray)
-	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		T* ptr = uniqueArray.get();
-		size_t size = uniqueArray.size();
-		uniqueArray.m_ptr = nullptr;
-		uniqueArray.m_size = 0;
-		assignUniqueArray(type, ptr, size);
-	}
-
 	template<typename T>
 	bool castToValue(T& dst) const
 	{
@@ -390,7 +368,7 @@ public:
 	template<typename T>
 	bool castToRawPtr(T*& rawPtr) const
 	{
-		if (vt_raw_ptr == m_category || vt_borrowed_ptr == m_category || vt_unique_ptr == m_category || vt_shared_ptr == m_category)
+		if (vt_raw_ptr == m_category || vt_shared_ptr == m_category)
 		{
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 			T* rawPointer;
@@ -406,46 +384,13 @@ public:
 	template<typename T>
 	bool castToRawArray(array_t<T>& rawArray) const
 	{
-		if (vt_raw_array == m_category || vt_borrowed_array == m_category || vt_unique_array == m_category || vt_shared_array == m_category)
+		if (vt_raw_array == m_category || vt_shared_array == m_category)
 		{
 			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 			T* rawPointer;
 			if (castToRawPointer(type, (void**)&rawPointer))
 			{
 				rawArray.assign((T*)m_ptr, m_arraySize);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	template<typename T, typename D>
-	bool castToUniquePtr(UniquePtr<T, D>& uniquePtr)
-	{
-		if (vt_unique_ptr == m_category)
-		{
-			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			T* rawPointer;
-			if (castToRawPointer(type, (void**)&rawPointer))
-			{
-				uniquePtr.assignRawPointer(rawPointer);
-				m_category = vt_null;//owner ship transferred 
-				return true;
-			}
-		}
-		return false;
-	}
-
-	template<typename T, typename D>
-	bool castToUniqueArray(UniqueArray<T, D>& uniqueArray)
-	{
-		if (vt_unique_array == m_category)
-		{
-			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			if (type == m_type)
-			{
-				uniqueArray.assignRawPointer((T*)m_ptr, m_arraySize);
-				m_category = vt_null;//owner ship transferred 
 				return true;
 			}
 		}
@@ -477,38 +422,6 @@ public:
 			if (type == m_type)
 			{
 				sharedArray.assignRawPointer((T*)m_ptr, m_arraySize);
-				return true;
-			}
-		}
-		return false;
-	}
-
-
-	template<typename T>
-	bool castToBorrowedPtr(BorrowedPtr<T>& borrowedPtr)
-	{
-		if (vt_borrowed_ptr == m_category || vt_unique_ptr == m_category || vt_shared_ptr == m_category)
-		{
-			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			T* rawPointer;
-			if (castToRawPointer(type, (void**)&rawPointer))
-			{
-				borrowedPtr.assignRawPointer(rawPointer);
-				return true;
-			}
-		}
-		return false;
-	}
-
-	template<typename T>
-	bool castToBorrowedArray(BorrowedArray<T>& borrowedArray)
-	{
-		if (vt_borrowed_array == m_category || vt_unique_array == m_category || vt_shared_array == m_category)
-		{
-			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			if (type == m_type)
-			{
-				borrowedArray.assignRawPointer((T*)m_ptr, m_arraySize);
 				return true;
 			}
 		}
@@ -584,17 +497,9 @@ public:
 	void assignRawArray(Type* type, void* ptr, size_t size);
 
 private:
-	void assignBorrowedPtr(Type* type, void* ptr);
-
-	void assignBorrowedArray(Type* type, void* ptr, size_t size);
-
 	void assignSharedPtr(Type* type, void* ptr);
 
 	void assignSharedArray(Type* type, void* ptr, size_t size);
-
-	void assignUniquePtr(Type* type, void* ptr);
-
-	void assignUniqueArray(Type* type, void* ptr, size_t size);
 
 private:
 	Category m_category;
@@ -629,12 +534,12 @@ inline bool Variant::isReference() const
 
 inline bool Variant::isPointer() const
 {
-	return (vt_raw_ptr == m_category || vt_borrowed_ptr == m_category || vt_unique_ptr == m_category || vt_shared_ptr == m_category);
+	return (vt_raw_ptr == m_category || vt_shared_ptr == m_category);
 }
 
 inline bool Variant::isArray() const
 {
-	return (vt_raw_array == m_category || vt_borrowed_array == m_category || vt_unique_array == m_category || vt_shared_array == m_category);
+	return (vt_raw_array == m_category || vt_shared_array == m_category);
 }
 
 inline size_t Variant::getArraySize() const
@@ -652,5 +557,6 @@ inline Variant::Category Variant::getCategory() const
 {
 	return m_category;
 }
+
 
 END_PAF
