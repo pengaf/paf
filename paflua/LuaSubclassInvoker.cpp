@@ -1,5 +1,5 @@
 #include "LuaSubclassInvoker.h"
-#include "../3rd/lua/src/lua.hpp"
+#include "../3rd/lua/lua.hpp"
 #include "../pafcore/Variant.h"
 #include <Windows.h>
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "Utility.h"
-#include "../3rd/lua/src/lua.hpp"
 #include "../pafcore/Field.h"
+
 BEGIN_PAFLUA
 
 extern const char* instanceArrayField_metatable_name;

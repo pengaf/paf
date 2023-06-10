@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Utility.h"
-#include "../3rd/lua/src/lua.hpp"
+#include "../3rd/lua/lua.hpp"
 
 BEGIN_PAFLUA
 

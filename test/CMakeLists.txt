@@ -7,6 +7,7 @@ source_group("Header Files" FILES ${HeaderFiles})
 set(InterfaceFiles
     "Node.i"
     "Scene.i"
+    "TestIDL.i"
 )
 source_group("Interface Files" FILES ${InterfaceFiles})
 

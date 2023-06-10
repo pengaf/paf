@@ -1,6 +1,5 @@
 #pragma once
 #include "Utility.h"
-#include "../3rd/lua/src/lua.hpp"
 #include "../pafcore/Property.h"
 
 BEGIN_PAFLUA

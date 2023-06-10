@@ -1,5 +1,5 @@
 #include "paflua.h"
-#include "../3rd/lua/src/lua.hpp"
+#include "../3rd/lua/lua.hpp"
 #include "VariantWrapper.h"
 #include "ArrayFieldWrapper.h"
 #include "ArrayPropertyWrapper.h"

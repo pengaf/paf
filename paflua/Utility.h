@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../pafcore/Utility.h"
-#include "../3rd/lua/src/lua.hpp"
+#include "../3rd/lua/lua.hpp"
 
 #if defined PAFLUA_EXPORTS
 	#define PAFLUA_EXPORT __declspec(dllexport)

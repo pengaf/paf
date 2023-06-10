@@ -110,8 +110,9 @@ public:
 		std::cout << "test1(int& a)\n";
 	}
 
-	void test1(int&& a) 
+	void test2(int && a) 
 	{
+		//a = 3;// std::make_unique<int>(4);
 		std::cout << "test1(int&& a)\n";
 	}
 
@@ -132,8 +133,10 @@ int main()
 	std::function<void()> fn2;
 	int a = sizeof(std::string);
 	Test test;
-	int nn{};
-	test.test1(nn);
+	std::unique_ptr<int> p;// = std::make_unique<int>(3);
+	float nn{};
+	//test.test2(nn);
+	test.test2(std::move(nn));
 
 	std::vector<Test> vv(3);
 	//{
