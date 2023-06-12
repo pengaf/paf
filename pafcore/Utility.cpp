@@ -112,7 +112,7 @@ void* Introspectable::castTo(ClassType* classType)
 	ClassType* thisType = getType();
 	if (thisType->getClassOffset(offset, classType))
 	{
-		void* address = getAddress();
+		void* address = getMemoryAddress();
 		return (void*)((size_t)address + offset);
 	}
 	return 0;

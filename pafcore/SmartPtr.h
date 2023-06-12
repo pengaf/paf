@@ -461,7 +461,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::IncStrongCount(m_ptr->getAddress());
+					Box::IncStrongCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{
@@ -475,7 +475,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::DecStrongCount(m_ptr->getAddress());
+					Box::DecStrongCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{
@@ -823,7 +823,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::IncWeakCount(m_ptr->getAddress());
+					Box::IncWeakCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{
@@ -837,7 +837,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::DecWeakCount(m_ptr->getAddress());
+					Box::DecWeakCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{
@@ -1007,7 +1007,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					ArrayBox::IncWeakCount(m_ptr->getAddress());
+					ArrayBox::IncWeakCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{
@@ -1021,7 +1021,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					ArrayBox::DecWeakCount(m_ptr->getAddress());
+					ArrayBox::DecWeakCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{

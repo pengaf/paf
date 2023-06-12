@@ -7,13 +7,14 @@ source_group("Header Files" FILES ${HeaderFiles})
 set(InterfaceFiles
     "Node.i"
     "Scene.i"
-    "TestIDL.i"
+    "Tree.i"
 )
 source_group("Interface Files" FILES ${InterfaceFiles})
 
 set(SourceFiles
     "Node.cpp"
     "Scene.cpp"
+    "Tree.cpp"
     "test1.cpp"
 )
 source_group("Source Files" FILES ${SourceFiles})

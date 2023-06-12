@@ -401,7 +401,7 @@ namespace paf
 	class PAFCORE_EXPORT Interface : public VirtualDestructor
 	{
 	public:
-		virtual void* getAddress() = 0;
+		virtual void* getMemoryAddress() = 0;
 	};
 
 	class Variant;

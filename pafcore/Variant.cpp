@@ -178,7 +178,7 @@ inline void DynamicCast(Type*& type, void*& ptr)
 		if (classType->is_introspectable())
 		{
 			type = reinterpret_cast<Introspectable*>(ptr)->getType();
-			ptr = reinterpret_cast<Introspectable*>(ptr)->getAddress();
+			ptr = reinterpret_cast<Introspectable*>(ptr)->getMemoryAddress();
 		}
 	}
 }
@@ -394,7 +394,7 @@ bool Variant::castToRawPointer(Type* dstType, void** dst) const
 		{
 			Introspectable* introspectable = (Introspectable*)src;
 			srcType = introspectable->getType();
-			src = introspectable->getAddress();
+			src = introspectable->getMemoryAddress();
 		}
 		size_t offset;
 		if (static_cast<ClassType*>(srcType)->getClassOffset(offset, static_cast<ClassType*>(dstType)))
