@@ -4,8 +4,8 @@ namespace paf
 {
 	abstract class(instance_field)#PAFCORE_EXPORT InstanceField : Metadata
 	{
-		ClassType objectType { get*};
-		Type type { get* };
+		ClassType* objectType { get};
+		Type* type { get };
 		TypeCompound typeCompound { get };
 		uint32_t arraySize{ get };
 		uint32_t offset { get };
@@ -28,7 +28,7 @@ namespace paf
 
 	abstract class(static_field)#PAFCORE_EXPORT StaticField : Metadata
 	{
-		Type type { get* };
+		Type* type { get };
 		TypeCompound typeCompound{ get };
 		uint32_t arraySize{ get };
 		size_t address { get };

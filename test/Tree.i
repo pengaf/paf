@@ -3,43 +3,92 @@
 #include "../pafcore/SmartPtr.h"
 #}
 
+#{
+class Tree;
+#}
+
+class TreeNode : paf::Introspectable
+{
+	bool isFree() const;
+	TreeNode^ getFirstChild() const;
+	TreeNode^ getNextSibling() const;
+	bool addChild(TreeNode* node, TreeNode* nextSibling#{ = nullptr#});
+#{
+	friend class Tree;
+public:
+	//Tree* getTree_() const;
+	TreeNode* getFirstChild_() const;
+	TreeNode* getNextSibling_() const;
+protected:
+	void addFreeChild(TreeNode* child, TreeNode* nextSibling);
+protected:
+	paf::SharedPtr<TreeNode> m_nextSibling;
+	paf::WeakPtr<TreeNode> m_prevSibling;
+	paf::SharedPtr<TreeNode> m_childHead;
+	paf::WeakPtr<TreeNode> m_childTail;
+	paf::WeakPtr<TreeNode> m_parent;
+	//paf::WeakPtr<Tree> m_tree;
+#}
+};
+
+
 class Tree : paf::Introspectable
 {
-	class Node : paf::Introspectable
-	{
-		bool addChild(Node* node, Node* nextSibling#{ = nullptr#});
+	TreeNode^ getRoot() const;
+	void setRoot(TreeNode* node);
+	bool attachNode(TreeNode* node, TreeNode* parent#{ = nullptr#}, TreeNode* nextSibling#{ = nullptr#});
+	bool detachNode(TreeNode* node);
 #{
-	protected:
-		paf::SharedPtr<Node> m_nextSibling;
-		paf::WeakPtr<Node> m_prevSibling;
-		paf::SharedPtr<Node> m_childHead;
-		paf::WeakPtr<Node> m_childTail;
-		paf::WeakPtr<Node> m_parent;
-		paf::WeakPtr<Tree> m_tree;
-#}
-	};
-
-	Node^ getRoot() const;
-	void setRoot(Node* node);
-#{
+	friend class TreeNode;
 public:
-	Node* getRoot_() const;
+	TreeNode* getRoot_() const;
 protected:
-	paf::SharedPtr<Node> m_root;
+	paf::SharedPtr<TreeNode> m_root;
 #}
 };
 
 
 #{
 
-inline paf::SharedPtr<Tree::Node> Tree::getRoot() const
+inline paf::SharedPtr<TreeNode> TreeNode::getFirstChild() const
+{
+	return m_childHead;
+}
+
+inline paf::SharedPtr<TreeNode> TreeNode::getNextSibling() const
+{
+	return m_nextSibling;
+}
+
+inline TreeNode* TreeNode::getFirstChild_() const
+{
+	return m_childHead.get();
+}
+
+inline TreeNode* TreeNode::getNextSibling_() const
+{
+	return m_nextSibling.get();
+}
+
+
+inline bool TreeNode::isFree() const
+{
+	return !m_parent;
+}
+
+inline Tree* TreeNode::getTree_() const
+{
+	return m_tree.get();
+}
+
+inline paf::SharedPtr<TreeNode> Tree::getRoot() const
 {
 	return m_root;
 }
 
-inline Tree::Node* Tree::getRoot_() const
+inline TreeNode* Tree::getRoot_() const
 {
-	return m_root;
+	return m_root.get();
 }
 
 #}

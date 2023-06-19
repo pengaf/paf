@@ -42,7 +42,7 @@ namespace paf
 
 	abstract class(enumerator)#PAFCORE_EXPORT Enumerator : Metadata
 	{
-		EnumType _type_ { get* };
+		EnumType* _type_ { get };
 		int _value_ { get };
 #{
 	public:

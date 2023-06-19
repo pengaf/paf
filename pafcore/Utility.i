@@ -408,7 +408,7 @@ namespace paf
 	class PAFCORE_EXPORT SubclassInvoker : public VirtualDestructor
 	{
 	public:
-		virtual ErrorCode invoke(const char* name, Variant* result, Variant* self, Variant* args, size_t numArgs) = 0;
+		virtual ErrorCode invoke(const char* name, Variant* self, Variant* results, size_t numResults, Variant* args, size_t numArgs) = 0;
 	};
 
 	class ClassType;

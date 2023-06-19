@@ -40,8 +40,8 @@ namespace paf
 
 	abstract class(instance_property)#PAFCORE_EXPORT InstanceProperty : Metadata
 	{
-		ClassType objectType { get* };
-		Type type { get* };
+		ClassType* objectType { get };
+		Type* type { get };
 		TypeCompound getterTypeCompound{ get };
 		TypeCompound setterTypeCompound{ get };
 		PropertyCategory propertyCategory{ get };
@@ -88,7 +88,7 @@ namespace paf
 
 	abstract class(static_property)#PAFCORE_EXPORT StaticProperty : Metadata
 	{
-		Type type { get* };
+		Type* type { get };
 		TypeCompound getterTypeCompound{ get };
 		TypeCompound setterTypeCompound{ get };
 		PropertyCategory propertyCategory{ get };

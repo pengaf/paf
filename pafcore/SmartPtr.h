@@ -4,8 +4,9 @@
 #include <atomic>
 #include <type_traits>
 #include <memory>
-
-//std::shared_ptr<int>
+//#include <array>
+//std::shared_ptr<int[]>
+//std::array<int, 5>
 
 namespace paf
 {
@@ -391,10 +392,10 @@ namespace paf
 			return m_ptr;
 		}
 
-		operator pointer() const noexcept
-		{
-			return m_ptr;
-		}
+		//operator pointer() const noexcept
+		//{
+		//	return m_ptr;
+		//}
 		
 		explicit operator bool() const noexcept
 		{

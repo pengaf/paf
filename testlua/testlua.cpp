@@ -2,7 +2,7 @@
 #include <string>
 #include <windows.h>
 
-#include "../3rd/lua/src/lua.hpp"
+#include "../3rd/lua/lua.hpp"
 #include "../paflua/paflua.h"
 #include "testlua.h"
 #include "testlua.mh"
@@ -29,7 +29,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	luaopen_paflua(L);
 	std::string path;
 	GetExePath(path);
-	path += "../testlua/testlua1.lua";
+	path += "../../testlua/testlua2.lua";
 	error = luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 0, 0);
 	if (error) 
 	{

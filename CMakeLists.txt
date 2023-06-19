@@ -30,7 +30,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 set(CMAKE_DEBUG_POSTFIX _d)
 
-#add_subdirectory(3rd/lua)
+add_subdirectory(3rd/lua)
 add_subdirectory(pafcore)
 add_subdirectory(paflua)
 #add_subdirectory(pafchakra)

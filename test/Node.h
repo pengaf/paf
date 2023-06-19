@@ -20,7 +20,7 @@ public:
 	{
 		return GetType();
 	}
-	void* getAddress()
+	void* getMemoryAddress()
 	{
 		return this;
 	}
@@ -29,7 +29,6 @@ public:
 	void addChild(Node* node);
 	void addSibling(Node* node);
 	bool isFreeNode()const ;
-	static ::paf::SharedPtr<Node> New();
 
 public:
 	void check__(Scene* scene, Node* parent, int depth);

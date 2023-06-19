@@ -6,18 +6,10 @@
 
 namespace paf
 {
-	enum class PropertyChangedFlag
-	{
-		update, //属性值变更，如果是容器属性，则 iterator 指向变更项, 否则为null
-		remove, //容器属性移除一项之前，iterator 指向即将移除的项
-		add, //容器属性增加一项之后，iterator 指向刚增加的项
-		reset,//容器属性多个项变换，iterator 为 null
-	};
-
 	override class #PAFCORE_EXPORT NotifyHandler : Introspectable
 	{
+		override abstract void onNotify(Introspectable* sender, Introspectable* parameter);
 	};
-
 
 	class #PAFCORE_EXPORT NotifyHandlerLink : NotifyHandler
 	{
@@ -93,7 +85,12 @@ namespace paf
 			PAF_ASSERT(!first->isStrictTypeOf<NotifyHandlerLink>() || !second->isStrictTypeOf<NotifyHandlerLink>());
 		}
 		~NotifyHandlerLink();
-
+	public:
+		void onNotify(Introspectable* sender, Introspectable* parameter) override
+		{
+			m_first->onNotify(sender, parameter);
+			m_second->onNotify(sender, parameter);
+		}
 	public:
 		bool find(NotifyHandler* p);
 		NotifyHandler* remove(NotifyHandler* p);

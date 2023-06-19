@@ -340,20 +340,6 @@ int Closure_NewValue(lua_State *L)
 	return Type_New(L, type, &paf::Variant::newValue, numArgs, 1);
 }
 
-int Closure_NewUniquePtr(lua_State *L)
-{
-	paf::Type* type = (paf::Type*)lua_topointer(L, lua_upvalueindex(1));
-	int numArgs = lua_gettop(L);
-	return Type_New(L, type, &paf::Variant::newUniquePtr, numArgs, 1);
-}
-
-int Closure_NewUniqueArray(lua_State *L)
-{
-	paf::Type* type = (paf::Type*)lua_topointer(L, lua_upvalueindex(1));
-	int numArgs = lua_gettop(L);
-	return Type_New(L, type, &paf::Variant::newUniqueArray, numArgs, 1);
-}
-
 int Closure_NewSharedPtr(lua_State *L)
 {
 	paf::Type* type = (paf::Type*)lua_topointer(L, lua_upvalueindex(1));
@@ -375,9 +361,9 @@ int Closure_Subclassing(lua_State *L)
 	if (1 == numArgs && lua_type(L, -1) == LUA_TTABLE)
 	{
 		LuaSubclassInvoker* subclassInvoker = new LuaSubclassInvoker(L);
-		paf::UniquePtr<paf::Introspectable> implementor = classType->createSubclassProxy(subclassInvoker);
+		paf::SharedPtr<paf::Introspectable> implementor = classType->createSubclassProxy(subclassInvoker);
 		paf::Variant impVar;
-		impVar.assignUniquePtr(std::move(implementor));
+		impVar.assignSharedPtr(std::move(implementor));
 		VariantToLua(L, &impVar);
 		return 1;
 	}
@@ -753,28 +739,13 @@ paf::ErrorCode Variant_Index_Identify(lua_State *L, paf::Variant* variant, const
 					if (strcmp(&name[4], "_") == 0)//_New_
 					{
 						lua_pushlightuserdata(L, type);
-						lua_pushcclosure(L, Closure_NewValue, 1);
-						return paf::ErrorCode::s_ok;
-					}
-					else if (strcmp(&name[4], "UniquePtr_") == 0)//_NewUniquePtr_
-					{
-						lua_pushlightuserdata(L, type);
-						lua_pushcclosure(L, Closure_NewUniquePtr, 1);
-						return paf::ErrorCode::s_ok;
-					}
-					else if (strcmp(&name[4], "UniqueArray_") == 0)//_NewUniqueArray_
-					{
-						lua_pushlightuserdata(L, type);
-						lua_pushcclosure(L, Closure_NewUniqueArray, 1);
-						return paf::ErrorCode::s_ok;
-					}
-					else if (strcmp(&name[4], "SharedPtr_") == 0)//_NewSharedPtr_
-					{
-						lua_pushlightuserdata(L, type);
 						lua_pushcclosure(L, Closure_NewSharedPtr, 1);
 						return paf::ErrorCode::s_ok;
+						//lua_pushlightuserdata(L, type);
+						//lua_pushcclosure(L, Closure_NewValue, 1);
+						//return paf::ErrorCode::s_ok;
 					}
-					else if (strcmp(&name[4], "SharedArray_") == 0)//_NewSharedArray_
+					else if (strcmp(&name[4], "Array_") == 0)//_NewSharedArray_
 					{
 						lua_pushlightuserdata(L, type);
 						lua_pushcclosure(L, Closure_NewSharedArray, 1);

@@ -26,6 +26,10 @@ namespace paf
 	class #PAFCORE_EXPORT String //: StringBase
 	{
 		String();
+		nocode operator string_t() const;
+		nocode operator = (string_t);
+		nocode operator = (String const &);
+
 #{
 	public:
 		explicit String(const char* str);

@@ -10,7 +10,7 @@ namespace paf
 
 	abstract class(function_argument)#PAFCORE_EXPORT MethodArgument : Metadata
 	{
-		Type type { get* };
+		Type* type { get};
 		TypeCompound typeCompound{ get };
 		Passing passing{ get };
 #{
@@ -25,7 +25,7 @@ namespace paf
 
 	abstract class(function_result)#PAFCORE_EXPORT MethodResult : Metadata
 	{
-		Type type { get* };
+		Type* type { get };
 		TypeCompound typeCompound{ get };
 #{
 	public:
@@ -39,16 +39,20 @@ namespace paf
 	abstract class(instance_method)#PAFCORE_EXPORT InstanceMethod : Metadata
 	{
 		MethodResult* getResult();
+		uint32_t getOutputArgumentCount();
+		MethodResult* getOutputArgument(uint32_t index);
 		uint32_t getArgumentCount();
 		MethodArgument* getArgument(uint32_t index);
 		uint32_t firstDefaultArgument();
 #{
 	public:
-		InstanceMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg);
+		InstanceMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg);
 	public:
 		InvokeMethod m_invokeMethod;
 		MethodResult* m_result;
+		MethodResult* m_outputArgs;
 		MethodArgument* m_args;
+		uint32_t m_outputArgCount;
 		uint32_t m_argCount;
 		uint32_t m_firstDefaultArg;
 #}
@@ -58,16 +62,20 @@ namespace paf
 	abstract class(static_method)#PAFCORE_EXPORT StaticMethod : Metadata
 	{
 		MethodResult * getResult();
+		uint32_t getOutputArgumentCount();
+		MethodResult* getOutputArgument(uint32_t index);
 		uint32_t getArgumentCount();
 		MethodArgument* getArgument(uint32_t index);
 		uint32_t firstDefaultArgument();
 #{
 	public:
-		StaticMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg);
+		StaticMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg);
 	public:
 		InvokeMethod m_invokeMethod;
 		MethodResult* m_result;
+		MethodResult* m_outputArgs;
 		MethodArgument* m_args;
+		uint32_t m_outputArgCount;
 		uint32_t m_argCount;
 		uint32_t m_firstDefaultArg;
 #}
@@ -106,6 +114,20 @@ namespace paf
 		return m_result;
 	}
 
+	inline uint32_t InstanceMethod::getOutputArgumentCount()
+	{
+		return m_outputArgCount;
+	}
+
+	inline MethodResult* InstanceMethod::getOutputArgument(uint32_t index)
+	{
+		if (index < m_outputArgCount)
+		{
+			return &m_outputArgs[index];
+		}
+		return nullptr;
+	}
+
 	inline uint32_t InstanceMethod::getArgumentCount()
 	{
 		return m_argCount;
@@ -128,6 +150,20 @@ namespace paf
 	inline MethodResult* StaticMethod::getResult()
 	{
 		return m_result;
+	}
+
+	inline uint32_t StaticMethod::getOutputArgumentCount()
+	{
+		return m_outputArgCount;
+	}
+
+	inline MethodResult* StaticMethod::getOutputArgument(uint32_t index)
+	{
+		if (index < m_outputArgCount)
+		{
+			return &m_outputArgs[index];
+		}
+		return nullptr;
 	}
 
 	inline uint32_t StaticMethod::getArgumentCount()

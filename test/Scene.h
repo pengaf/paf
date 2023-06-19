@@ -17,14 +17,13 @@ public:
 	{
 		return GetType();
 	}
-	void* getAddress()
+	void* getMemoryAddress()
 	{
 		return this;
 	}
 
 	Scene();
 
-	static ::paf::SharedPtr<Scene> New();
 
 
 	friend class Node;

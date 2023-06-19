@@ -42,8 +42,6 @@ namespace paf
 		value,
 		reference,
 		const_reference,
-		rvalue_reference,
-		const_rvalue_reference,
 	};
 
 	enum class TypeCompound

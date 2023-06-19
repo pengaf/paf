@@ -5,15 +5,15 @@
 
 BEGIN_PAF
 
-void PropertyChangedNotifyHandler::onPropertyChanged(Introspectable* sender, string_t propertyName, PropertyChangedFlag flag, Iterator* iterator)
-{
-
-}
-
-void PropertyChangedNotifyHandler::onPropertyEditableChanged(Introspectable* sender, string_t propertyName)
-{
-
-}
+//void PropertyChangedNotifyHandler::onPropertyChanged(Introspectable* sender, string_t propertyName, PropertyChangedFlag flag, Iterator* iterator)
+//{
+//
+//}
+//
+//void PropertyChangedNotifyHandler::onPropertyEditableChanged(Introspectable* sender, string_t propertyName)
+//{
+//
+//}
 
 //void PropertyChangedNotifyHandler::onDynamicPropertyChanged(Introspectable> sender, string_t propertyName, PropertyChangedFlag flag, RawPtr<Iterator* iterator)
 //{
