@@ -76,11 +76,11 @@ inline bool TreeNode::isFree() const
 	return !m_parent;
 }
 
-inline Tree* TreeNode::getTree_() const
-{
-	return m_tree.get();
-}
-
+//inline Tree* TreeNode::getTree_() const
+//{
+//	return m_tree.get();
+//}
+//
 inline paf::SharedPtr<TreeNode> Tree::getRoot() const
 {
 	return m_root;

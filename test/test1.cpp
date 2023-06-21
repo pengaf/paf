@@ -10,7 +10,6 @@
 #include "../pafcore/SmartPtr.h"
 #include "../pafcore/System.h"
 #include "../pafcore/String.h"
-#pragma comment(lib, "pafcore_d.lib")
 //
 //#ifdef _DEBUG
 //	#define PAF_FILE_LINE(...) PAF_WIDE(__FILE__), __LINE__, __VA_ARGS__
@@ -29,26 +28,26 @@
 
 void test1()
 {
-	auto scene = Scene::New();
+	auto scene = paf::SharedPtr<Scene>::Make();
 	for (int i = 0; i < 5; ++i)
 	{
-		auto node = Node::New();
+		auto node = paf::SharedPtr<Node>::Make();
 		char name[222];
 		sprintf(name, "%d", i);
 		node->m_name = name;
-		scene->getRootNode()->addChild(node);
+		scene->getRootNode()->addChild(node.get());
 		for (int j = 0; j < 5; ++j)
 		{
-			auto node = Node::New();
+			auto node = paf::SharedPtr<Node>::Make();
 			sprintf(name, "%d-%d", i,j);
 			node->m_name = name;
 			if (node->m_childHead && j > 2)
 			{
-				node->m_childHead->m_nextSibling->m_nextSibling->addSibling(node);
+				node->m_childHead->m_nextSibling->m_nextSibling->addSibling(node.get());
 			}
 			else
 			{
-				node->addChild(node);
+				node->addChild(node.get());
 			}
 		}
 	}

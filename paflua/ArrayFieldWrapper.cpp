@@ -143,7 +143,6 @@ int InstanceArrayField_Len(lua_State *L)
 	InstanceFieldInstance* instance = (InstanceFieldInstance*)lua_touserdata(L, 1);
 	paf::InstanceField* field = instance->field;
 	uint32_t size = field->get_arraySize();
-	//errorCode = (*field->m_arraySize)(field, instance->object, size);
 	lua_pushinteger(L, size);
 	return 1;
 }
@@ -193,22 +192,12 @@ int StaticArrayField_NewIndex(lua_State *L)
 
 int StaticArrayField_Len(lua_State *L)
 {
-	//paf::ErrorCode errorCode;
-	//StaticFieldInstance* instance = (StaticFieldInstance*)lua_touserdata(L, 1);
-	//paf::StaticField* field = instance->field;
-	//assert(field->get_fieldCategory() == paf::FieldCategory::array_field);
-	//size_t size;
-	//errorCode = (*field->m_arraySize)(field, size);
-	//if (paf::ErrorCode::s_ok == errorCode)
-	//{
-	//	lua_pushinteger(L, size);
-	//	return 1;
-	//}
-	//else
-	{
-		//RaiseLuaError(L, "# for staticArrayField", errorCode);
-		return 0;
-	}
+	paf::ErrorCode errorCode;
+	StaticFieldInstance* instance = (StaticFieldInstance*)lua_touserdata(L, 1);
+	paf::StaticField* field = instance->field;
+	uint32_t size = field->get_arraySize();
+	lua_pushinteger(L, size);
+	return 1;
 }
 
 struct luaL_Reg g_instanceArrayFieldInstance_reg[] =

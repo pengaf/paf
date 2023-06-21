@@ -1,24 +1,10 @@
 #include "LuaSubclassInvoker.h"
 #include "../3rd/lua/lua.hpp"
 #include "../pafcore/Variant.h"
-#include <Windows.h>
+#include "../pafcore/System.h"
 
 BEGIN_PAFLUA
 
-extern const char* variant_metatable_name;
-void stackDump (lua_State *L);
-paf::Variant* LuaToVariant(paf::Variant* value, lua_State *L, int index);
-void VariantToLua(lua_State *L, paf::Variant* variant);
-
-//paf::Variant* VariantToLua2(lua_State *L, paf::Variant* variant)
-//{
-//	void* p = lua_newuserdata(L, sizeof(paf::Variant));
-//	paf::Variant* res = new(p)paf::Variant;
-//	res->move(*variant);
-//	luaL_getmetatable(L, variant_metatable_name);
-//	lua_setmetatable(L, -2);
-//	return res;
-//}
 
 LuaSubclassInvoker::LuaSubclassInvoker(lua_State* luaState)
 {
@@ -32,7 +18,7 @@ LuaSubclassInvoker::~LuaSubclassInvoker()
 	lua_rawsetp(m_luaState, LUA_REGISTRYINDEX, this);
 }
 
-paf::ErrorCode LuaSubclassInvoker::invoke(const char* name, paf::Variant* result, paf::Variant* self, paf::Variant* args, size_t numArgs)
+paf::ErrorCode LuaSubclassInvoker::invoke(const char* name, paf::Variant* self, paf::Variant* results, size_t numResults, paf::Variant* args, size_t numArgs)
 {
 #ifdef _DEBUG
 	int top = lua_gettop(m_luaState);
@@ -74,8 +60,8 @@ paf::ErrorCode LuaSubclassInvoker::invoke(const char* name, paf::Variant* result
 	{
 		const char* str = lua_tostring(m_luaState, -1);
 //#ifdef _DEBUG
-		OutputDebugStringA(str);
-		OutputDebugStringA("\n");
+		paf::System::OutputDebug(str);
+		paf::System::OutputDebug("\n");
 //#endif
 		lua_pop(m_luaState, 1);
 
@@ -85,18 +71,18 @@ paf::ErrorCode LuaSubclassInvoker::invoke(const char* name, paf::Variant* result
 	else
 	{
 
-		paf::Variant* value = LuaToVariant(result, m_luaState, -1);
-		if(value != result)
-		{
-			result->assign(std::move(*value));
-		}
+		//paf::Variant* value = LuaToVariant(result, m_luaState, -1);
+		//if(value != result)
+		//{
+		//	result->assign(std::move(*value));
+		//}
 
 		//stackDump(m_luaState);
 
-		//for(size_t i = 0; i < numArgs; ++i)
-		//{
-		//	args[i].move(*luaArgs[i]);
-		//}
+		for(size_t i = 0; i < numResults; ++i)
+		{
+			//args[i].move(*luaArgs[i]);
+		}
 		lua_pop(m_luaState, 1);
 	}
 

@@ -5,7 +5,7 @@ namespace paf
 
 #{
 	class Variant;
-	typedef ErrorCode(*InvokeMethod)(Variant* result, Variant** args, uint32_t numArgs);
+	typedef ErrorCode(*InvokeMethod)(Variant* results, uint32_t& resultCount, Variant** args, uint32_t numArgs);
 #}
 
 	abstract class(function_argument)#PAFCORE_EXPORT MethodArgument : Metadata
@@ -43,18 +43,20 @@ namespace paf
 		MethodResult* getOutputArgument(uint32_t index);
 		uint32_t getArgumentCount();
 		MethodArgument* getArgument(uint32_t index);
-		uint32_t firstDefaultArgument();
+		uint32_t getDefaultArgumentCount();
+		string_t getDefaultArgumentLiteral(uint32_t index);
 #{
 	public:
-		InstanceMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg);
+		InstanceMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, const char** defaultArgLiterals, uint32_t defaultArgCount);
 	public:
 		InvokeMethod m_invokeMethod;
 		MethodResult* m_result;
 		MethodResult* m_outputArgs;
 		MethodArgument* m_args;
+		const char** m_defaultArgLiterals;
 		uint32_t m_outputArgCount;
 		uint32_t m_argCount;
-		uint32_t m_firstDefaultArg;
+		uint32_t m_defaultArgCount;
 #}
 	};
 
@@ -66,18 +68,20 @@ namespace paf
 		MethodResult* getOutputArgument(uint32_t index);
 		uint32_t getArgumentCount();
 		MethodArgument* getArgument(uint32_t index);
-		uint32_t firstDefaultArgument();
+		uint32_t getDefaultArgumentCount();
+		string_t getDefaultArgumentLiteral(uint32_t index);
 #{
 	public:
-		StaticMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg);
+		StaticMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, const char** defaultArgLiterals, uint32_t defaultArgCount);
 	public:
 		InvokeMethod m_invokeMethod;
 		MethodResult* m_result;
 		MethodResult* m_outputArgs;
 		MethodArgument* m_args;
+		const char** m_defaultArgLiterals;
 		uint32_t m_outputArgCount;
 		uint32_t m_argCount;
-		uint32_t m_firstDefaultArg;
+		uint32_t m_defaultArgCount;
 #}
 	};
 
@@ -142,9 +146,18 @@ namespace paf
 		return nullptr;
 	}
 
-	inline uint32_t InstanceMethod::firstDefaultArgument()
+	inline uint32_t InstanceMethod::getDefaultArgumentCount()
 	{
-		return m_firstDefaultArg;
+		return m_defaultArgCount;
+	}
+	
+	inline string_t InstanceMethod::getDefaultArgumentLiteral(uint32_t index)
+	{
+		if (index < m_defaultArgCount)
+		{
+			return m_defaultArgLiterals[index];
+		}
+		return "";
 	}
 
 	inline MethodResult* StaticMethod::getResult()
@@ -180,11 +193,19 @@ namespace paf
 		return nullptr;
 	}
 
-	inline uint32_t StaticMethod::firstDefaultArgument()
+	inline uint32_t StaticMethod::getDefaultArgumentCount()
 	{
-		return m_firstDefaultArg;
+		return m_defaultArgCount;
 	}
 
+	inline string_t StaticMethod::getDefaultArgumentLiteral(uint32_t index)
+	{
+		if (index < m_defaultArgCount)
+		{
+			return m_defaultArgLiterals[index];
+		}
+		return "";
+	}
 
 #}
 

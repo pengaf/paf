@@ -15,12 +15,12 @@
 
 BEGIN_PAFLUA
 
+void stackDump(lua_State *L);
 void RaiseLuaError(lua_State *L, const char* name, paf::ErrorCode errorCode);
 bool LuaToInt(int& value, lua_State *L, int index);
 paf::Variant* LuaToVariant(paf::Variant* value, lua_State *L, int index);
 void VariantToLua(lua_State *L, paf::Variant* variant);
 bool Variant_ParseIntegerSubscript(size_t& num, lua_State *L);
-
 
 enum SubscriptCategory
 {

@@ -7,6 +7,7 @@
 //#include <array>
 //std::shared_ptr<int[]>
 //std::array<int, 5>
+//std::unique_ptr<int[]>
 
 namespace paf
 {
@@ -22,6 +23,11 @@ namespace paf
 		virtual void destruct() = 0;
 		virtual void deallocate() = 0;
 	public:
+#ifdef _DEBUG
+		bool dangling() const
+		{
+			return 0 == m_strongCount;
+		}
 		void incWeakCount()
 		{
 			PAF_ASSERT(!dangling());
@@ -36,33 +42,6 @@ namespace paf
 				deallocate();
 			}
 		}
-		void incStrongCount()
-		{
-			PAF_ASSERT(!dangling());
-			++m_strongCount;
-		}
-		void decStrongCount()
-		{
-			if (0 == --m_strongCount)
-			{
-				destruct();
-				decWeakCount();
-			}
-		}
-		bool dangling() const
-		{
-			return 0 == m_strongCount;
-		}
-	protected:
-		mutable long m_strongCount{ 1 };
-		mutable long m_weakCount{ 1 };
-	public:
-		static Box* FromRawPtr(const void* ptr)
-		{
-			PAF_ASSERT(ptr);
-			return (Box*)(ptr)-1;
-		}
-
 		static bool IsDangling(const void* ptr)
 		{
 			return ptr ? static_cast<const Box*>(ptr)->dangling() : false;
@@ -77,7 +56,33 @@ namespace paf
 		{
 			FromRawPtr(ptr)->decWeakCount();
 		}
-
+#endif
+		void incStrongCount()
+		{
+			PAF_ASSERT(!dangling());
+			++m_strongCount;
+		}
+		void decStrongCount()
+		{
+			if (0 == --m_strongCount)
+			{
+				destruct();
+#ifdef _DEBUG
+				decWeakCount();
+#else
+				deallocate();
+#endif
+			}
+		}
+	protected:
+		mutable long m_strongCount{ 1 };
+		mutable long m_weakCount{ 1 };
+	public:
+		static Box* FromRawPtr(const void* ptr)
+		{
+			PAF_ASSERT(ptr);
+			return (Box*)(ptr)-1;
+		}
 		static void IncStrongCount(const void* ptr)
 		{
 			FromRawPtr(ptr)->incStrongCount();
@@ -95,6 +100,11 @@ namespace paf
 		virtual void destructArray(size_t arraySize) = 0;
 		virtual void deallocate() = 0;
 	public:
+#ifdef _DEBUG
+		bool dangling() const
+		{
+			return 0 == m_strongCount;
+		}
 		void incWeakCount()
 		{
 			PAF_ASSERT(!dangling());
@@ -109,33 +119,6 @@ namespace paf
 				deallocate();
 			}
 		}
-		void incStrongCount()
-		{
-			PAF_ASSERT(!dangling());
-			++m_strongCount;
-		}
-		void decStrongCount(size_t arraySize)
-		{
-			if (0 == --m_strongCount)
-			{
-				destructArray(arraySize);
-				decWeakCount();
-			}
-		}
-		bool dangling() const
-		{
-			return 0 == m_strongCount;
-		}
-	protected:
-		mutable long m_strongCount{ 1 };
-		mutable long m_weakCount{ 1 };
-	public:
-		static ArrayBox* FromRawPtr(const void* ptr)
-		{
-			PAF_ASSERT(ptr);
-			return (ArrayBox*)(ptr)-1;
-		}
-
 		static bool IsDangling(const void* ptr)
 		{
 			return ptr ? static_cast<const ArrayBox*>(ptr)->dangling() : false;
@@ -149,6 +132,33 @@ namespace paf
 		static void DecWeakCount(const void* ptr)
 		{
 			FromRawPtr(ptr)->decWeakCount();
+		}
+#endif
+		void incStrongCount()
+		{
+			PAF_ASSERT(!dangling());
+			++m_strongCount;
+		}
+		void decStrongCount(size_t arraySize)
+		{
+			if (0 == --m_strongCount)
+			{
+				destructArray(arraySize);
+#ifdef _DEBUG
+				decWeakCount();
+#else
+				deallocate();
+#endif
+			}
+		}
+	protected:
+		mutable long m_strongCount{ 1 };
+		mutable long m_weakCount{ 1 };
+	public:
+		static ArrayBox* FromRawPtr(const void* ptr)
+		{
+			PAF_ASSERT(ptr);
+			return (ArrayBox*)(ptr)-1;
 		}
 
 		static void IncStrongCount(const void* ptr)
@@ -820,6 +830,7 @@ namespace paf
 	private:
 		void incWeakCount()
 		{
+#ifdef _DEBUG
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
@@ -831,9 +842,11 @@ namespace paf
 					Box::IncWeakCount(m_ptr);
 				}
 			}
+#endif
 		}
 		void decWeakCount()
 		{
+#ifdef _DEBUG
 			if (m_ptr)
 			{
 				if constexpr (is_interface<T>)
@@ -845,6 +858,7 @@ namespace paf
 					Box::DecWeakCount(m_ptr);
 				}
 			}
+#endif
 		}
 		void reset(T* ptr)
 		{
@@ -852,10 +866,12 @@ namespace paf
 			m_ptr = ptr;
 			incWeakCount();
 		}
+#ifdef _DEBUG
 		bool isDangling() const 
 		{
 			return Box::IsDangling(m_ptr);
 		}
+#endif
 	private:
 		T* m_ptr;
 	};

@@ -42,25 +42,23 @@ namespace paf
 	{
 		ClassType* objectType { get };
 		Type* type { get };
-		TypeCompound getterTypeCompound{ get };
-		TypeCompound setterTypeCompound{ get };
+		TypeCompound typeCompound{ get };
 		PropertyCategory propertyCategory{ get };
 #{
 	public:
-		InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
+		InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound typeCompound,
 			SimpleInstancePropertyGet get, SimpleInstancePropertySet set);
 		
-		InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
+		InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound typeCompound,
 			ArrayInstancePropertySize size, ArrayInstancePropertyGet get, ArrayInstancePropertySet set);
 
-		InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
+		InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound typeCompound,
 			CollectionInstancePropertyIterate iterate, CollectionInstancePropertyGet get, CollectionInstancePropertySet set);
 
 	public:
 		ClassType * m_objectType;
 		Type* m_type;
-		TypeCompound m_getterTypeCompound;
-		TypeCompound m_setterTypeCompound;
+		TypeCompound m_typeCompound;
 		PropertyCategory m_propertyCategory;
 		union
 		{
@@ -89,23 +87,21 @@ namespace paf
 	abstract class(static_property)#PAFCORE_EXPORT StaticProperty : Metadata
 	{
 		Type* type { get };
-		TypeCompound getterTypeCompound{ get };
-		TypeCompound setterTypeCompound{ get };
+		TypeCompound typeCompound{ get };
 		PropertyCategory propertyCategory{ get };
 #{
 	public:
-		StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
+		StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound typeCompound,
 			SimpleStaticPropertyGet get, SimpleStaticPropertySet set);
 
-		StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
+		StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound typeCompound,
 			ArrayStaticPropertySize size, ArrayStaticPropertyGet get, ArrayStaticPropertySet set);
 
-		StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound getterTypeCompound, TypeCompound setterTypeCompound,
+		StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound typeCompound,
 			CollectionStaticPropertyIterate iterate, CollectionStaticPropertyGet get, CollectionStaticPropertySet set);
 	public:
 		Type* m_type;
-		TypeCompound m_getterTypeCompound;
-		TypeCompound m_setterTypeCompound;
+		TypeCompound m_typeCompound;
 		PropertyCategory m_propertyCategory;
 		union
 		{
@@ -141,14 +137,9 @@ namespace paf
 		return m_type;
 	}
 
-	inline TypeCompound InstanceProperty::get_getterTypeCompound() const
+	inline TypeCompound InstanceProperty::get_typeCompound() const
 	{
-		return m_getterTypeCompound;
-	}
-
-	inline TypeCompound InstanceProperty::get_setterTypeCompound() const
-	{
-		return m_setterTypeCompound;
+		return m_typeCompound;
 	}
 
 	inline PropertyCategory InstanceProperty::get_propertyCategory() const
@@ -161,14 +152,9 @@ namespace paf
 		return m_type;
 	}
 
-	inline TypeCompound StaticProperty::get_getterTypeCompound() const
+	inline TypeCompound StaticProperty::get_typeCompound() const
 	{
-		return m_getterTypeCompound;
-	}
-
-	inline TypeCompound StaticProperty::get_setterTypeCompound() const
-	{
-		return m_setterTypeCompound;
+		return m_typeCompound;
 	}
 
 	inline PropertyCategory StaticProperty::get_propertyCategory() const

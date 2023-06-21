@@ -324,6 +324,7 @@ namespace paf
 		size_t m_size;
 	};
 
+	const size_t max_method_result_count = 8;
 	const size_t max_method_param_count = 32;
 
 	enum class ErrorCode

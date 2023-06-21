@@ -56,8 +56,8 @@ namespace paf
 
 		//static ErrorCode GetInstanceArrayProperty(Variant& value, Variant* that, InstanceArrayProperty* property, size_t index);
 		//static ErrorCode CallInstanceMethod(Variant& result, Introspectable* that, const char* methodName, Variant** args, int_t numArgs);
-		static ErrorCode CallInstanceMethod(InstanceMethod* method, Variant& result, Variant* that, Variant* arguments, uint32_t numArgs);
-		static ErrorCode CallStaticMethod(StaticMethod* method, Variant& result, Variant* arguments, uint32_t numArgs);
+		static ErrorCode CallInstanceMethod(InstanceMethod* method, Variant* results, uint32_t& resultCount, Variant* that, Variant* arguments, uint32_t numArgs);
+		static ErrorCode CallStaticMethod(StaticMethod* method, Variant* results, uint32_t& resultCount, Variant* arguments, uint32_t numArgs);
 #}
 	};
 }

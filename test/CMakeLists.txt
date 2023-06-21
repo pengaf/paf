@@ -39,7 +39,6 @@ endforeach()
 
 add_executable(test1 ${AllFiles})
 target_link_libraries(test1 pafcore)
-set_target_properties(test1 PROPERTIES DEBUG_POSTFIX _d)
 
 if(WIN32)   
 add_definitions( /Zi )

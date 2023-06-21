@@ -728,7 +728,7 @@ ErrorCode Reflection::CollectionInstancePropertyIterate(InstanceProperty* instan
 	return errorCode;
 }
 
-ErrorCode Reflection::CallInstanceMethod(InstanceMethod* method, Variant& result, Variant* that, Variant* arguments, uint32_t numArgs)
+ErrorCode Reflection::CallInstanceMethod(InstanceMethod* method, Variant* results, uint32_t& resultCount, Variant* that, Variant* arguments, uint32_t numArgs)
 {
 	Variant* args[max_method_param_count + 1];
 	if (numArgs > max_method_param_count)
@@ -740,11 +740,11 @@ ErrorCode Reflection::CallInstanceMethod(InstanceMethod* method, Variant& result
 	{
 		args[i + 1] = &arguments[i];
 	}
-	ErrorCode errorCode = (*method->m_invokeMethod)(&result, args, numArgs + 1);
+	ErrorCode errorCode = (*method->m_invokeMethod)(results, resultCount, args, numArgs + 1);
 	return errorCode;
 }
 
-ErrorCode Reflection::CallStaticMethod(StaticMethod* method, Variant& result, Variant* arguments, uint32_t numArgs)
+ErrorCode Reflection::CallStaticMethod(StaticMethod* method, Variant* results, uint32_t& resultCount, Variant* arguments, uint32_t numArgs)
 {
 	Variant* args[max_method_param_count];
 	if (numArgs > max_method_param_count)
@@ -755,7 +755,7 @@ ErrorCode Reflection::CallStaticMethod(StaticMethod* method, Variant& result, Va
 	{
 		args[i] = &arguments[i];
 	}
-	ErrorCode errorCode = (*method->m_invokeMethod)(&result, args, numArgs);
+	ErrorCode errorCode = (*method->m_invokeMethod)(results, resultCount, args, numArgs);
 	return errorCode;
 }
 

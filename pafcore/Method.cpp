@@ -20,7 +20,7 @@ MethodResult::MethodResult(Type* type, TypeCompound typeCompound)
 	m_typeCompound = typeCompound;
 }
 
-InstanceMethod::InstanceMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg) :
+InstanceMethod::InstanceMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, const char** defaultArgLiterals, uint32_t defaultArgCount) :
 	Metadata(name, attributes)
 {
 	m_invokeMethod = invokeMethod;
@@ -29,17 +29,21 @@ InstanceMethod::InstanceMethod(const char* name, Attributes* attributes, InvokeM
 	m_outputArgCount = outputArgCount;
 	m_args = args;
 	m_argCount = argCount;
-	m_firstDefaultArg = firstDefaultArg;
+	m_defaultArgLiterals = defaultArgLiterals;
+	m_defaultArgCount = defaultArgCount;
 }
 
-StaticMethod::StaticMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, uint32_t firstDefaultArg) :
+StaticMethod::StaticMethod(const char* name, Attributes* attributes, InvokeMethod invokeMethod, MethodResult* result, MethodResult* outputArgs, uint32_t outputArgCount, MethodArgument* args, uint32_t argCount, const char** defaultArgLiterals, uint32_t defaultArgCount) :
 	Metadata(name, attributes)
 {
 	m_invokeMethod = invokeMethod;
 	m_result = result;
+	m_outputArgs = outputArgs;
+	m_outputArgCount = outputArgCount;
 	m_args = args;
 	m_argCount = argCount;
-	m_firstDefaultArg = firstDefaultArg;
+	m_defaultArgLiterals = defaultArgLiterals;
+	m_defaultArgCount = defaultArgCount;
 }
 
 END_PAF

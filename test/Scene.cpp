@@ -6,7 +6,7 @@
 
 Scene::Scene()
 {
-	m_rootNode = Node::New();
+	m_rootNode = paf::SharedPtr<Node>::Make();
 	m_rootNode->m_scene = this;
 }
 

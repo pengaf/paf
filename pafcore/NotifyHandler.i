@@ -8,7 +8,7 @@ namespace paf
 {
 	override class #PAFCORE_EXPORT NotifyHandler : Introspectable
 	{
-		override abstract void onNotify(Introspectable* sender, Introspectable* parameter);
+		override abstract void onNotify(Introspectable* sender, Introspectable* parameter=#{nullptr#});
 	};
 
 	class #PAFCORE_EXPORT NotifyHandlerLink : NotifyHandler

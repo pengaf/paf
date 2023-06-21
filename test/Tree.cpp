@@ -69,19 +69,21 @@ void Tree::setRoot(TreeNode* node)
 
 bool Tree::attachNode(TreeNode* node, TreeNode* parent, TreeNode* nextSibling)
 {
+	return false;
 }
 
 bool Tree::detachNode(TreeNode* node)
 {
-	if (!node)
-	{
-		return false;
-	}
-	if (node->m_tree != this)
-	{
-		return false;
-	}
-	if (m_root == node)
-	{
-	}
+	return false;
+	//if (!node)
+	//{
+	//	return false;
+	//}
+	//if (node->m_tree != this)
+	//{
+	//	return false;
+	//}
+	//if (m_root == node)
+	//{
+	//}
 }

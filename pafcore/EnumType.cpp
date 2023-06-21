@@ -14,7 +14,7 @@ EnumType::EnumType(const char* name, const char* declarationFile)
 	m_enumeratorCount = 0;
 	static InstanceProperty s_properties[] = 
 	{
-		InstanceProperty("_name_", nullptr, nullptr, RuntimeTypeOf<string_t>::RuntimeType::GetSingleton(), TypeCompound::none, TypeCompound::none, Enum_get__name_, nullptr),
+		InstanceProperty("_name_", nullptr, nullptr, RuntimeTypeOf<string_t>::RuntimeType::GetSingleton(), TypeCompound::none, Enum_get__name_, nullptr),
 	};
 	m_instanceProperties = s_properties;
 	m_instancePropertyCount = paf_array_size_of(s_properties);

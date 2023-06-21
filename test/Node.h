@@ -48,18 +48,16 @@ public:
 };
 
 
-//inline paf::BorrowedPtr<Node> Node::addChild(paf::UniquePtr<Node>&& node)
+//inline void Node::addChild(Node* node)
 //{
-//	return PushBack(std::move(node), paf::BorrowedPtr<Node>(this));
 //}
-//
-//inline paf::BorrowedPtr<Node> Node::addSibling(paf::UniquePtr<Node>&& node)
-//{
-//	return InsertBefore(std::move(node), paf::BorrowedPtr<Node>(this));
-//}
-//
-//inline bool Node::isFreeNode() const
-//{
-//	return !bool(m_parent);
-//}
+
+inline void Node::addSibling(Node* node)
+{
+}
+
+inline bool Node::isFreeNode() const
+{
+	return !bool(m_parent);
+}
 
