@@ -385,6 +385,7 @@ namespace paf
 		e_invalid_arg_type_32,
 		e_too_few_arguments,
 		e_too_many_arguments,
+		e_too_few_results,
 		e_not_implemented,
 		e_script_error,
 		e_script_dose_not_override,
