@@ -1,19 +1,18 @@
 #pragma once
 
 #include "Utility.h"
-#include "../3rd/lua/lua.hpp"
 
-BEGIN_PAFLUA
+BEGIN_PAFPY
 
-struct LuaSubclassInvoker : public paf::SubclassInvoker
+struct PythonSubclassInvoker : public paf::SubclassInvoker
 {
 public:
-	LuaSubclassInvoker(lua_State* luaState);
-	~LuaSubclassInvoker();
+	PythonSubclassInvoker(PyObject* pyObject);
+	~PythonSubclassInvoker();
 public:
 	virtual paf::ErrorCode invoke(const char* name, paf::Variant* self, paf::Variant* results, size_t numResults, paf::Variant* args, size_t numArgs) override;
 public:
-	lua_State* m_luaState;
+	PyObject* m_pyObject;
 };
 
-END_PAFLUA
+END_PAFPY

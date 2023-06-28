@@ -2,7 +2,7 @@
 
 namespace paf
 {
-	class(noncopyable) #PAFCORE_EXPORT Serializable : Introspectable
+	class #PAFCORE_EXPORT Serializable : Introspectable
 	{
 #{
 	public:

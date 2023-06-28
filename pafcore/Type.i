@@ -15,8 +15,8 @@ namespace paf
 		Type(const char* name, MetaCategory category, const char* declarationFile);
 		~Type();
 	public:
-		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs);
-		virtual bool placementNewArray(void* address, size_t count);
+		virtual ErrorCode construct(void* address, Variant** args, uint32_t numArgs);
+		virtual bool constructArray(void* address, size_t count);
 		virtual bool destruct(void* self);
 		virtual bool copyAssign(void* self, const void* src);
 		virtual bool assign(void* self, Type* srcType, const void* src);

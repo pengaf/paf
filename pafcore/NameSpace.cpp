@@ -10,6 +10,21 @@
 
 BEGIN_PAF
 
+static inline void Hash_Combine(size_t& seed, size_t value)
+{
+	seed ^= value + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+static inline size_t StringToHash(const char* str)
+{
+	size_t seed = 0;
+	for (const char* p = str; 0 != *p; ++p)
+	{
+		Hash_Combine(seed, size_t(*p));
+	}
+	return seed;
+}
+
 size_t NameSpace::Hash_Metadata::operator ()(const Metadata* metadata) const
 {
 	return StringToHash(metadata->m_name);

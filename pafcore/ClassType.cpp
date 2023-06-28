@@ -327,11 +327,6 @@ Metadata* ClassType::findMember(const char* name)
 	return findMember(name, true, true);
 }
 
-ErrorCode ClassType::placementNew(void* ptr, Variant** args, uint32_t numArgs)
-{
-	return ErrorCode::e_not_implemented;
-}
-
 SharedPtr<Introspectable> ClassType::createSubclassProxy(SubclassInvoker* subclassInvoker)
 {
 	return SharedPtr<Introspectable>(nullptr);

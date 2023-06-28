@@ -3,7 +3,7 @@
 
 namespace paf
 {
-	class(noncopyable) #PAFCORE_EXPORT Editable : Serializable
+	class #PAFCORE_EXPORT Editable : Serializable
 	{
 #{
 	public:

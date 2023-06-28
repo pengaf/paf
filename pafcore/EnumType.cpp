@@ -92,7 +92,7 @@ ErrorCode EnumType::Enum_get__name_(InstanceProperty* instanceProperty, Variant*
 	return ErrorCode::s_ok;
 }
 
-ErrorCode EnumType::placementNew(void* address, Variant** args, uint32_t numArgs)
+ErrorCode EnumType::construct(void* address, Variant** args, uint32_t numArgs)
 {
 	if (0 == numArgs)
 	{
@@ -125,7 +125,7 @@ ErrorCode EnumType::placementNew(void* address, Variant** args, uint32_t numArgs
 	return ErrorCode::e_too_many_arguments;
 }
 
-bool EnumType::placementNewArray(void* address, size_t count)
+bool EnumType::constructArray(void* address, size_t count)
 {
 	return true;
 }

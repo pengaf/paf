@@ -23,12 +23,12 @@ Type::~Type()
 	}
 }
 
-ErrorCode Type::placementNew(void* address, Variant** args, uint32_t numArgs)
+ErrorCode Type::construct(void* address, Variant** args, uint32_t numArgs)
 {
 	return ErrorCode::e_not_implemented;
 }
 
-bool Type::placementNewArray(void* address, size_t count)
+bool Type::constructArray(void* address, size_t count)
 {
 	return false;
 }

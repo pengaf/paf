@@ -6,19 +6,24 @@
 #import "Property.i"
 #import "String.i"
 
-
 #{
-#include "Utility.h"
-#include "Variant.h"
-#include "PrimitiveType.h"
-#include "EnumType.h"
-#include "Field.h"
-#include "Property.h"
-#include "Method.h"
+#include "SmartPtr.h"
 #}
 
 namespace paf
 {
+#{
+	class Variant;
+	class TypeAlias;
+	class PrimitiveType;
+	class EnumType;
+	class InstanceField;
+	class InstanceProperty;
+	class StaticMethod;
+	class InstanceMethod;
+	
+	class Iterator;
+#}
 	class(value_object) #PAFCORE_EXPORT Reflection
 	{
 		static String GetTypeFullName(Type* type);

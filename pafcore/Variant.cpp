@@ -37,7 +37,7 @@ public:
 		Type** ppType = reinterpret_cast<Type**>(p);
 		GenericBoxImpl* box = reinterpret_cast<GenericBoxImpl*>(ppType + 1);
 		void* ptr = (box + 1);
-		ErrorCode errorCode = type->placementNew(ptr, args, numArgs);
+		ErrorCode errorCode = type->construct(ptr, args, numArgs);
 		if (ErrorCode::s_ok == errorCode)
 		{
 			*ppType = type;
@@ -85,7 +85,7 @@ public:
 		Type** ppType = reinterpret_cast<Type**>(p);
 		GenericArrayBoxImpl* box = reinterpret_cast<GenericArrayBoxImpl*>(ppType + 1);
 		void* ptr = (box + 1);
-		if (type->placementNewArray(ptr, arraySize))
+		if (type->constructArray(ptr, arraySize))
 		{
 			*ppType = type;
 			new(box)GenericArrayBoxImpl();
@@ -126,7 +126,7 @@ public:
 		static_assert(sizeof(GenericValueBoxImpl) == sizeof(ValueBox), "");
 		GenericValueBoxImpl* box = (GenericValueBoxImpl*)storage;
 		void* ptr = (box + 1);
-		ErrorCode errorCode = type->placementNew(ptr, args, numArgs);
+		ErrorCode errorCode = type->construct(ptr, args, numArgs);
 		if (ErrorCode::s_ok == errorCode)
 		{
 			new(box)GenericValueBoxImpl();
@@ -141,7 +141,7 @@ public:
 		Type** ppType = reinterpret_cast<Type**>(p);
 		GenericValueBoxImpl* box = reinterpret_cast<GenericValueBoxImpl*>(ppType + 1);
 		void* ptr = (box + 1);
-		ErrorCode errorCode = type->placementNew(ptr, args, numArgs);
+		ErrorCode errorCode = type->construct(ptr, args, numArgs);
 		if (ErrorCode::s_ok == errorCode)
 		{
 			*ppType = type;
@@ -470,7 +470,7 @@ ErrorCode Variant::newSharedArray(Type* type, size_t count)
 	return errorCode;
 }
 
-ErrorCode Variant::subscript(Variant& var, uint32_t index)
+ErrorCode Variant::subscript(Variant& var, size_t index)
 {
 	var.clear();
 	switch (m_category)

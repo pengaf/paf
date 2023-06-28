@@ -11,7 +11,6 @@ namespace paf
 	class InstanceMethod;
 	class StaticField;
 	class StaticProperty;
-	class StaticArrayProperty;
 	class StaticMethod;
 	class Enumerator;
 	class TypeAlias;
@@ -68,7 +67,6 @@ namespace paf
 		//override Type
 		virtual Metadata* findMember(const char* name);
 	public:
-		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs);
 		virtual SharedPtr<Introspectable> createSubclassProxy(SubclassInvoker* subclassInvoker);
 	public:
 		Metadata* findMember(const char* name, bool includeBaseClasses, bool typeAliasToType);

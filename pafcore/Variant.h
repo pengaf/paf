@@ -182,7 +182,8 @@ public:
 class PAFCORE_EXPORT Variant
 {
 public:
-	static constexpr size_t storage_size = 64 + sizeof(ValueBox);
+	//static constexpr size_t storage_size = 64 + sizeof(ValueBox);
+	enum { storage_size = 64 + sizeof(ValueBox) };
 	enum Category
 	{
 		vt_null,
@@ -225,7 +226,7 @@ public:
 	ErrorCode newSharedPtr(Type* type, Variant** args, uint32_t numArgs);
 	ErrorCode newSharedArray(Type* type, size_t count);
 	ErrorCode newSharedArray(Type* type, Variant** args, uint32_t numArgs);
-	ErrorCode subscript(Variant& var, uint32_t index);
+	ErrorCode subscript(Variant& var, size_t index);
 
 public:
 	bool castToPrimitive(PrimitiveType* dstType, void* dst) const;
@@ -506,13 +507,13 @@ private:
 	Type* m_type;
 	union 
 	{
-		struct
+		byte_t m_storage[storage_size];//vt_small_value
+		struct //other
 		{
 			void* m_ptr;
 			size_t m_arraySize;
 			size_t m_arrayIndex;
 		};
-		byte_t m_storage[storage_size];
 	};
 };
 

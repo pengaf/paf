@@ -208,7 +208,8 @@ void VariantToLua(lua_State *L, paf::Variant* variant)
 			switch (primitiveType->getPrimitiveTypeCategory())
 			{
 			case paf::float_type:
-			case paf::double_type: {
+			case paf::double_type:
+			case paf::long_double_type: {
 				lua_Number value;
 				variant->castToPrimitive<lua_Number>(value);
 				lua_pushnumber(L, value);

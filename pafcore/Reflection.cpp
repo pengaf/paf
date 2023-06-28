@@ -39,7 +39,7 @@ String Reflection::GetTypeFullName(Type*  type)
 		totalLength += strlen(scopeName) + 1;
 		scope = nextScope;
 	}
-	std::string name;
+	String name;
 	name.reserve(totalLength);
 	for (size_t i = 0; i < scopeCount; ++i)
 	{
@@ -47,7 +47,7 @@ String Reflection::GetTypeFullName(Type*  type)
 		name.append(".");
 	}
 	name.append(localName);
-	return String(name.c_str());
+	return name;
 }
 
 String Reflection::GetTypeAliasFullName(TypeAlias* typeAlias)
@@ -80,7 +80,7 @@ String Reflection::GetTypeAliasFullName(TypeAlias* typeAlias)
 		totalLength += strlen(scopeName) + 1;
 		scope = nextScope;
 	}
-	std::string name;
+	String name;
 	name.reserve(totalLength);
 	for (size_t i = 0; i < scopeCount; ++i)
 	{
@@ -88,12 +88,12 @@ String Reflection::GetTypeAliasFullName(TypeAlias* typeAlias)
 		name.append(".");
 	}
 	name.append(localName);
-	return String(name.c_str());
+	return name;
 }
 
 Type* Reflection::GetTypeFromFullName(string_t fullName)
 {
-	std::string name;
+	String name;
 	const char* nameBegin = fullName;
 	Metadata* metadata = NameSpace::GetGlobalNameSpace();
 	while (metadata && nameBegin)

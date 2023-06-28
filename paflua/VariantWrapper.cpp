@@ -52,6 +52,7 @@ bool LuaToInt(int& value, lua_State *L, int index)
 }
 
 const size_t max_param_count = 20;
+const size_t max_result_count = 10;
 
 paf::ErrorCode GetInstanceProperty(lua_State *L, paf::Variant* that, paf::InstanceProperty* property)
 {
@@ -217,8 +218,9 @@ int InvokeMethod(lua_State *L, paf::InvokeMethod invoker, int numArgs, int start
 		new(argument)paf::Variant;
 		args[i] = LuaToVariant(argument, L, i + startIndex);
 	}
-	paf::Variant result;
-	paf::ErrorCode errorCode = (*invoker)(&result, args, numArgs);
+	paf::Variant results[max_result_count];
+	uint32_t resultCount = max_result_count;
+	paf::ErrorCode errorCode = (*invoker)(results, resultCount, args, numArgs);
 	for (int i = 0; i < numArgs; i++)
 	{
 		paf::Variant* argument = (paf::Variant*)&argumentsBuf[sizeof(paf::Variant)*i];
@@ -226,15 +228,11 @@ int InvokeMethod(lua_State *L, paf::InvokeMethod invoker, int numArgs, int start
 	}
 	if (paf::ErrorCode::s_ok == errorCode)
 	{
-		if (result.isNull())
+		for(uint32_t i = 0; i < resultCount; ++i)
 		{
-			return 0;
+			VariantToLua(L, &results[i]);
 		}
-		else
-		{
-			VariantToLua(L, &result);
-			return 1;
-		}
+		return resultCount;
 	}
 	RaiseLuaError(L, "", errorCode);
 	return 0;
@@ -335,7 +333,7 @@ int Variant_Call(lua_State *L)
 			paf::StaticMethod* method = (paf::StaticMethod*)variant->getRawPointer();
 			int numArgs = lua_gettop(L) - 1;
 			return InvokeMethod(L, method->m_invokeMethod, numArgs, 2);
-	}
+		}
 		break;
 	case paf::MetaCategory::primitive_type:
 	case paf::MetaCategory::enumeration_type:

@@ -159,7 +159,7 @@ namespace paf
 {
 #{
 	template<typename T, bool b = std::is_default_constructible_v<T>>
-	struct PlacementNewDefaultCaller
+	struct DefaultConstructorCaller
 	{
 		static bool Call(void* p)
 		{
@@ -168,7 +168,7 @@ namespace paf
 		}
 	};
 	template<typename T>
-	struct PlacementNewDefaultCaller<T, false>
+	struct DefaultConstructorCaller<T, false>
 	{
 		static bool Call(void* p)
 		{
@@ -177,7 +177,7 @@ namespace paf
 	};
 
 	template<typename T, bool b = std::is_copy_constructible_v<T>>
-	struct PlacementNewCopyCaller
+	struct CopyConstructorCaller
 	{
 		static bool Call(void* p, const void* other)
 		{
@@ -186,7 +186,7 @@ namespace paf
 		}
 	};
 	template<typename T>
-	struct PlacementNewCopyCaller<T, false>
+	struct CopyConstructorCaller<T, false>
 	{
 		static bool Call(void* p, const void* other)
 		{
@@ -195,7 +195,7 @@ namespace paf
 	};
 
 	template<typename T, bool b = std::is_default_constructible_v<T>>
-	struct PlacementNewArrayCaller
+	struct ArrayConstructorCaller
 	{
 		static bool Call(void* p, size_t count)
 		{
@@ -204,7 +204,7 @@ namespace paf
 		}
 	};
 	template<typename T>
-	struct PlacementNewArrayCaller<T, false>
+	struct ArrayConstructorCaller<T, false>
 	{
 		static bool Call(void* p, size_t count)
 		{
@@ -250,43 +250,55 @@ namespace paf
 		}
 	};
 
-	template<typename T, typename U, bool b = std::is_assignable_v<T, U>>
+	template<typename D, typename S, bool b = std::is_assignable_v<D, S>>
 	struct AssignmentCaller
 	{
 		static bool Call(void* dst, const void* src)
 		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const U*>(src);
+			*reinterpret_cast<D*>(dst) = *reinterpret_cast<const S*>(src);
 			return true;
 		}
 	};
 
-	template<typename T, typename U>
-	struct AssignmentCaller<T, U, false>
+	template<typename D, typename S>
+	struct AssignmentCaller<D, S, false>
 	{
 		static bool Call(void* dst, const void* src)
 		{
-			return false;
+			return AssignmentOperator<D, S>(*reinterpret_cast<D*>(dst), *reinterpret_cast<const S*>(src));
 		}
 	};
 
-	template<typename T, typename U, bool b = std::is_convertible_v<U, T>>
+	template<typename D, typename S, bool b = std::is_convertible_v<D, S>>
 	struct CastCaller
 	{
 		static bool Call(void* dst, const void* src)
 		{
-			*reinterpret_cast<T*>(dst) = *reinterpret_cast<const U*>(src);
+			*reinterpret_cast<D*>(dst) = *reinterpret_cast<const S*>(src);
 			return true;
 		}
 	};
 
-	template<typename T, typename U>
-	struct CastCaller<T, U, false>
+	template<typename D, typename S>
+	struct CastCaller<D, S, false>
 	{
 		static bool Call(void* dst, const void* src)
 		{
-			return false;
+			return TypeCastOperator<D, S>(*reinterpret_cast<D*>(dst), *reinterpret_cast<const S*>(src));
 		}
 	};
+
+	template<typename D, typename S>
+	inline bool AssignmentOperator(D& dst, const S& src)
+	{
+		return false;
+	}
+
+	template<typename D, typename S>
+	bool TypeCastOperator(D& dst, const S& src)
+	{
+		return false;
+	}
 
 	template<typename T>
 	class array_t
@@ -519,7 +531,7 @@ namespace paf
 	};
 
 
-	class(noncopyable) #PAFCORE_EXPORT Introspectable ## : public IntrospectableInterface
+	class #PAFCORE_EXPORT Introspectable ## : public IntrospectableInterface
 	{
 #{
 	public:

@@ -29,7 +29,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	luaopen_paflua(L);
 	std::string path;
 	GetExePath(path);
-	path += "../../testlua/testlua2.lua";
+	path += "../../testlua/testlua3.lua";
 	error = luaL_loadfile(L, path.c_str()) || lua_pcall(L, 0, 0, 0);
 	if (error) 
 	{

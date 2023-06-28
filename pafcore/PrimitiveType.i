@@ -1,15 +1,15 @@
 #import "Type.i"
 
 #{
-#include "Variant.h"
 #include "Method.h"
 #include "NameSpace.h"
-
 #}
 
 namespace paf
 {
 #{
+	class Variant;
+
 	enum PrimitiveTypeCategory
 	{
 		bool_type,
@@ -29,7 +29,8 @@ namespace paf
 		double_type,
 		long_double_type,
 		primitive_type_count,
-	};	
+	};
+
 #}
 
 	class(primitive_type)#PAFCORE_EXPORT PrimitiveType : Type
@@ -208,7 +209,7 @@ namespace paf
 			m_size = sizeof(T);
 			NameSpace::GetGlobalNameSpace()->registerMember(this);
 		}
-		virtual ErrorCode placementNew(void* address, ::paf::Variant** args, uint32_t numArgs) override
+		virtual ErrorCode construct(void* address, ::paf::Variant** args, uint32_t numArgs) override
 		{
 			if (0 == numArgs)
 			{
@@ -226,7 +227,7 @@ namespace paf
 			}
 			return ErrorCode::e_too_many_arguments;
 		}
-		virtual bool placementNewArray(void* address, size_t count) override
+		virtual bool constructArray(void* address, size_t count) override
 		{
 			new(address)T[count];
 			return true;

@@ -19,8 +19,8 @@ namespace paf
 		EnumType(const char* name, const char* declarationFile);
 	public:
 		//override Type
-		virtual ErrorCode placementNew(void* address, Variant** args, uint32_t numArgs) override;
-		virtual bool placementNewArray(void* address, size_t count) override;
+		virtual ErrorCode construct(void* address, Variant** args, uint32_t numArgs) override;
+		virtual bool constructArray(void* address, size_t count) override;
 		virtual bool destruct(void* self) override;
 		virtual bool copyAssign(void* self, const void* src) override;
 		virtual bool assign(void* self, Type* srcType, const void* src) override;
