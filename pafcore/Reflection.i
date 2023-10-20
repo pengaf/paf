@@ -48,10 +48,12 @@ namespace paf
 		//static ErrorCode AssignValue(Type* dstType, void* dstPtr, Variant& src);
 		static ErrorCode GetInstanceFieldReference(Variant& result, Variant* that, InstanceField* field);
 		static ErrorCode SetInstanceField(Variant* that, InstanceField* field, Variant& value);
-		
+		static ErrorCode GetInstanceArrayFieldReference(Variant& result, Variant* that, InstanceField* field, size_t index);
+		static ErrorCode SetInstanceArrayField(Variant* that, InstanceField* field, size_t index, Variant& value);
 
-		static ErrorCode SimpleInstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, Variant* value);
-		static ErrorCode SimpleInstancePropertySet(InstanceProperty* instanceProperty, Variant* that, Variant* value);
+
+		static ErrorCode InstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, Variant* value);
+		static ErrorCode InstancePropertySet(InstanceProperty* instanceProperty, Variant* that, Variant* value);
 		static ErrorCode ArrayInstancePropertySize(InstanceProperty* instanceProperty, Variant* that, size_t& index);
 		static ErrorCode ArrayInstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
 		static ErrorCode ArrayInstancePropertySet(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);

@@ -48,11 +48,6 @@ namespace paf
 	{
 		none,
 		raw_ptr,
-		raw_array,
-		borrowed_ptr,
-		borrowed_array,
-		unique_ptr,
-		unique_array,
 		shared_ptr,
 		shared_array,
 	};

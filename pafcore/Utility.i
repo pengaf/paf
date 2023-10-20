@@ -300,42 +300,6 @@ namespace paf
 		return false;
 	}
 
-	template<typename T>
-	class array_t
-	{
-	public:
-		array_t() noexcept : m_ptr(nullptr), m_size(0)
-		{}
-		array_t(T* ptr, size_t size) noexcept : m_ptr(ptr), m_size(size)
-		{}
-	public:
-		void assign(T* ptr, size_t size)
-		{
-			m_ptr = ptr;
-			m_size = size;
-		}
-		T* get() const noexcept
-		{
-			return m_ptr;
-		}
-		size_t size() const noexcept
-		{
-			return m_size;
-		}
-		T& operator[](size_t idx) const noexcept
-		{
-			PAF_ASSERT(m_ptr && idx < m_size);
-			return m_ptr[idx];
-		}
-		explicit operator bool() const noexcept
-		{
-			return static_cast<bool>(m_ptr);
-		}
-	private:
-		T* m_ptr;
-		size_t m_size;
-	};
-
 	const size_t max_method_result_count = 8;
 	const size_t max_method_param_count = 32;
 

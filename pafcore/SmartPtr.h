@@ -7,7 +7,7 @@
 //#include <array>
 //std::shared_ptr<int[]>
 //std::array<int, 5>
-//std::unique_ptr<int[]>
+//std::unique_ptr<int[]>;
 
 namespace paf
 {
@@ -17,12 +17,16 @@ namespace paf
 	template<typename T1, typename T2>
 	static constexpr bool convertable_shared_ptr_v = (std::is_base_of_v<T1, T2> || std::is_base_of_v<T2, T1>) && std::has_virtual_destructor_v<T1> && std::has_virtual_destructor_v<T2>;
 
-	class Box
+	class RefCountBase
 	{
 	public:
 		virtual void destruct() = 0;
 		virtual void deallocate() = 0;
 	public:
+		RefCountBase() : m_weakCount(1)
+		{}
+		RefCountBase(uint32_t arraySize) : m_arraySize(arraySize)
+		{}
 #ifdef _DEBUG
 		bool dangling() const
 		{
@@ -44,7 +48,7 @@ namespace paf
 		}
 		static bool IsDangling(const void* ptr)
 		{
-			return ptr ? static_cast<const Box*>(ptr)->dangling() : false;
+			return ptr ? static_cast<const RefCountBase*>(ptr)->dangling() : false;
 		}
 
 		static void IncWeakCount(const void* ptr)
@@ -74,103 +78,42 @@ namespace paf
 #endif
 			}
 		}
+		void decStrongCountForArray()
+		{
+			if (0 == --m_strongCount)
+			{
+				destruct();
+				deallocate();
+			}
+		}
+
 	protected:
 		mutable long m_strongCount{ 1 };
-		mutable long m_weakCount{ 1 };
+		union
+		{
+			mutable long m_arraySize;
+			mutable long m_weakCount;
+		};
 	public:
-		static Box* FromRawPtr(const void* ptr)
+		static RefCountBase* FromRawPtr(const void* ptr)
 		{
 			PAF_ASSERT(ptr);
-			return (Box*)(ptr)-1;
+			return (RefCountBase*)(ptr)-1;
 		}
 		static void IncStrongCount(const void* ptr)
 		{
 			FromRawPtr(ptr)->incStrongCount();
 		}
-
 		static void DecStrongCount(const void* ptr)
 		{
 			FromRawPtr(ptr)->decStrongCount();
 		}
-	};
-
-	class ArrayBox
-	{
-	public:
-		virtual void destructArray(size_t arraySize) = 0;
-		virtual void deallocate() = 0;
-	public:
-#ifdef _DEBUG
-		bool dangling() const
+		static void DecStrongCountForArray(const void* ptr)
 		{
-			return 0 == m_strongCount;
-		}
-		void incWeakCount()
-		{
-			PAF_ASSERT(!dangling());
-			++m_weakCount;
-		}
-		void decWeakCount()
-		{
-			PAF_ASSERT(0 < m_weakCount);
-			if (0 == --m_weakCount)
-			{
-				PAF_ASSERT(0 == m_strongCount);
-				deallocate();
-			}
-		}
-		static bool IsDangling(const void* ptr)
-		{
-			return ptr ? static_cast<const ArrayBox*>(ptr)->dangling() : false;
-		}
-
-		static void IncWeakCount(const void* ptr)
-		{
-			FromRawPtr(ptr)->incWeakCount();
-		}
-
-		static void DecWeakCount(const void* ptr)
-		{
-			FromRawPtr(ptr)->decWeakCount();
-		}
-#endif
-		void incStrongCount()
-		{
-			PAF_ASSERT(!dangling());
-			++m_strongCount;
-		}
-		void decStrongCount(size_t arraySize)
-		{
-			if (0 == --m_strongCount)
-			{
-				destructArray(arraySize);
-#ifdef _DEBUG
-				decWeakCount();
-#else
-				deallocate();
-#endif
-			}
-		}
-	protected:
-		mutable long m_strongCount{ 1 };
-		mutable long m_weakCount{ 1 };
-	public:
-		static ArrayBox* FromRawPtr(const void* ptr)
-		{
-			PAF_ASSERT(ptr);
-			return (ArrayBox*)(ptr)-1;
-		}
-
-		static void IncStrongCount(const void* ptr)
-		{
-			FromRawPtr(ptr)->incStrongCount();
-		}
-
-		static void DecStrongCount(const void* ptr, size_t arraySize)
-		{
-			FromRawPtr(ptr)->decStrongCount(arraySize);
+			FromRawPtr(ptr)->decStrongCountForArray();
 		}
 	};
+
 
 
 	template<typename T>
@@ -184,7 +127,7 @@ namespace paf
 				ptr->~T();
 			}
 		}
-		static void DestructArray(T* ptr, size_t arraySize)
+		static void DestructArray(T* ptr, uint32_t arraySize)
 		{
 			if constexpr (!std::is_trivially_destructible_v<T>)
 			{
@@ -198,9 +141,9 @@ namespace paf
 	};
 
 	template<typename T, typename D = Destructor<T>>
-	class BoxImpl : public Box
+	class RefCountImpl : public RefCountBase
 	{
-		BoxImpl() = default;
+		RefCountImpl() = default;
 	public:
 		void destruct() override
 		{
@@ -214,10 +157,11 @@ namespace paf
 		template<typename... Types>
 		static T* New(Types&&... args)
 		{
-			size_t size = sizeof(BoxImpl) + sizeof(T);
+			static_assert(sizeof(RefCountBase) == sizeof(RefCountImpl));
+			size_t size = sizeof(RefCountImpl) + sizeof(T);
 			void* p = malloc(size);
-			BoxImpl* box = (BoxImpl*)p;
-			new(box)BoxImpl();
+			RefCountImpl* box = (RefCountImpl*)p;
+			new(box)RefCountImpl();
 			T* ptr = (T*)(box + 1);
 			new(ptr)T(std::forward<Types>(args)...);
 			return ptr;
@@ -225,28 +169,49 @@ namespace paf
 	};
 
 	template<typename T, typename D = Destructor<T>>
-	class ArrayBoxImpl : public ArrayBox
+	class ArrayRefCountImpl : public RefCountBase
 	{
 	public:
-		void destructArray(size_t arraySize) override
+		ArrayRefCountImpl(uint32_t arraySize) :
+			RefCountBase(arraySize)
+		{}
+		void destruct() override
 		{
-			D::DestructArray(reinterpret_cast<T*>(this + 1), arraySize);
+			D::DestructArray(reinterpret_cast<T*>(this + 1), this->m_arraySize);
 		}
 		void deallocate() override
 		{
 			free(this);
 		}
 	public:
-		static T* NewArray(size_t arraySize)
+		static T* NewArray(uint32_t arraySize)
 		{
-			size_t size = sizeof(ArrayBoxImpl) + sizeof(T) * arraySize;
+			static_assert(sizeof(RefCountBase) == sizeof(ArrayRefCountImpl));
+			size_t size = sizeof(ArrayRefCountImpl) + sizeof(T) * arraySize;
 			void* p = malloc(size);
-			ArrayBoxImpl* box = (ArrayBoxImpl*)p;
-			new(box)ArrayBoxImpl();
+			ArrayRefCountImpl* box = (ArrayRefCountImpl*)p;
+			new(box)ArrayRefCountImpl(arraySize);
 			T* ptr = (T*)(box + 1);
 			new(ptr)T[arraySize];
 			return ptr;
 		}
+	};
+
+	class Variant;
+
+	class RefPtrBase
+	{
+		friend class Variant;
+	public:
+		void* ptr() const
+		{
+			return m_ptr;
+		}
+	protected:
+		RefPtrBase(void* ptr) : m_ptr(ptr)
+		{}
+	protected:
+		void* m_ptr;
 	};
 
 	template<typename T, typename D = Destructor<T>>
@@ -258,28 +223,9 @@ namespace paf
 	template<typename T>
 	class WeakPtr;
 
-	template<typename T>
-	class WeakArray;
-
-	class Variant;
-
-	class GenericPtr
-	{
-	public:
-		void* m_ptr;
-	};
-
-
-	class GenericArray
-	{
-	public:
-		void* m_ptr;
-		size_t m_size;
-	};
-
 
 	template<typename T, typename D>
-	class SharedPtr
+	class SharedPtr : public RefPtrBase
 	{
 		template <typename T2>
 		friend class WeakPtr;
@@ -287,53 +233,51 @@ namespace paf
 		template<typename T2, typename D2>
 		friend class SharedPtr;
 
-		friend class Variant;
-
 	public:
 		using pointer = T * ;
 		using reference = T & ;
 	private:
 		SharedPtr(pointer ptr) noexcept :
-			m_ptr(ptr)
+			RefPtrBase(ptr)
 		{}
 		//for shared from other raw pointer
 		SharedPtr(pointer ptr, std::true_type tag) noexcept :
-			m_ptr(ptr)
+			RefPtrBase(ptr)
 		{
 			incStrongCount();
 		}
 	public:
 		constexpr SharedPtr() noexcept :
-			m_ptr(nullptr)
+			RefPtrBase(nullptr)
 		{}
 
 		constexpr SharedPtr(nullptr_t) noexcept :
-			m_ptr(nullptr)
+			RefPtrBase(nullptr)
 		{}
 
 		SharedPtr(const SharedPtr& other) noexcept :
-			m_ptr(other.m_ptr)
+			RefPtrBase(other.m_ptr)
 		{
 			incStrongCount();
 		}
 
 		template <typename T2, typename D2, std::enable_if_t<convertable_shared_ptr_v<T, T2>, int> = 0>
 		SharedPtr(const SharedPtr<T2, D2>& other) noexcept :
-			m_ptr(static_cast<T*>(other.m_ptr))
+			RefPtrBase(static_cast<T*>(other.m_ptr))
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
 			incStrongCount();
 		}
 
 		SharedPtr(SharedPtr&& other) noexcept :
-			m_ptr(other.m_ptr)
+			RefPtrBase(other.m_ptr)
 		{
 			other.m_ptr = nullptr;
 		}
 
 		template <typename T2, typename D2, std::enable_if_t<convertable_shared_ptr_v<T, T2>, int> = 0>
 		SharedPtr(SharedPtr<T2, D2>&& other) noexcept :
-			m_ptr(static_cast<T*>(other.m_ptr))
+			RefPtrBase(static_cast<T*>(other.m_ptr))
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
 			other.m_ptr = nullptr;
@@ -351,11 +295,11 @@ namespace paf
 			return *this;
 		}
 
-		SharedPtr& operator=(pointer ptr) noexcept
-		{
-			assignRawPointer(ptr);
-			return *this;
-		}
+		//SharedPtr& operator=(pointer ptr) noexcept
+		//{
+		//	assignRawPointer(ptr);
+		//	return *this;
+		//}
 
 		SharedPtr& operator=(const SharedPtr& other) noexcept
 		{
@@ -384,7 +328,7 @@ namespace paf
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
 			decStrongCount();
-			m_ptr = static_cast<T*>(other.m_ptr);
+			m_ptr = static_cast<T*>(other.get());
 			other.m_ptr = nullptr;
 			return *this;
 		}
@@ -393,13 +337,13 @@ namespace paf
 		reference operator*() const noexcept
 		{
 			PAF_ASSERT(m_ptr);
-			return *m_ptr;
+			return *get();
 		}
 
 		pointer operator->() const noexcept
 		{
 			PAF_ASSERT(m_ptr);
-			return m_ptr;
+			return get();
 		}
 
 		//operator pointer() const noexcept
@@ -422,33 +366,33 @@ namespace paf
 			return m_ptr != ptr;
 		}
 
-		template<typename T2>
-		bool operator==(const WeakPtr<T2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
+		//template<typename T2>
+		//bool operator==(const WeakPtr<T2>& other) const
+		//{
+		//	return m_ptr == other.m_ptr;
+		//}
 
-		template<typename T2>
-		bool operator!=(const WeakPtr<T2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
+		//template<typename T2>
+		//bool operator!=(const WeakPtr<T2>& other) const
+		//{
+		//	return m_ptr != other.m_ptr;
+		//}
 
-		template<typename T2, typename D2>
-		bool operator==(const SharedPtr<T2, D2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
+		//template<typename T2, typename D2>
+		//bool operator==(const SharedPtr<T2, D2>& other) const
+		//{
+		//	return m_ptr == other.m_ptr;
+		//}
 
-		template<typename T2, typename D2>
-		bool operator!=(const SharedPtr<T2, D2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
+		//template<typename T2, typename D2>
+		//bool operator!=(const SharedPtr<T2, D2>& other) const
+		//{
+		//	return m_ptr != other.m_ptr;
+		//}
 
 		pointer get() const noexcept
 		{
-			return m_ptr;
+			return reinterpret_cast<pointer>(m_ptr);
 		}
 
 		void swap(SharedPtr& other) noexcept
@@ -457,14 +401,10 @@ namespace paf
 		}
 	private:
 		//for variant
-		void assignRawPointer(pointer ptr)
-		{
-			SharedPtr(ptr, std::true_type()).swap(*this);
-		}
-		Box* getBox() const
-		{
-			return m_ptr ? Box::FromRawPtr(m_ptr) : nullptr;
-		}
+		//void assignRawPointer(pointer ptr)
+		//{
+		//	SharedPtr(ptr, std::true_type()).swap(*this);
+		//}
 	private:
 		void incStrongCount()
 		{
@@ -472,11 +412,11 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::IncStrongCount(m_ptr->getMemoryAddress());
+					RefCountBase::IncStrongCount(get()->getMemoryAddress());
 				}
 				else
 				{
-					Box::IncStrongCount(m_ptr);
+					RefCountBase::IncStrongCount(m_ptr);
 				}
 			}
 		}
@@ -486,21 +426,19 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::DecStrongCount(m_ptr->getMemoryAddress());
+					RefCountBase::DecStrongCount(get()->getMemoryAddress());
 				}
 				else
 				{
-					Box::DecStrongCount(m_ptr);
+					RefCountBase::DecStrongCount(m_ptr);
 				}
 			}
 		}
-	private:
-		T* m_ptr;
 	public:
 		template <typename... Types>
 		static SharedPtr Make(Types&&... args)
 		{
-			T* p = BoxImpl<T, D>::New(std::forward<Types>(args)...);
+			T* p = RefCountImpl<T, D>::New(std::forward<Types>(args)...);
 			return SharedPtr(p);
 		}
 		static SharedPtr SharedFrom(T* ptr)
@@ -511,49 +449,35 @@ namespace paf
 
 
 	template<typename T, typename D>
-	class SharedArray
+	class SharedArray : public RefPtrBase
 	{
-		template <typename T2>
-		friend class WeakArray;
-
-		template<typename T2, typename D2>
-		friend class SharedArray;
-
-		friend class Variant;
-
 	public:
 		using pointer = T * ;
 		using reference = T & ;
 		using size_type = size_t;
 	private:
-		SharedArray(pointer ptr, size_type size) noexcept :
-			m_ptr(ptr),
-			m_size(size)
+		SharedArray(pointer ptr) noexcept :
+			RefPtrBase(ptr)
 		{}
 	public:
 		constexpr SharedArray() noexcept :
-			m_ptr(nullptr),
-			m_size(0)
+			RefPtrBase(nullptr)
 		{}
 
 		constexpr SharedArray(nullptr_t) noexcept :
-			m_ptr(nullptr),
-			m_size(0)
+			RefPtrBase(nullptr)
 		{}
 
 		SharedArray(SharedArray const& other) noexcept :
-			m_ptr(other.m_ptr),
-			m_size(other.m_size)
+			RefPtrBase(other.m_ptr)
 		{
 			incStrongCount();
 		}
 
 		SharedArray(SharedArray&& other) noexcept :
-			m_ptr(other.m_ptr),
-			m_size(other.m_size)
+			RefPtrBase(other.m_ptr)
 		{
 			other.m_ptr = nullptr;
-			other.m_size = 0;
 		}
 
 		~SharedArray() noexcept
@@ -573,11 +497,11 @@ namespace paf
 			return *this;
 		}
 
-		reference operator[](size_t idx) const noexcept
-		{
-			PAF_ASSERT(m_ptr && idx < m_size);
-			return m_ptr[idx];
-		}
+		//reference operator[](size_t idx) const noexcept
+		//{
+		//	PAF_ASSERT(m_ptr && idx < m_size);
+		//	return m_ptr[idx];
+		//}
 
 		explicit operator bool() const noexcept
 		{
@@ -594,22 +518,12 @@ namespace paf
 			return m_ptr != ptr;
 		}
 
-		bool operator==(const WeakArray<T>& other) const
+		bool operator==(const SharedArray& other) const
 		{
 			return m_ptr == other.m_ptr;
 		}
 
-		bool operator!=(const WeakArray<T>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		bool operator==(const SharedArray<T>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const SharedArray<T>& other) const
+		bool operator!=(const SharedArray& other) const
 		{
 			return m_ptr != other.m_ptr;
 		}
@@ -619,16 +533,16 @@ namespace paf
 			return m_ptr;
 		}
 
-		pointer get(size_t idx) const noexcept
-		{
-			PAF_ASSERT(0 == idx || idx < m_size);
-			return idx < m_size ? m_ptr + idx : nullptr;
-		}
+		//pointer get(size_t idx) const noexcept
+		//{
+		//	PAF_ASSERT(0 == idx || idx < m_size);
+		//	return idx < m_size ? m_ptr + idx : nullptr;
+		//}
 
-		size_type size() const noexcept
-		{
-			return m_size;
-		}
+		//size_type size() const noexcept
+		//{
+		//	return m_size;
+		//}
 
 		void swap(SharedArray& other) noexcept
 		{
@@ -637,43 +551,39 @@ namespace paf
 		}
 	private:
 		//for variant
-		void assignRawPointer(pointer ptr, size_t size)
-		{
-			ArrayBox::IncStrongCount(ptr);
-			ArrayBox::DecStrongCount(m_ptr, m_size);
-			m_ptr = ptr;
-			m_size = size;
-		}
+		//void assignRawPointer(pointer ptr, size_t size)
+		//{
+		//	ArrayRefCountBase::IncStrongCount(ptr);
+		//	ArrayRefCountBase::DecStrongCount(m_ptr, m_size);
+		//	m_ptr = ptr;
+		//	m_size = size;
+		//}
 	private:
 		void incStrongCount()
 		{
 			if (m_ptr)
 			{
-				ArrayBox::IncStrongCount(m_ptr);
+				RefCountBase::IncStrongCount(m_ptr);
 			}
 		}
 		void decStrongCount()
 		{
 			if (m_ptr)
 			{
-				ArrayBox::DecStrongCount(m_ptr, m_size);
+				RefCountBase::DecStrongCountForArray(m_ptr);
 			}
 		}
-	private:
-		pointer m_ptr;
-		size_t m_size;
 	public:
-		static SharedArray Make(const size_t size)
+		static SharedArray Make(const uint32_t arraySize)
 		{
-			T* p = ArrayBoxImpl<T, D>::NewArray(size);
-			return SharedArray(p, size);
+			T* p = ArrayRefCountImpl<T, D>::NewArray(arraySize);
+			return SharedArray(p);
 		}
 	};
 
 
-
 	template<typename T>
-	class WeakPtr
+	class WeakPtr : public RefPtrBase
 	{
 		template <typename T2>
 		friend class WeakPtr;
@@ -689,28 +599,28 @@ namespace paf
 		using reference = T & ;
 	public:
 		constexpr WeakPtr() noexcept :
-			m_ptr(nullptr)
+			RefPtrBase(nullptr)
 		{}
 
 		constexpr WeakPtr(nullptr_t) noexcept :
-			m_ptr(nullptr)
+			RefPtrBase(nullptr)
 		{}
 
-		explicit WeakPtr(pointer ptr) noexcept :
-			m_ptr(ptr)
-		{
-			incWeakCount();
-		}
+		//explicit WeakPtr(pointer ptr) noexcept :
+		//	RefPtrBase(ptr)
+		//{
+		//	incWeakCount();
+		//}
 
 		WeakPtr(const WeakPtr& other) noexcept :
-			m_ptr(other.m_ptr)
+			RefPtrBase(other.m_ptr)
 		{
 			incWeakCount();
 		}
 
 		template<typename T2>
 		WeakPtr(const WeakPtr<T2>& other) noexcept :
-			m_ptr(static_cast<T*>(other.get()))
+			RefPtrBase(static_cast<T*>(other.get()))
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
 			incWeakCount();
@@ -718,7 +628,7 @@ namespace paf
 
 		template<typename T2, typename D2>
 		explicit WeakPtr(const SharedPtr<T2, D2>& other) noexcept :
-			m_ptr(static_cast<T*>(other.get()))
+			RefPtrBase(static_cast<T*>(other.get()))
 		{
 			PAF_ASSERT(is_interface<T> || paf_base_offset_of(T, T2) == 0);
 			incWeakCount();
@@ -731,11 +641,11 @@ namespace paf
 			return *this;
 		}
 
-		WeakPtr& operator=(pointer ptr) noexcept
-		{
-			reset(ptr);
-			return *this;
-		}
+		//WeakPtr& operator=(pointer ptr) noexcept
+		//{
+		//	reset(ptr);
+		//	return *this;
+		//}
 
 		WeakPtr& operator=(const WeakPtr& other) noexcept
 		{
@@ -766,14 +676,14 @@ namespace paf
 		{
 			PAF_ASSERT(m_ptr);
 			PAF_ASSERT(!isDangling());
-			return *m_ptr;
+			return *get();
 		}
 
 		pointer operator->() const noexcept
 		{
 			PAF_ASSERT(m_ptr);
 			PAF_ASSERT(!isDangling());
-			return m_ptr;
+			return get();
 		}
 
 		explicit operator bool() const noexcept
@@ -791,29 +701,29 @@ namespace paf
 			return m_ptr != ptr;
 		}
 
-		template<typename T2>
-		bool operator==(const WeakPtr<T2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
+		//template<typename T2>
+		//bool operator==(const WeakPtr<T2>& other) const
+		//{
+		//	return m_ptr == other.m_ptr;
+		//}
 
-		template<typename T2>
-		bool operator!=(const WeakPtr<T2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
+		//template<typename T2>
+		//bool operator!=(const WeakPtr<T2>& other) const
+		//{
+		//	return m_ptr != other.m_ptr;
+		//}
 
-		template<typename T2, typename D2>
-		bool operator==(const SharedPtr<T2, D2>& other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
+		//template<typename T2, typename D2>
+		//bool operator==(const SharedPtr<T2, D2>& other) const
+		//{
+		//	return m_ptr == other.m_ptr;
+		//}
 
-		template<typename T2, typename D2>
-		bool operator!=(const SharedPtr<T2, D2>& other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
+		//template<typename T2, typename D2>
+		//bool operator!=(const SharedPtr<T2, D2>& other) const
+		//{
+		//	return m_ptr != other.m_ptr;
+		//}
 
 		pointer get() const noexcept
 		{
@@ -821,12 +731,12 @@ namespace paf
 			return m_ptr;
 		}
 	private:
-		void assignRawPointer(pointer ptr)
-		{
-			decWeakCount();
-			m_ptr = ptr;
-			incWeakCount();
-		}
+		//void assignRawPointer(pointer ptr)
+		//{
+		//	decWeakCount();
+		//	m_ptr = ptr;
+		//	incWeakCount();
+		//}
 	private:
 		void incWeakCount()
 		{
@@ -835,11 +745,11 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::IncWeakCount(m_ptr->getMemoryAddress());
+					RefCountBase::IncWeakCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{
-					Box::IncWeakCount(m_ptr);
+					RefCountBase::IncWeakCount(m_ptr);
 				}
 			}
 #endif
@@ -851,11 +761,11 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					Box::DecWeakCount(m_ptr->getMemoryAddress());
+					RefCountBase::DecWeakCount(m_ptr->getMemoryAddress());
 				}
 				else
 				{
-					Box::DecWeakCount(m_ptr);
+					RefCountBase::DecWeakCount(m_ptr);
 				}
 			}
 #endif
@@ -869,186 +779,9 @@ namespace paf
 #ifdef _DEBUG
 		bool isDangling() const 
 		{
-			return Box::IsDangling(m_ptr);
+			return RefCountBase::IsDangling(m_ptr);
 		}
 #endif
-	private:
-		T* m_ptr;
-	};
-
-
-	template<typename T>
-	class WeakArray
-	{
-		template <typename T2>
-		friend class WeakArray;
-
-		template<typename T2, typename D2>
-		friend class SharedArray;
-
-		friend class Variant;
-
-	public:
-		using element_type = T;
-		using pointer = T * ;
-		using reference = T & ;
-		using size_type = size_t;
-	public:
-		constexpr WeakArray() noexcept :
-			m_ptr(nullptr),
-			m_size(0)
-		{}
-
-		WeakArray(const WeakArray& other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
-		{
-			incWeakCount();
-		}
-
-		WeakArray(WeakArray&& other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
-		{
-			other.m_ptr = nullptr;
-			other.m_size = 0;
-		}
-
-		explicit WeakArray(const SharedArray<T>&other) noexcept :
-			m_ptr(other.get()),
-			m_size(other.size())
-		{
-			incWeakCount();
-		}
-
-		WeakArray& operator=(nullptr_t other) noexcept
-		{
-			decWeakCount();
-			m_ptr = nullptr;
-			m_size = 0;
-			return *this;
-		}
-
-		WeakArray& operator=(const WeakArray & other) noexcept
-		{
-			if (this != std::addressof(other))
-			{
-				decWeakCount();
-				m_ptr = other.get();
-				m_size = other.size();
-				incWeakCount();
-			}
-			return *this;
-		}
-
-		WeakArray& operator=(const SharedArray<T>&other) noexcept
-		{
-			decWeakCount();
-			m_ptr = other.get();
-			m_size = other.size();
-			incWeakCount();
-			return *this;
-		}
-
-		reference operator[](size_t idx) const noexcept
-		{
-			PAF_ASSERT(m_ptr && idx < m_size);
-			PAF_ASSERT(!isDangling());
-			return m_ptr[idx];
-		}
-
-		explicit operator bool() const noexcept
-		{
-			return static_cast<bool>(m_ptr);
-		}
-
-		bool operator==(const T * ptr) const
-		{
-			return m_ptr == ptr;
-		}
-
-		bool operator!=(const T * ptr) const
-		{
-			return m_ptr != ptr;
-		}
-
-		bool operator==(const WeakArray & other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const WeakArray & other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		bool operator==(const SharedArray<T>&other) const
-		{
-			return m_ptr == other.m_ptr;
-		}
-
-		bool operator!=(const SharedArray<T>&other) const
-		{
-			return m_ptr != other.m_ptr;
-		}
-
-		pointer get() const noexcept
-		{
-			PAF_ASSERT(!isDangling());
-			return m_ptr;
-		}
-
-		pointer get(size_t idx) const noexcept
-		{
-			PAF_ASSERT(0 == idx || idx < m_size);
-			PAF_ASSERT(!isDangling());
-			return idx < m_size ? m_ptr + idx : nullptr;
-		}
-
-		size_type size() const noexcept
-		{
-			return m_size;
-		}
-	private:
-		void assignRawPointer(pointer ptr, size_t size)
-		{
-			decWeakCount();
-			m_ptr = ptr;
-			m_size = size;
-			incWeakCount();
-		}
-	private:
-		void incWeakCount()
-		{
-			if (m_ptr)
-			{
-				if constexpr (is_interface<T>)
-				{
-					ArrayBox::IncWeakCount(m_ptr->getMemoryAddress());
-				}
-				else
-				{
-					ArrayBox::IncWeakCount(m_ptr);
-				}
-			}
-		}
-		void decWeakCount()
-		{
-			if (m_ptr)
-			{
-				if constexpr (is_interface<T>)
-				{
-					ArrayBox::DecWeakCount(m_ptr->getMemoryAddress());
-				}
-				else
-				{
-					ArrayBox::DecWeakCount(m_ptr);
-				}
-			}
-		}
-	private:
-		T* m_ptr;
-		size_t m_size;
 	};
 
 }

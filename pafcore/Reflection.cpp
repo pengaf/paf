@@ -534,10 +534,10 @@ bool Reflection::StringToEnum(Variant& value, EnumType* enumType, const char* st
 
 ErrorCode Reflection::GetInstanceFieldReference(Variant& result, Variant* that, InstanceField* field)
 {
-	if (field->isArray())
-	{
-		return ErrorCode::e_field_is_an_array;
-	}
+	//if (field->isArray())
+	//{
+	//	return ErrorCode::e_field_is_an_array;
+	//}
 	size_t baseOffset;
 	if (!static_cast<ClassType*>(that->getType())->getClassOffset(baseOffset, field->get_objectType()))
 	{
@@ -551,16 +551,12 @@ ErrorCode Reflection::GetInstanceFieldReference(Variant& result, Variant* that, 
 		result.assignReference(fieldType, (void*)fieldAddress);
 		break;
 	case TypeCompound::raw_ptr:
-	case TypeCompound::borrowed_ptr:
-	case TypeCompound::unique_ptr:
+		result.assignRawPtr(fieldType, *reinterpret_cast<void**>(fieldAddress));
 	case TypeCompound::shared_ptr:
-		result.assignRawPtr(fieldType, reinterpret_cast<GenericPtr*>(fieldAddress)->m_ptr);
+		//result.assignRawPtr(fieldType, reinterpret_cast<RefPtrBase*>(fieldAddress)->ptr());
 		break;
-	case TypeCompound::raw_array:
-	case TypeCompound::borrowed_array:
-	case TypeCompound::unique_array:
 	case TypeCompound::shared_array:
-		result.assignRawArray(fieldType, reinterpret_cast<GenericArray*>(fieldAddress)->m_ptr, reinterpret_cast<GenericArray*>(fieldAddress)->m_size);
+		//result.assignRawArray(fieldType, reinterpret_cast<RefPtrBase*>(fieldAddress)->ptr(), reinterpret_cast<GenericArray*>(fieldAddress)->m_size);
 		break;
 	default:
 		PAF_ASSERT(false);
@@ -570,45 +566,92 @@ ErrorCode Reflection::GetInstanceFieldReference(Variant& result, Variant* that, 
 
 ErrorCode Reflection::SetInstanceField(Variant* that, InstanceField* field, Variant& value)
 {
-	//if (field->isArray())
-	//{
-	//	return ErrorCode::e_field_is_an_array;
-	//}
-	//size_t baseOffset;
-	//if (!static_cast<ClassType*>(that->getType())->getClassOffset(baseOffset, field->get_objectType()))
-	//{
-	//	return ErrorCode::e_invalid_type;
-	//}
-	//size_t fieldAddress = (size_t)that->getRawPointer() + baseOffset + field->get_offset();
-	//Type* fieldType = field->get_type();
+	if (field->isArray())
+	{
+		return ErrorCode::e_field_is_an_array;
+	}
+	size_t baseOffset;
+	if (!static_cast<ClassType*>(that->getType())->getClassOffset(baseOffset, field->get_objectType()))
+	{
+		return ErrorCode::e_invalid_type;
+	}
+	size_t fieldAddress = (size_t)that->getRawPointer() + baseOffset + field->get_offset();
+	Type* fieldType = field->get_type();
 
-	//switch (field->get_typeCompound())
-	//{
-	//case TypeCompound::none:
-	//	if (value.isValue() || value.isReference())
-	//	{
-	//		return AssignValue(fieldType, (void*)fieldAddress, value);
-	//	}
-	//	break;
-	//case TypeCompound::raw_ptr:
-	//case TypeCompound::borrowed_ptr:
-	//case TypeCompound::unique_ptr:
-	//case TypeCompound::shared_ptr:
-	//	result.assignRawPtr(fieldType, reinterpret_cast<GenericPtr*>(fieldAddress)->m_ptr);
-	//	break;
-	//case TypeCompound::raw_array:
-	//case TypeCompound::borrowed_array:
-	//case TypeCompound::unique_array:
-	//case TypeCompound::shared_array:
-	//	result.assignRawArray(fieldType, reinterpret_cast<GenericArray*>(fieldAddress)->m_ptr, reinterpret_cast<GenericArray*>(fieldAddress)->m_size);
-	//	break;
-	//default:
-	//	PAF_ASSERT(false);
-	//}
+	switch (field->get_typeCompound())
+	{
+	case TypeCompound::none:
+		value.castToValue(fieldType, (void*)fieldAddress);
+		break;
+	case TypeCompound::raw_ptr:
+		value.castToRawPointer(fieldType, (void**)fieldAddress);
+		break;
+	case TypeCompound::shared_ptr:
+		PAF_ASSERT(false);
+		break;
+	case TypeCompound::shared_array:
+		PAF_ASSERT(false);
+		break;
+	default:
+		PAF_ASSERT(false);
+	}
 	return ErrorCode::s_ok;
 }
 
-ErrorCode Reflection::SimpleInstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, Variant* value) 
+ErrorCode Reflection::GetInstanceArrayFieldReference(Variant& result, Variant* that, InstanceField* field, size_t index)
+{
+	if (field->get_arraySize() <= index)
+	{
+		return ErrorCode::e_index_out_of_range;
+	}
+	size_t baseOffset;
+	if (!static_cast<ClassType*>(that->getType())->getClassOffset(baseOffset, field->get_objectType()))
+	{
+		return ErrorCode::e_invalid_type;
+	}
+	size_t fieldAddress = (size_t)that->getRawPointer() + baseOffset + field->get_offset();
+	TypeCompound typeCompound = field->get_typeCompound();
+	if (0 < index)
+	{
+		switch (typeCompound)
+		{
+		case TypeCompound::none:
+			fieldAddress += field->getType()->get__size_() * index;
+			break;
+		case TypeCompound::raw_ptr:
+			fieldAddress += sizeof(void*) * index;
+			break;
+		case TypeCompound::shared_ptr:
+			fieldAddress += sizeof(RefPtrBase) * index;
+			break;
+		case TypeCompound::shared_array:
+			fieldAddress += sizeof(RefPtrBase) * index;
+			break;
+		}
+	}
+	Type* fieldType = field->get_type();
+	switch (typeCompound)
+	{
+	case TypeCompound::none:
+		result.assignReference(fieldType, (void*)(fieldAddress));
+		break;
+	case TypeCompound::raw_ptr:
+	case TypeCompound::shared_ptr:
+		result.assignRawPtr(fieldType, *reinterpret_cast<void**>(fieldAddress));
+		break;
+	//case TypeCompound::raw_array:
+	//case TypeCompound::shared_array:
+	//	result.assignSharedArray(fieldType, reinterpret_cast<GenericArray*>(fieldAddress)->m_ptr, reinterpret_cast<GenericArray*>(fieldAddress)->m_size);
+		break;
+	default:
+		PAF_ASSERT(false);
+	}
+	return ErrorCode::s_ok;
+}
+
+//static ErrorCode SetInstanceArrayField(Variant* that, InstanceField* field, size_t index, Variant& value);
+
+ErrorCode Reflection::InstancePropertyGet(InstanceProperty* instanceProperty, Variant* that, Variant* value) 
 {
 	PAF_ASSERT(instanceProperty && that && value);
 	if (PropertyCategory::simple_property != instanceProperty->get_propertyCategory())
@@ -623,7 +666,7 @@ ErrorCode Reflection::SimpleInstancePropertyGet(InstanceProperty* instanceProper
 	return errorCode;
 }
 
-ErrorCode Reflection::SimpleInstancePropertySet(InstanceProperty* instanceProperty, Variant* that, Variant* value)
+ErrorCode Reflection::InstancePropertySet(InstanceProperty* instanceProperty, Variant* that, Variant* value)
 {
 	PAF_ASSERT(instanceProperty && that && value);
 	if (PropertyCategory::simple_property != instanceProperty->get_propertyCategory())

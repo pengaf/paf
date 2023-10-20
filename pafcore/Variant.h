@@ -191,8 +191,6 @@ public:
 		vt_big_value,
 		vt_reference,
 		vt_raw_ptr,
-		vt_raw_array,
-		vt_raw_array_element,
 		vt_shared_ptr,
 		vt_shared_array,
 		vt_weak_array_element,
@@ -211,8 +209,8 @@ public:
 	bool isValue() const;
 	bool isReference() const;
 	bool isPointer() const;
-	bool isArray() const;
-	size_t getArraySize() const;
+	//bool isArray() const;
+	//size_t getArraySize() const;
 	Type* getType() const;
 	void* getRawPointer() const;
 	void clear();
@@ -261,49 +259,6 @@ public:
 	{
 		Type* type = typename RuntimeTypeOf<T>::RuntimeType::GetSingleton();
 		assignRawPtr(type, rawPtr);
-	}
-
-	template<typename T>
-	void assignRawArray(array_t<T> const& rawArray)
-	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		assignRawArray(type, rawArray.get(), rawArray.size());
-	}
-
-	template<typename T>
-	void assignWeakPtr(WeakPtr<T> const& weakPtr)
-	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		weakPtr.incBorrowCount();
-		assignWeakPtr(type, weakPtr.get());
-	}
-
-	template<typename T>
-	void assignWeakPtr(WeakPtr<T>&& weakPtr)
-	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		T* ptr = weakPtr.get();
-		weakPtr.m_ptr = nullptr;
-		assignWeakPtr(type, ptr);
-	}
-
-	template<typename T>
-	void assignWeakArray(WeakArray<T> const& weakArray)
-	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		weakArray.incBorrowCount();
-		assignWeakArray(type, weakArray.get(), weakArray.size());
-	}
-
-	template<typename T>
-	void assignWeakArray(WeakArray<T>&& weakArray)
-	{
-		Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-		T* ptr = weakArray.get();
-		size_t size = weakArray.size();
-		weakArray.m_ptr = nullptr;
-		weakArray.m_size = 0;
-		assignWeakArray(type, ptr, size);
 	}
 
 	template<typename T, typename D>
@@ -376,22 +331,6 @@ public:
 			if (castToRawPointer(type, (void**)&rawPointer))
 			{
 				rawPtr = (T*)m_ptr;
-				return true;
-			}
-		}
-		return false;
-	}
-
-	template<typename T>
-	bool castToRawArray(array_t<T>& rawArray) const
-	{
-		if (vt_raw_array == m_category || vt_shared_array == m_category)
-		{
-			Type* type = RuntimeTypeOf<T>::RuntimeType::GetSingleton();
-			T* rawPointer;
-			if (castToRawPointer(type, (void**)&rawPointer))
-			{
-				rawArray.assign((T*)m_ptr, m_arraySize);
 				return true;
 			}
 		}
@@ -495,12 +434,10 @@ public:
 
 	void assignRawPtr(Type* type, void* ptr);
 
-	void assignRawArray(Type* type, void* ptr, size_t size);
-
 private:
 	void assignSharedPtr(Type* type, void* ptr);
 
-	void assignSharedArray(Type* type, void* ptr, size_t size);
+	void assignSharedArray(Type* type, void* ptr);
 
 private:
 	Category m_category;
@@ -511,7 +448,7 @@ private:
 		struct //other
 		{
 			void* m_ptr;
-			size_t m_arraySize;
+			//size_t m_arraySize;
 			size_t m_arrayIndex;
 		};
 	};
@@ -538,16 +475,16 @@ inline bool Variant::isPointer() const
 	return (vt_raw_ptr == m_category || vt_shared_ptr == m_category);
 }
 
-inline bool Variant::isArray() const
-{
-	return (vt_raw_array == m_category || vt_shared_array == m_category);
-}
+//inline bool Variant::isArray() const
+//{
+//	return (vt_raw_array == m_category || vt_shared_array == m_category);
+//}
 
-inline size_t Variant::getArraySize() const
-{
-	PAF_ASSERT(isArray());
-	return m_arraySize;
-}
+//inline size_t Variant::getArraySize() const
+//{
+//	PAF_ASSERT(isArray());
+//	return m_arraySize;
+//}
 
 inline Type* Variant::getType() const 
 {

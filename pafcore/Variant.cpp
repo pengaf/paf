@@ -9,9 +9,9 @@
 BEGIN_PAF
 
 
-class GenericBoxImpl : public Box
+class GenericRefCountImpl : public RefCountBase
 {
-	GenericBoxImpl() = default;
+	GenericRefCountImpl() = default;
 public:
 	void destruct() override
 	{
@@ -32,16 +32,16 @@ public:
 public:
 	static ErrorCode New(void*& address, Type* type, Variant** args, uint32_t numArgs)
 	{
-		size_t size = sizeof(Type*) + sizeof(GenericBoxImpl) + type->get__size_();
+		size_t size = sizeof(Type*) + sizeof(GenericRefCountImpl) + type->get__size_();
 		void* p = malloc(size);
 		Type** ppType = reinterpret_cast<Type**>(p);
-		GenericBoxImpl* box = reinterpret_cast<GenericBoxImpl*>(ppType + 1);
+		GenericRefCountImpl* box = reinterpret_cast<GenericRefCountImpl*>(ppType + 1);
 		void* ptr = (box + 1);
 		ErrorCode errorCode = type->construct(ptr, args, numArgs);
 		if (ErrorCode::s_ok == errorCode)
 		{
 			*ppType = type;
-			new(box)GenericBoxImpl();
+			new(box)GenericRefCountImpl();
 			address = ptr;
 		}
 		else
@@ -52,10 +52,10 @@ public:
 	}
 };
 
-class GenericArrayBoxImpl : public ArrayBox
+class GenericArrayBoxImpl : public RefCountBase
 {
 public:
-	void destructArray(size_t arraySize) override
+	void destruct() override
 	{
 		Type* type = *(reinterpret_cast<Type**>(this) - 1);
 		if (type->isObject())
@@ -65,6 +65,7 @@ public:
 			{
 				void* p = this + 1;
 				size_t size = classType->get__size_();
+				uint32_t arraySize = m_arraySize;
 				for (; arraySize > 0; --arraySize)
 				{
 					classType->destruct(p);
@@ -203,7 +204,7 @@ Variant::Variant(Variant&& var)
 	else
 	{
 		m_ptr = var.m_ptr;
-		m_arraySize = var.m_arraySize;
+		//m_arraySize = var.m_arraySize;
 	}
 	var.m_category = vt_null;
 }
@@ -229,7 +230,7 @@ void Variant::assign(Variant&& var)
 	else
 	{
 		m_ptr = var.m_ptr;
-		m_arraySize = var.m_arraySize;
+		//m_arraySize = var.m_arraySize;
 	}
 	var.m_category = vt_null;
 }
@@ -245,10 +246,10 @@ void Variant::clear()
 		ValueBox::Delete(m_ptr);
 		break;
 	case vt_shared_ptr:
-		Box::DecStrongCount(m_ptr);
+		RefCountBase::DecStrongCount(m_ptr);
 		break;
 	case vt_shared_array:
-		ArrayBox::DecStrongCount(m_ptr, m_arraySize);
+		RefCountBase::DecStrongCountForArray(m_ptr);
 		break;
 	}
 	m_category = vt_null;
@@ -301,19 +302,6 @@ void Variant::assignRawPtr(Type* type, void* ptr)
 	}
 }
 
-void Variant::assignRawArray(Type* type, void* ptr, size_t size)
-{
-	clear();
-	if (ptr)
-	{
-		PAF_ASSERT(IsFinal(type, ptr));
-		m_type = type;
-		m_ptr = ptr;
-		m_arraySize = size;
-		m_category = vt_raw_array;
-	}
-}
-
 void Variant::assignSharedPtr(Type* type, void* ptr)
 {
 	clear();
@@ -326,7 +314,7 @@ void Variant::assignSharedPtr(Type* type, void* ptr)
 	}
 }
 
-void Variant::assignSharedArray(Type* type, void* ptr, size_t size)
+void Variant::assignSharedArray(Type* type, void* ptr)
 {
 	clear();
 	if (ptr)
@@ -334,7 +322,6 @@ void Variant::assignSharedArray(Type* type, void* ptr, size_t size)
 		PAF_ASSERT(IsFinal(type, ptr));
 		m_type = type;
 		m_ptr = ptr;
-		m_arraySize = size;
 		m_category = vt_shared_array;
 	}
 }
@@ -448,7 +435,7 @@ ErrorCode Variant::newValue(Type* type, Variant** args, uint32_t numArgs)
 ErrorCode Variant::newSharedPtr(Type* type, Variant** args, uint32_t numArgs)
 {
 	clear();
-	ErrorCode errorCode = GenericBoxImpl::New(m_ptr, type, args, numArgs);
+	ErrorCode errorCode = GenericRefCountImpl::New(m_ptr, type, args, numArgs);
 	if (ErrorCode::s_ok == errorCode)
 	{
 		m_category = vt_shared_ptr;
@@ -465,7 +452,7 @@ ErrorCode Variant::newSharedArray(Type* type, size_t count)
 	{
 		m_category = vt_shared_array;
 		m_type = type;
-		m_arraySize = count;
+		//m_arraySize = count;
 	}
 	return errorCode;
 }
@@ -475,19 +462,18 @@ ErrorCode Variant::subscript(Variant& var, size_t index)
 	var.clear();
 	switch (m_category)
 	{
-	case vt_raw_array:
 	case vt_shared_array:
-		if (index < m_arraySize)
-		{
-			var.m_type = m_type;
-			var.m_ptr = (void*)((size_t)m_ptr + m_type->get__size_() * index);
-			var.m_category = vt_reference;
-			return ErrorCode::s_ok;
-		}
-		else
-		{
-			return ErrorCode::e_index_out_of_range;
-		}
+		//if (index < m_arraySize)
+		//{
+		//	var.m_type = m_type;
+		//	var.m_ptr = (void*)((size_t)m_ptr + m_type->get__size_() * index);
+		//	var.m_category = vt_reference;
+		//	return ErrorCode::s_ok;
+		//}
+		//else
+		//{
+		//	return ErrorCode::e_index_out_of_range;
+		//}
 	case vt_raw_ptr:
 	case vt_shared_ptr:
 		if (0 == index)
