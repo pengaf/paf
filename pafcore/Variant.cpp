@@ -19,7 +19,7 @@ public:
 		if (type->isObject())
 		{
 			ClassType* classType = static_cast<ClassType*>(type);
-			if (!classType->m_is_trivially_destructible)
+			if (!classType->is_trivially_destructible())
 			{
 				classType->destruct(this + 1);
 			}
@@ -99,6 +99,11 @@ public:
 			free(p);
 			return ErrorCode::e_not_implemented;
 		}
+	}
+	static size_t arraySize(void* address)
+	{
+		GenericArrayBoxImpl* box = reinterpret_cast<GenericArrayBoxImpl*>(address) - 1;
+		return box->m_arraySize;
 	}
 };
 
@@ -186,6 +191,8 @@ inline void DynamicCast(Type*& type, void*& ptr)
 
 Variant::Variant()
 {
+	static_assert(offsetof(Variant, m_type) + sizeof(Type*) == offsetof(Variant, m_storage));
+
 	m_category = vt_null;
 #ifdef _DEBUG
 	//VariantLeakReporter::GetInstance()->onVariantConstruct(this);
@@ -204,7 +211,6 @@ Variant::Variant(Variant&& var)
 	else
 	{
 		m_ptr = var.m_ptr;
-		//m_arraySize = var.m_arraySize;
 	}
 	var.m_category = vt_null;
 }
@@ -230,7 +236,6 @@ void Variant::assign(Variant&& var)
 	else
 	{
 		m_ptr = var.m_ptr;
-		//m_arraySize = var.m_arraySize;
 	}
 	var.m_category = vt_null;
 }
@@ -268,6 +273,11 @@ void* Variant::getRawPointer() const
 	}
 }
 
+size_t Variant::getArraySize() const
+{
+	PAF_ASSERT(isArray());
+	return GenericArrayBoxImpl::arraySize(m_ptr);
+}
 
 void Variant::assignEnumByInt(EnumType* type, int value)
 {
@@ -452,7 +462,6 @@ ErrorCode Variant::newSharedArray(Type* type, size_t count)
 	{
 		m_category = vt_shared_array;
 		m_type = type;
-		//m_arraySize = count;
 	}
 	return errorCode;
 }
@@ -463,17 +472,17 @@ ErrorCode Variant::subscript(Variant& var, size_t index)
 	switch (m_category)
 	{
 	case vt_shared_array:
-		//if (index < m_arraySize)
-		//{
-		//	var.m_type = m_type;
-		//	var.m_ptr = (void*)((size_t)m_ptr + m_type->get__size_() * index);
-		//	var.m_category = vt_reference;
-		//	return ErrorCode::s_ok;
-		//}
-		//else
-		//{
-		//	return ErrorCode::e_index_out_of_range;
-		//}
+		if (index < GenericArrayBoxImpl::arraySize(m_ptr))
+		{
+			var.m_type = m_type;
+			var.m_ptr = (void*)((size_t)m_ptr + m_type->get__size_() * index);
+			var.m_category = vt_reference;
+			return ErrorCode::s_ok;
+		}
+		else
+		{
+			return ErrorCode::e_index_out_of_range;
+		}
 	case vt_raw_ptr:
 	case vt_shared_ptr:
 		if (0 == index)

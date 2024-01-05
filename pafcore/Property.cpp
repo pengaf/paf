@@ -31,7 +31,7 @@ InstanceProperty::InstanceProperty(const char* name, Attributes* attributes, Cla
 }
 
 InstanceProperty::InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound typeCompound,
-	CollectionInstancePropertyIterate iterate, CollectionInstancePropertyGet get, CollectionInstancePropertySet set) :
+	CollectionInstancePropertySize size, CollectionInstancePropertyIterate iterate, CollectionInstancePropertyGet get, CollectionInstancePropertySet set) :
 	Metadata(name, attributes)
 {
 	m_objectType = objectType;
@@ -69,7 +69,7 @@ StaticProperty::StaticProperty(const char* name, Attributes* attributes, Type* t
 }
 
 StaticProperty::StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound typeCompound,
-	CollectionStaticPropertyIterate iterate, CollectionStaticPropertyGet get, CollectionStaticPropertySet set) :
+	CollectionStaticPropertySize size, CollectionStaticPropertyIterate iterate, CollectionStaticPropertyGet get, CollectionStaticPropertySet set) :
 	Metadata(name, attributes)
 {
 	m_type = type;

@@ -20,6 +20,7 @@ namespace paf
 	typedef ErrorCode(*ArrayInstancePropertyGet)(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
 	typedef ErrorCode(*ArrayInstancePropertySet)(InstanceProperty* instanceProperty, Variant* that, size_t index, Variant* value);
 
+	typedef ErrorCode(*CollectionInstancePropertySize)(InstanceProperty* instanceProperty, Variant* that, size_t& size);
 	typedef ErrorCode(*CollectionInstancePropertyIterate)(InstanceProperty* instanceProperty, Variant* that, SharedPtr<Iterator>& iterator);
 	typedef ErrorCode(*CollectionInstancePropertyGet)(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, Variant* value);
 	typedef ErrorCode(*CollectionInstancePropertySet)(InstanceProperty* instanceProperty, Variant* that, Iterator* iterator, size_t removeCount, Variant* value);
@@ -32,6 +33,7 @@ namespace paf
 	typedef ErrorCode(*ArrayStaticPropertyGet)(StaticProperty* staticProperty, size_t index, Variant* value);
 	typedef ErrorCode(*ArrayStaticPropertySet)(StaticProperty* staticProperty, size_t index, Variant* value);
 
+	typedef ErrorCode(*CollectionStaticPropertySize)(StaticProperty* staticProperty, size_t& size);
 	typedef ErrorCode(*CollectionStaticPropertyIterate)(StaticProperty* staticProperty, SharedPtr<Iterator>& iterator);
 	typedef ErrorCode(*CollectionStaticPropertyGet)(StaticProperty* staticProperty, Iterator* iterator, Variant* value);
 	typedef ErrorCode(*CollectionStaticPropertySet)(StaticProperty* staticProperty, Iterator* iterator, size_t removeCount, Variant* value);
@@ -53,7 +55,7 @@ namespace paf
 			ArrayInstancePropertySize size, ArrayInstancePropertyGet get, ArrayInstancePropertySet set);
 
 		InstanceProperty(const char* name, Attributes* attributes, ClassType* objectType, Type* type, TypeCompound typeCompound,
-			CollectionInstancePropertyIterate iterate, CollectionInstancePropertyGet get, CollectionInstancePropertySet set);
+			CollectionInstancePropertySize size, CollectionInstancePropertyIterate iterate, CollectionInstancePropertyGet get, CollectionInstancePropertySet set);
 
 	public:
 		ClassType * m_objectType;
@@ -75,6 +77,7 @@ namespace paf
 			};
 			struct
 			{
+				CollectionInstancePropertySize m_collectionSize;
 				CollectionInstancePropertyIterate m_collectionIterate;
 				CollectionInstancePropertyGet m_collectionGet;
 				CollectionInstancePropertySet m_collectionSet;
@@ -98,7 +101,7 @@ namespace paf
 			ArrayStaticPropertySize size, ArrayStaticPropertyGet get, ArrayStaticPropertySet set);
 
 		StaticProperty(const char* name, Attributes* attributes, Type* type, TypeCompound typeCompound,
-			CollectionStaticPropertyIterate iterate, CollectionStaticPropertyGet get, CollectionStaticPropertySet set);
+			CollectionStaticPropertySize size, CollectionStaticPropertyIterate iterate, CollectionStaticPropertyGet get, CollectionStaticPropertySet set);
 	public:
 		Type* m_type;
 		TypeCompound m_typeCompound;
@@ -118,6 +121,7 @@ namespace paf
 			};
 			struct
 			{
+				CollectionStaticPropertySize m_collectionSize;
 				CollectionStaticPropertyIterate m_collectionIterate;
 				CollectionStaticPropertyGet m_collectionGet;
 				CollectionStaticPropertySet m_collectionSet;

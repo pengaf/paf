@@ -209,8 +209,8 @@ public:
 	bool isValue() const;
 	bool isReference() const;
 	bool isPointer() const;
-	//bool isArray() const;
-	//size_t getArraySize() const;
+	bool isArray() const;
+	size_t getArraySize() const;
 	Type* getType() const;
 	void* getRawPointer() const;
 	void clear();
@@ -448,7 +448,6 @@ private:
 		struct //other
 		{
 			void* m_ptr;
-			//size_t m_arraySize;
 			size_t m_arrayIndex;
 		};
 	};
@@ -475,16 +474,10 @@ inline bool Variant::isPointer() const
 	return (vt_raw_ptr == m_category || vt_shared_ptr == m_category);
 }
 
-//inline bool Variant::isArray() const
-//{
-//	return (vt_raw_array == m_category || vt_shared_array == m_category);
-//}
-
-//inline size_t Variant::getArraySize() const
-//{
-//	PAF_ASSERT(isArray());
-//	return m_arraySize;
-//}
+inline bool Variant::isArray() const
+{
+	return vt_shared_array == m_category;
+}
 
 inline Type* Variant::getType() const 
 {

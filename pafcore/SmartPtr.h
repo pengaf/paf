@@ -295,11 +295,11 @@ namespace paf
 			return *this;
 		}
 
-		//SharedPtr& operator=(pointer ptr) noexcept
-		//{
-		//	assignRawPointer(ptr);
-		//	return *this;
-		//}
+		SharedPtr& operator=(pointer ptr) noexcept
+		{
+			assignRawPointer(ptr);
+			return *this;
+		}
 
 		SharedPtr& operator=(const SharedPtr& other) noexcept
 		{
@@ -366,45 +366,45 @@ namespace paf
 			return m_ptr != ptr;
 		}
 
-		//template<typename T2>
-		//bool operator==(const WeakPtr<T2>& other) const
-		//{
-		//	return m_ptr == other.m_ptr;
-		//}
+		template<typename T2>
+		bool operator==(const WeakPtr<T2>& other) const
+		{
+			return m_ptr == other.m_ptr;
+		}
 
-		//template<typename T2>
-		//bool operator!=(const WeakPtr<T2>& other) const
-		//{
-		//	return m_ptr != other.m_ptr;
-		//}
+		template<typename T2>
+		bool operator!=(const WeakPtr<T2>& other) const
+		{
+			return m_ptr != other.m_ptr;
+		}
 
-		//template<typename T2, typename D2>
-		//bool operator==(const SharedPtr<T2, D2>& other) const
-		//{
-		//	return m_ptr == other.m_ptr;
-		//}
+		template<typename T2, typename D2>
+		bool operator==(const SharedPtr<T2, D2>& other) const
+		{
+			return m_ptr == other.m_ptr;
+		}
 
-		//template<typename T2, typename D2>
-		//bool operator!=(const SharedPtr<T2, D2>& other) const
-		//{
-		//	return m_ptr != other.m_ptr;
-		//}
+		template<typename T2, typename D2>
+		bool operator!=(const SharedPtr<T2, D2>& other) const
+		{
+			return m_ptr != other.m_ptr;
+		}
 
 		pointer get() const noexcept
 		{
 			return reinterpret_cast<pointer>(m_ptr);
 		}
 
+	private:
+		//for variant
+		void assignRawPointer(pointer ptr)
+		{
+			SharedPtr(ptr, std::true_type()).swap(*this);
+		}
 		void swap(SharedPtr& other) noexcept
 		{
 			std::swap(m_ptr, other.m_ptr);
 		}
-	private:
-		//for variant
-		//void assignRawPointer(pointer ptr)
-		//{
-		//	SharedPtr(ptr, std::true_type()).swap(*this);
-		//}
 	private:
 		void incStrongCount()
 		{
@@ -544,11 +544,6 @@ namespace paf
 		//	return m_size;
 		//}
 
-		void swap(SharedArray& other) noexcept
-		{
-			std::swap(m_ptr, other.m_ptr);
-			std::swap(m_size, other.m_size);
-		}
 	private:
 		//for variant
 		//void assignRawPointer(pointer ptr, size_t size)
@@ -558,6 +553,11 @@ namespace paf
 		//	m_ptr = ptr;
 		//	m_size = size;
 		//}
+		void swap(SharedArray& other) noexcept
+		{
+			std::swap(m_ptr, other.m_ptr);
+			std::swap(m_size, other.m_size);
+		}
 	private:
 		void incStrongCount()
 		{
@@ -596,7 +596,13 @@ namespace paf
 	public:
 		using element_type = T;
 		using pointer = T * ;
-		using reference = T & ;
+		using reference = T &;
+	private:
+		explicit WeakPtr(pointer ptr) noexcept :
+			RefPtrBase(ptr)
+		{
+			incWeakCount();
+		}
 	public:
 		constexpr WeakPtr() noexcept :
 			RefPtrBase(nullptr)
@@ -605,12 +611,6 @@ namespace paf
 		constexpr WeakPtr(nullptr_t) noexcept :
 			RefPtrBase(nullptr)
 		{}
-
-		//explicit WeakPtr(pointer ptr) noexcept :
-		//	RefPtrBase(ptr)
-		//{
-		//	incWeakCount();
-		//}
 
 		WeakPtr(const WeakPtr& other) noexcept :
 			RefPtrBase(other.m_ptr)
@@ -634,6 +634,11 @@ namespace paf
 			incWeakCount();
 		}
 
+		~WeakPtr() noexcept
+		{
+			decWeakCount();
+		}
+
 		WeakPtr& operator=(nullptr_t other) noexcept
 		{
 			decWeakCount();
@@ -641,11 +646,11 @@ namespace paf
 			return *this;
 		}
 
-		//WeakPtr& operator=(pointer ptr) noexcept
-		//{
-		//	reset(ptr);
-		//	return *this;
-		//}
+		WeakPtr& operator=(pointer ptr) noexcept
+		{
+			WeakPtr(ptr).swap(*this);
+			return *this;
+		}
 
 		WeakPtr& operator=(const WeakPtr& other) noexcept
 		{
@@ -701,35 +706,37 @@ namespace paf
 			return m_ptr != ptr;
 		}
 
-		//template<typename T2>
-		//bool operator==(const WeakPtr<T2>& other) const
-		//{
-		//	return m_ptr == other.m_ptr;
-		//}
+		template<typename T2>
+		bool operator==(const WeakPtr<T2>& other) const
+		{
+			return m_ptr == other.m_ptr;
+		}
 
-		//template<typename T2>
-		//bool operator!=(const WeakPtr<T2>& other) const
-		//{
-		//	return m_ptr != other.m_ptr;
-		//}
+		template<typename T2>
+		bool operator!=(const WeakPtr<T2>& other) const
+		{
+			return m_ptr != other.m_ptr;
+		}
 
-		//template<typename T2, typename D2>
-		//bool operator==(const SharedPtr<T2, D2>& other) const
-		//{
-		//	return m_ptr == other.m_ptr;
-		//}
+		template<typename T2, typename D2>
+		bool operator==(const SharedPtr<T2, D2>& other) const
+		{
+			return m_ptr == other.m_ptr;
+		}
 
-		//template<typename T2, typename D2>
-		//bool operator!=(const SharedPtr<T2, D2>& other) const
-		//{
-		//	return m_ptr != other.m_ptr;
-		//}
+		template<typename T2, typename D2>
+		bool operator!=(const SharedPtr<T2, D2>& other) const
+		{
+			return m_ptr != other.m_ptr;
+		}
 
 		pointer get() const noexcept
 		{
 			PAF_ASSERT(!isDangling());
-			return m_ptr;
+			return (pointer)m_ptr;
 		}
+
+
 	private:
 		//void assignRawPointer(pointer ptr)
 		//{
@@ -737,6 +744,10 @@ namespace paf
 		//	m_ptr = ptr;
 		//	incWeakCount();
 		//}
+		void swap(WeakPtr& other) noexcept
+		{
+			std::swap(m_ptr, other.m_ptr);
+		}
 	private:
 		void incWeakCount()
 		{
@@ -745,7 +756,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					RefCountBase::IncWeakCount(m_ptr->getMemoryAddress());
+					RefCountBase::IncWeakCount(get()->getMemoryAddress());
 				}
 				else
 				{
@@ -761,7 +772,7 @@ namespace paf
 			{
 				if constexpr (is_interface<T>)
 				{
-					RefCountBase::DecWeakCount(m_ptr->getMemoryAddress());
+					RefCountBase::DecWeakCount(get()->getMemoryAddress());
 				}
 				else
 				{
